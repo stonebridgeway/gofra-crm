@@ -46,3 +46,51 @@ test("keeps every CRM status in the frontend contract", async () => {
   await assert.rejects(access(new URL("../.openai/hosting.json", projectRoot)));
   await assert.rejects(access(new URL("../worker/index.ts", projectRoot)));
 });
+
+test("ships the role, theme, calendar, statistics and chat frontend modules", async () => {
+  const [app, domain, gateway, theme, features, chat, chatGateway, styles] =
+    await Promise.all([
+      readFile(new URL("../app/crm/CrmApp.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/crm/domain.ts", import.meta.url), "utf8"),
+      readFile(new URL("../app/crm/crm-gateway.ts", import.meta.url), "utf8"),
+      readFile(new URL("../app/crm/theme.tsx", import.meta.url), "utf8"),
+      readFile(
+        new URL("../app/crm/WorkspaceFeatures.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(new URL("../app/crm/ChatView.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/crm/chat-gateway.ts", import.meta.url), "utf8"),
+      readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    ]);
+
+  assert.match(domain, /CRM_SCHEMA_VERSION = 2/);
+  assert.match(domain, /UserRole = "manager" \| "employee"/);
+  assert.match(domain, /interface Task/);
+  assert.match(domain, /"dashboard"[\s\S]*"calendar"[\s\S]*"statistics"[\s\S]*"chat"/);
+  assert.match(gateway, /LEGACY_CRM_STORAGE_KEY/);
+  assert.match(gateway, /createTasksFromLegacyRecords/);
+
+  assert.match(app, /DashboardView/);
+  assert.match(app, /CalendarView/);
+  assert.match(app, /StatisticsView/);
+  assert.match(app, /ChatView/);
+  assert.match(app, /mobile-nav/);
+  assert.match(app, /switchDemoUser/);
+  assert.match(app, /canViewFinancials/);
+  assert.match(app, /managerOptions/);
+  assert.match(app, /TASK-КЛ-/);
+  assert.match(app, /nextActionAt/);
+  assert.match(app, /importBatch/);
+
+  assert.match(theme, /ThemeMode = "system" \| "light" \| "dark"/);
+  assert.match(theme, /document\.documentElement\.dataset\.theme/);
+  assert.match(styles, /html\[data-theme="dark"\]/);
+  assert.match(styles, /@media \(max-width: 720px\)/);
+
+  assert.match(features, /export function DashboardView/);
+  assert.match(features, /export function CalendarView/);
+  assert.match(features, /export function StatisticsView/);
+  assert.match(chat, /export function ChatView/);
+  assert.match(chatGateway, /indexedDB/);
+  assert.match(chatGateway, /localStorage/);
+});

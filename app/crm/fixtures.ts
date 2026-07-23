@@ -1,5 +1,6 @@
 import {
   CLIENT_STATUSES,
+  CRM_SCHEMA_VERSION,
   DEAL_STATUSES,
   type Client,
   type Contact,
@@ -7,7 +8,78 @@ import {
   type Deal,
   type Interaction,
   type Potential,
+  type Session,
+  type StatusEvent,
+  type Target,
+  type Task,
+  type Team,
+  type User,
 } from "./domain";
+
+export const DEMO_TEAM_ID = "team-gofra";
+export const DEMO_USER_IDS = {
+  sofia: "user-sofia",
+  nikolai: "user-nikolai",
+  timur: "user-timur",
+} as const;
+
+const DEMO_CREATED_AT = "2026-06-01T08:00:00.000Z";
+const DEMO_UPDATED_AT = "2026-07-23T08:00:00.000Z";
+
+export const demoTeams: Team[] = [
+  {
+    id: DEMO_TEAM_ID,
+    name: "Команда ГОФРА",
+    createdAt: DEMO_CREATED_AT,
+    updatedAt: DEMO_UPDATED_AT,
+  },
+];
+
+export const demoUsers: User[] = [
+  {
+    id: DEMO_USER_IDS.sofia,
+    teamId: DEMO_TEAM_ID,
+    fullName: "Софья Романова",
+    email: "sofia@gofra.demo",
+    role: "manager",
+    jobTitle: "Руководитель отдела продаж",
+    initials: "СР",
+    isActive: true,
+    createdAt: DEMO_CREATED_AT,
+    updatedAt: DEMO_UPDATED_AT,
+  },
+  {
+    id: DEMO_USER_IDS.nikolai,
+    teamId: DEMO_TEAM_ID,
+    fullName: "Николай Ветров",
+    email: "nikolai@gofra.demo",
+    role: "employee",
+    jobTitle: "Менеджер по продажам",
+    initials: "НВ",
+    isActive: true,
+    createdAt: DEMO_CREATED_AT,
+    updatedAt: DEMO_UPDATED_AT,
+  },
+  {
+    id: DEMO_USER_IDS.timur,
+    teamId: DEMO_TEAM_ID,
+    fullName: "Тимур Агапов",
+    email: "timur@gofra.demo",
+    role: "employee",
+    jobTitle: "Менеджер по продажам",
+    initials: "ТА",
+    isActive: true,
+    createdAt: DEMO_CREATED_AT,
+    updatedAt: DEMO_UPDATED_AT,
+  },
+];
+
+export const demoSession: Session = {
+  id: "session-demo",
+  currentUserId: DEMO_USER_IDS.sofia,
+  activeTeamId: DEMO_TEAM_ID,
+  startedAt: DEMO_UPDATED_AT,
+};
 
 const companies = [
   "Северная мануфактура",
@@ -53,6 +125,12 @@ const managers = [
   "Тимур Агапов",
 ] as const;
 
+const managerIds = [
+  DEMO_USER_IDS.sofia,
+  DEMO_USER_IDS.nikolai,
+  DEMO_USER_IDS.timur,
+] as const;
+
 const sources = [
   "2ГИС",
   "Сайт компании",
@@ -87,7 +165,10 @@ const clientsFromStatuses: Client[] = CLIENT_STATUSES.map((status, index) => {
     potential: potentials[index % potentials.length],
     status,
     source: sources[index % sources.length],
+    ownerId: managerIds[index % managerIds.length],
     managerName: managers[index % managers.length],
+    createdAt: `2026-06-${String(2 + index).padStart(2, "0")}T08:00:00.000Z`,
+    updatedAt: `2026-07-${String(9 + (index % 12)).padStart(2, "0")}T10:30:00.000Z`,
     lastContactAt: `2026-07-${String(9 + (index % 12)).padStart(2, "0")}T10:30:00.000Z`,
     nextAction: closed
       ? ""
@@ -126,6 +207,9 @@ export const demoContacts: Contact[] = demoClients
   .map((client, index) => ({
     id: `КТ-${String(index + 1).padStart(4, "0")}`,
     clientId: client.id,
+    ownerId: client.ownerId,
+    createdAt: `2026-06-${String(8 + index).padStart(2, "0")}T09:00:00.000Z`,
+    updatedAt: `2026-07-${String(10 + (index % 10)).padStart(2, "0")}T11:00:00.000Z`,
     fullName: [
       "Варвара Антонова",
       "Павел Гришин",
@@ -160,6 +244,9 @@ export const demoDeals: Deal[] = DEAL_STATUSES.map((status, index) => {
   return {
     id: `СД-${String(812 + index).padStart(4, "0")}`,
     clientId: demoClients[(index + 1) % demoClients.length].id,
+    ownerId: managerIds[index % managerIds.length],
+    createdAt: `2026-07-${String(1 + index).padStart(2, "0")}T08:30:00.000Z`,
+    updatedAt: `2026-07-${String(8 + index).padStart(2, "0")}T12:00:00.000Z`,
     contactId:
       index < demoContacts.length ? demoContacts[index].id : null,
     title: `Поставка · ${dealProducts[index % dealProducts.length]}`,
@@ -199,6 +286,13 @@ export const demoInteractions: Interaction[] = Array.from(
       9 + (index % 7)
     }:15:00.000Z`,
     clientId: demoClients[index % demoClients.length].id,
+    ownerId: managerIds[index % managerIds.length],
+    createdAt: `2026-07-${String(22 - (index % 9)).padStart(2, "0")}T${
+      9 + (index % 7)
+    }:15:00.000Z`,
+    updatedAt: `2026-07-${String(22 - (index % 9)).padStart(2, "0")}T${
+      9 + (index % 7)
+    }:15:00.000Z`,
     contactId:
       index < demoContacts.length ? demoContacts[index].id : null,
     kind: [
@@ -229,11 +323,200 @@ export const demoInteractions: Interaction[] = Array.from(
   }),
 );
 
+const clientTasks: Task[] = demoClients
+  .filter((client) => client.nextAction)
+  .map((client, index) => {
+    const completed = index === 0;
+
+    return {
+      id: `ЗД-КЛ-${String(index + 1).padStart(4, "0")}`,
+      title: client.nextAction,
+      description: `Следующее действие по клиенту «${client.companyName}».`,
+      kind: index % 3 === 0 ? "call" : index % 3 === 1 ? "email" : "follow_up",
+      status: completed ? "completed" : "open",
+      priority: index % 5 === 0 ? "high" : "normal",
+      dueAt: client.nextActionAt,
+      completedAt: completed ? "2026-07-23T11:12:00.000Z" : null,
+      assigneeId: client.ownerId,
+      createdById: DEMO_USER_IDS.sofia,
+      clientId: client.id,
+      dealId: null,
+      contactId: null,
+      createdAt: client.createdAt,
+      updatedAt: completed ? "2026-07-23T11:12:00.000Z" : client.updatedAt,
+    };
+  });
+
+const dealTasks: Task[] = demoDeals
+  .filter((deal) => deal.nextAction)
+  .map((deal, index) => ({
+    id: `ЗД-СД-${String(index + 1).padStart(4, "0")}`,
+    title: deal.nextAction,
+    description: `Следующий шаг по сделке «${deal.title}».`,
+    kind: index % 3 === 0 ? "proposal" : index % 3 === 1 ? "call" : "follow_up",
+    status: "open",
+    priority: index % 4 === 0 ? "high" : "normal",
+    dueAt: deal.nextActionAt,
+    completedAt: null,
+    assigneeId: deal.ownerId,
+    createdById: DEMO_USER_IDS.sofia,
+    clientId: deal.clientId,
+    dealId: deal.id,
+    contactId: deal.contactId,
+    createdAt: deal.createdAt,
+    updatedAt: deal.updatedAt,
+  }));
+
+const interactionTasks: Task[] = demoInteractions
+  .slice(0, 6)
+  .map((interaction, index) => ({
+    id: `ЗД-ИВ-${String(index + 1).padStart(4, "0")}`,
+    title: interaction.nextStep,
+    description: `Продолжение после взаимодействия «${interaction.subject}».`,
+    kind: index % 2 === 0 ? "follow_up" : "call",
+    status: "open",
+    priority: index === 1 ? "high" : "normal",
+    dueAt: interaction.nextStepAt,
+    completedAt: null,
+    assigneeId: interaction.ownerId,
+    createdById: interaction.ownerId,
+    clientId: interaction.clientId,
+    dealId: null,
+    contactId: interaction.contactId,
+    createdAt: interaction.createdAt,
+    updatedAt: interaction.updatedAt,
+  }));
+
+export const demoTasks: Task[] = [
+  ...clientTasks,
+  ...dealTasks,
+  ...interactionTasks,
+  {
+    id: "ЗД-НАП-0001",
+    title: "Сверить просроченные задачи команды",
+    description: "Ежедневное напоминание руководителя перед планёркой.",
+    kind: "reminder",
+    status: "open",
+    priority: "high",
+    dueAt: "2026-07-23T08:30:00.000Z",
+    completedAt: null,
+    assigneeId: DEMO_USER_IDS.sofia,
+    createdById: DEMO_USER_IDS.sofia,
+    clientId: null,
+    dealId: null,
+    contactId: null,
+    createdAt: "2026-07-20T08:00:00.000Z",
+    updatedAt: "2026-07-20T08:00:00.000Z",
+  },
+];
+
+const clientStatusEvents: StatusEvent[] = demoClients.map((client, index) => ({
+  id: `СТ-КЛ-${String(index + 1).padStart(4, "0")}`,
+  entityType: "client",
+  entityId: client.id,
+  fromStatus:
+    index <= 1 ? null : (CLIENT_STATUSES[index - 2] ?? null),
+  toStatus: client.status,
+  changedById: client.ownerId,
+  changedAt: client.updatedAt,
+  createdAt: client.updatedAt,
+  updatedAt: client.updatedAt,
+}));
+
+const dealStatusEvents: StatusEvent[] = demoDeals.map((deal, index) => ({
+  id: `СТ-СД-${String(index + 1).padStart(4, "0")}`,
+  entityType: "deal",
+  entityId: deal.id,
+  fromStatus: index === 0 ? null : (DEAL_STATUSES[index - 1] ?? null),
+  toStatus: deal.status,
+  changedById: deal.ownerId,
+  changedAt: deal.updatedAt,
+  createdAt: deal.updatedAt,
+  updatedAt: deal.updatedAt,
+}));
+
+export const demoStatusEvents: StatusEvent[] = [
+  ...clientStatusEvents,
+  ...dealStatusEvents,
+];
+
+export const demoTargets: Target[] = [
+  {
+    id: "ЦЕЛЬ-КОМ-ВЫРУЧКА-2026-07",
+    scope: "team",
+    subjectId: DEMO_TEAM_ID,
+    metric: "revenue",
+    periodStart: "2026-07-01",
+    periodEnd: "2026-07-31",
+    targetValue: 8_000_000,
+    unit: "RUB",
+    createdAt: "2026-07-01T08:00:00.000Z",
+    updatedAt: "2026-07-01T08:00:00.000Z",
+  },
+  {
+    id: "ЦЕЛЬ-КОМ-МАРЖА-2026-07",
+    scope: "team",
+    subjectId: DEMO_TEAM_ID,
+    metric: "margin",
+    periodStart: "2026-07-01",
+    periodEnd: "2026-07-31",
+    targetValue: 1_600_000,
+    unit: "RUB",
+    createdAt: "2026-07-01T08:00:00.000Z",
+    updatedAt: "2026-07-01T08:00:00.000Z",
+  },
+  {
+    id: "ЦЕЛЬ-КОМ-СДЕЛКИ-2026-07",
+    scope: "team",
+    subjectId: DEMO_TEAM_ID,
+    metric: "deals_won",
+    periodStart: "2026-07-01",
+    periodEnd: "2026-07-31",
+    targetValue: 12,
+    unit: "count",
+    createdAt: "2026-07-01T08:00:00.000Z",
+    updatedAt: "2026-07-01T08:00:00.000Z",
+  },
+  ...demoUsers.flatMap<Target>((user) => [
+    {
+      id: `ЦЕЛЬ-${user.id}-ВЫРУЧКА-2026-07`,
+      scope: "user",
+      subjectId: user.id,
+      metric: "revenue",
+      periodStart: "2026-07-01",
+      periodEnd: "2026-07-31",
+      targetValue: user.role === "manager" ? 1_500_000 : 3_250_000,
+      unit: "RUB",
+      createdAt: "2026-07-01T08:00:00.000Z",
+      updatedAt: "2026-07-01T08:00:00.000Z",
+    },
+    {
+      id: `ЦЕЛЬ-${user.id}-АКТИВНОСТИ-2026-07`,
+      scope: "user",
+      subjectId: user.id,
+      metric: "activities",
+      periodStart: "2026-07-01",
+      periodEnd: "2026-07-31",
+      targetValue: user.role === "manager" ? 45 : 80,
+      unit: "count",
+      createdAt: "2026-07-01T08:00:00.000Z",
+      updatedAt: "2026-07-01T08:00:00.000Z",
+    },
+  ]),
+];
+
 export const demoSnapshot: CrmSnapshot = {
+  schemaVersion: CRM_SCHEMA_VERSION,
+  teams: demoTeams,
+  users: demoUsers,
+  session: demoSession,
   clients: demoClients,
   contacts: demoContacts,
   deals: demoDeals,
   interactions: demoInteractions,
+  tasks: demoTasks,
+  statusEvents: demoStatusEvents,
+  targets: demoTargets,
   dictionaries: {
     potentials: ["A", "B", "C", "D"],
     industries: [

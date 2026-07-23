@@ -10,6 +10,13 @@ import {
   type ReactNode,
 } from "react";
 import { crmGateway } from "./crm-gateway";
+import { ChatView } from "./ChatView";
+import {
+  CalendarView,
+  DashboardView,
+  StatisticsView,
+} from "./WorkspaceFeatures";
+import { ThemeSwitch } from "./theme";
 import {
   CLIENT_PIPELINE,
   CLIENT_STATUSES,
@@ -26,7 +33,15 @@ import {
   type InteractionKind,
   type PipelineGroup,
   type Potential,
+  type Task,
+  type User,
 } from "./domain";
+import {
+  canAccessModule,
+  canViewFinancials,
+  filterAccessibleRecords,
+  isManager,
+} from "./permissions";
 
 type ViewMode = "board" | "list";
 type DrawerTarget =
@@ -42,18 +57,34 @@ type MoveIntent =
     }
   | null;
 type CreateKind = "client" | "deal" | "contact" | "interaction" | null;
+type GlobalSearchResult = {
+  id: string;
+  kind: "client" | "deal" | "contact";
+  title: string;
+  meta: string;
+  clientId?: string;
+};
 
 const MODULES: Array<{
   id: AppModule;
   short: string;
   label: string;
   eyebrow: string;
+  mobile?: boolean;
 }> = [
+  {
+    id: "dashboard",
+    short: "ГЛ",
+    label: "Главная",
+    eyebrow: "Рабочий стол",
+    mobile: true,
+  },
   {
     id: "clients",
     short: "КЛ",
     label: "Клиенты",
     eyebrow: "Воронка клиентов",
+    mobile: true,
   },
   {
     id: "deals",
@@ -69,9 +100,29 @@ const MODULES: Array<{
   },
   {
     id: "activity",
-    short: "ИВ",
+    short: "ИС",
     label: "История",
     eyebrow: "Взаимодействия",
+  },
+  {
+    id: "calendar",
+    short: "КД",
+    label: "Календарь",
+    eyebrow: "Задачи и напоминания",
+    mobile: true,
+  },
+  {
+    id: "statistics",
+    short: "СТ",
+    label: "Статистика",
+    eyebrow: "Результаты и динамика",
+  },
+  {
+    id: "chat",
+    short: "ЧТ",
+    label: "Чат",
+    eyebrow: "Командные обсуждения",
+    mobile: true,
   },
   {
     id: "import",
@@ -88,6 +139,15 @@ const MODULES: Array<{
 ];
 
 const managers = ["Софья Романова", "Николай Ветров", "Тимур Агапов"];
+const APP_MODULE_IDS = new Set<AppModule>(MODULES.map((module) => module.id));
+
+const getModuleFromHash = (): AppModule => {
+  if (typeof window === "undefined") return "dashboard";
+  const candidate = window.location.hash
+    .replace(/^#\/?/, "")
+    .split(/[/?]/)[0] as AppModule;
+  return APP_MODULE_IDS.has(candidate) ? candidate : "dashboard";
+};
 
 const formatMoney = (value: number) =>
   new Intl.NumberFormat("ru-RU", {
@@ -105,6 +165,13 @@ const formatDate = (value: string | null, withTime = false) => {
     month: "short",
     ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
   }).format(date);
+};
+
+const toIsoOrNull = (value: FormDataEntryValue | null) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 };
 
 const getDueState = (value: string | null) => {
@@ -164,7 +231,7 @@ const searchIncludes = (query: string, values: Array<string | null>) => {
 };
 
 export function CrmApp() {
-  const [activeModule, setActiveModule] = useState<AppModule>("clients");
+  const [activeModule, setActiveModule] = useState<AppModule>(getModuleFromHash);
   const [snapshot, setSnapshot] = useState<CrmSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -173,8 +240,130 @@ export function CrmApp() {
   const [moveIntent, setMoveIntent] = useState<MoveIntent>(null);
   const [createKind, setCreateKind] = useState<CreateKind>(null);
   const [createClientId, setCreateClientId] = useState<string | null>(null);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<number | null>(null);
+
+  const currentUser = useMemo(
+    () =>
+      snapshot?.users.find(
+        (user) => user.id === snapshot.session.currentUserId,
+      ) ?? null,
+    [snapshot],
+  );
+
+  const visibleModules = useMemo(
+    () =>
+      currentUser
+        ? MODULES.filter((module) => canAccessModule(currentUser, module.id))
+        : MODULES.filter(
+            (module) =>
+              module.id !== "import" && module.id !== "dictionaries",
+          ),
+    [currentUser],
+  );
+
+  const visibleSnapshot = useMemo(() => {
+    if (!snapshot || !currentUser || isManager(currentUser)) return snapshot;
+
+    const clients = filterAccessibleRecords(
+      currentUser,
+      snapshot.clients,
+      snapshot.users,
+    );
+    const clientIds = new Set(clients.map((client) => client.id));
+    const deals = filterAccessibleRecords(
+      currentUser,
+      snapshot.deals,
+      snapshot.users,
+    );
+    const dealIds = new Set(deals.map((deal) => deal.id));
+
+    return {
+      ...snapshot,
+      clients,
+      deals,
+      contacts: filterAccessibleRecords(
+        currentUser,
+        snapshot.contacts,
+        snapshot.users,
+      ),
+      interactions: filterAccessibleRecords(
+        currentUser,
+        snapshot.interactions,
+        snapshot.users,
+      ),
+      tasks: snapshot.tasks.filter(
+        (task) => task.assigneeId === currentUser.id,
+      ),
+      statusEvents: snapshot.statusEvents.filter(
+        (event) =>
+          (event.entityType === "client" && clientIds.has(event.entityId)) ||
+          (event.entityType === "deal" && dealIds.has(event.entityId)),
+      ),
+      targets: snapshot.targets.filter(
+        (target) =>
+          target.subjectId === currentUser.id ||
+          target.subjectId === currentUser.teamId,
+      ),
+    };
+  }, [currentUser, snapshot]);
+
+  const globalSearchResults = useMemo<GlobalSearchResult[]>(() => {
+    if (!visibleSnapshot || globalSearch.trim().length < 2) return [];
+
+    const clients = visibleSnapshot.clients
+      .filter((client) =>
+        searchIncludes(globalSearch, [
+          client.companyName,
+          client.inn,
+          client.city,
+          client.industry,
+        ]),
+      )
+      .map((client) => ({
+        id: client.id,
+        kind: "client" as const,
+        title: client.companyName,
+        meta: `Клиент · ${client.status ?? "Без статуса"}`,
+      }));
+
+    const deals = visibleSnapshot.deals
+      .filter((deal) =>
+        searchIncludes(globalSearch, [
+          deal.title,
+          deal.product,
+          visibleSnapshot.clients.find(
+            (client) => client.id === deal.clientId,
+          )?.companyName ?? null,
+        ]),
+      )
+      .map((deal) => ({
+        id: deal.id,
+        kind: "deal" as const,
+        title: deal.title,
+        meta: `Сделка · ${deal.status}`,
+      }));
+
+    const contacts = visibleSnapshot.contacts
+      .filter((contact) =>
+        searchIncludes(globalSearch, [
+          contact.fullName,
+          contact.phone,
+          contact.email,
+          contact.role,
+        ]),
+      )
+      .map((contact) => ({
+        id: contact.id,
+        kind: "contact" as const,
+        title: contact.fullName,
+        meta: `Контакт · ${contact.role || "Должность не указана"}`,
+        clientId: contact.clientId,
+      }));
+
+    return [...clients, ...deals, ...contacts].slice(0, 8);
+  }, [globalSearch, visibleSnapshot]);
 
   const load = async () => {
     setLoading(true);
@@ -218,10 +407,26 @@ export function CrmApp() {
       setDrawer(null);
       setMoveIntent(null);
       setCreateKind(null);
+      setMobileMoreOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    const onHashChange = () => setActiveModule(getModuleFromHash());
+    window.addEventListener("hashchange", onHashChange);
+    if (!window.location.hash) {
+      window.history.replaceState(null, "", "#/dashboard");
+    }
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser || canAccessModule(currentUser, activeModule)) return;
+    setActiveModule("dashboard");
+    window.history.replaceState(null, "", "#/dashboard");
+  }, [activeModule, currentUser]);
 
   useEffect(
     () => () => {
@@ -236,6 +441,30 @@ export function CrmApp() {
     toastTimer.current = window.setTimeout(() => setToast(""), 2600);
   };
 
+  const navigateTo = (module: AppModule) => {
+    if (currentUser && !canAccessModule(currentUser, module)) {
+      notify("Этот раздел доступен руководителю");
+      return;
+    }
+    setActiveModule(module);
+    setMobileMoreOpen(false);
+    if (window.location.hash !== `#/${module}`) {
+      window.location.hash = `/${module}`;
+    }
+  };
+
+  const openGlobalSearchResult = (result: GlobalSearchResult) => {
+    if (result.kind === "deal") {
+      setDrawer({ kind: "deal", id: result.id });
+    } else {
+      setDrawer({
+        kind: "client",
+        id: result.kind === "client" ? result.id : result.clientId ?? result.id,
+      });
+    }
+    setGlobalSearch("");
+  };
+
   const commit = (next: CrmSnapshot, message?: string) => {
     setSnapshot(next);
     void crmGateway.save(next).catch(() => {
@@ -246,12 +475,33 @@ export function CrmApp() {
 
   const moveClient = (id: string, status: ClientStatus) => {
     if (!snapshot) return;
+    const previous = snapshot.clients.find((client) => client.id === id);
+    if (!previous || previous.status === status) {
+      setMoveIntent(null);
+      return;
+    }
+    const now = new Date().toISOString();
     commit(
       {
         ...snapshot,
         clients: snapshot.clients.map((client) =>
-          client.id === id ? { ...client, status } : client,
+          client.id === id ? { ...client, status, updatedAt: now } : client,
         ),
+        statusEvents: [
+          ...snapshot.statusEvents,
+          {
+            id: `СОБ-КЛ-${Date.now()}`,
+            entityType: "client",
+            entityId: id,
+            fromStatus: previous.status,
+            toStatus: status,
+            changedById:
+              currentUser?.id ?? snapshot.session.currentUserId,
+            changedAt: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
       },
       `Клиент перемещён: ${status}`,
     );
@@ -260,12 +510,33 @@ export function CrmApp() {
 
   const moveDeal = (id: string, status: DealStatus) => {
     if (!snapshot) return;
+    const previous = snapshot.deals.find((deal) => deal.id === id);
+    if (!previous || previous.status === status) {
+      setMoveIntent(null);
+      return;
+    }
+    const now = new Date().toISOString();
     commit(
       {
         ...snapshot,
         deals: snapshot.deals.map((deal) =>
-          deal.id === id ? { ...deal, status } : deal,
+          deal.id === id ? { ...deal, status, updatedAt: now } : deal,
         ),
+        statusEvents: [
+          ...snapshot.statusEvents,
+          {
+            id: `СОБ-СД-${Date.now()}`,
+            entityType: "deal",
+            entityId: id,
+            fromStatus: previous.status,
+            toStatus: status,
+            changedById:
+              currentUser?.id ?? snapshot.session.currentUserId,
+            changedAt: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
       },
       `Сделка перемещена: ${status}`,
     );
@@ -305,8 +576,20 @@ export function CrmApp() {
     if (createKind === "client") {
       const companyName = String(form.get("companyName") ?? "").trim();
       if (!companyName) return;
+      const managerName = String(
+        form.get("manager") ?? currentUser?.fullName ?? managers[0],
+      );
+      const ownerId =
+        snapshot.users.find((user) => user.fullName === managerName)?.id ??
+        currentUser?.id ??
+        snapshot.session.currentUserId;
+      const nextAction = String(form.get("nextAction") ?? "").trim();
+      const nextActionAt = toIsoOrNull(form.get("nextActionAt"));
       const client: Client = {
         id: `КЛ-${Date.now().toString().slice(-4)}`,
+        ownerId,
+        createdAt: now,
+        updatedAt: now,
         companyName,
         inn: String(form.get("inn") ?? ""),
         region: String(form.get("region") ?? ""),
@@ -317,14 +600,38 @@ export function CrmApp() {
         potential: String(form.get("potential") ?? "B") as Potential,
         status: String(form.get("status") ?? "Новый лид") as ClientStatus,
         source: String(form.get("source") ?? "Другое"),
-        managerName: String(form.get("manager") ?? managers[0]),
+        managerName,
         lastContactAt: null,
-        nextAction: String(form.get("nextAction") ?? ""),
-        nextActionAt: null,
+        nextAction,
+        nextActionAt,
         comment: "",
       };
+      const task: Task | null = nextAction
+        ? {
+            id: `TASK-КЛ-${Date.now()}`,
+            title: nextAction,
+            description: `Следующее действие по клиенту «${companyName}».`,
+            kind: "follow_up",
+            status: "open",
+            priority: "normal",
+            dueAt: nextActionAt,
+            completedAt: null,
+            assigneeId: ownerId,
+            createdById:
+              currentUser?.id ?? snapshot.session.currentUserId,
+            clientId: client.id,
+            dealId: null,
+            contactId: null,
+            createdAt: now,
+            updatedAt: now,
+          }
+        : null;
       commit(
-        { ...snapshot, clients: [client, ...snapshot.clients] },
+        {
+          ...snapshot,
+          clients: [client, ...snapshot.clients],
+          tasks: task ? [task, ...snapshot.tasks] : snapshot.tasks,
+        },
         "Клиент добавлен в демо-режиме",
       );
     }
@@ -334,8 +641,20 @@ export function CrmApp() {
       const clientId = String(form.get("clientId") ?? "");
       if (!title || !clientId) return;
       const ourPrice = Number(form.get("ourPrice") ?? 0);
+      const managerName = String(
+        form.get("manager") ?? currentUser?.fullName ?? managers[0],
+      );
+      const ownerId =
+        snapshot.users.find((user) => user.fullName === managerName)?.id ??
+        currentUser?.id ??
+        snapshot.session.currentUserId;
+      const nextAction = String(form.get("nextAction") ?? "").trim();
+      const nextActionAt = toIsoOrNull(form.get("nextActionAt"));
       const deal: Deal = {
         id: `СД-${Date.now().toString().slice(-4)}`,
+        ownerId,
+        createdAt: now,
+        updatedAt: now,
         clientId,
         contactId: null,
         title,
@@ -349,13 +668,37 @@ export function CrmApp() {
         marginPercent: 24,
         status: String(form.get("status") ?? "Новая заявка") as DealStatus,
         proposalDate: null,
-        nextAction: String(form.get("nextAction") ?? ""),
-        nextActionAt: null,
-        managerName: String(form.get("manager") ?? managers[0]),
+        nextAction,
+        nextActionAt,
+        managerName,
         comment: "",
       };
+      const task: Task | null = nextAction
+        ? {
+            id: `TASK-СД-${Date.now()}`,
+            title: nextAction,
+            description: `Следующее действие по сделке «${title}».`,
+            kind: "follow_up",
+            status: "open",
+            priority: "normal",
+            dueAt: nextActionAt,
+            completedAt: null,
+            assigneeId: ownerId,
+            createdById:
+              currentUser?.id ?? snapshot.session.currentUserId,
+            clientId,
+            dealId: deal.id,
+            contactId: null,
+            createdAt: now,
+            updatedAt: now,
+          }
+        : null;
       commit(
-        { ...snapshot, deals: [deal, ...snapshot.deals] },
+        {
+          ...snapshot,
+          deals: [deal, ...snapshot.deals],
+          tasks: task ? [task, ...snapshot.tasks] : snapshot.tasks,
+        },
         "Сделка добавлена в демо-режиме",
       );
     }
@@ -366,8 +709,15 @@ export function CrmApp() {
         form.get("clientId") ?? createClientId ?? "",
       );
       if (!fullName || !clientId) return;
+      const ownerId =
+        snapshot.clients.find((client) => client.id === clientId)?.ownerId ??
+        currentUser?.id ??
+        snapshot.session.currentUserId;
       const contact: Contact = {
         id: `КТ-${Date.now().toString().slice(-4)}`,
+        ownerId,
+        createdAt: now,
+        updatedAt: now,
         clientId,
         fullName,
         role: String(form.get("role") ?? ""),
@@ -387,23 +737,56 @@ export function CrmApp() {
       );
       const subject = String(form.get("subject") ?? "").trim();
       if (!clientId || !subject) return;
+      const managerName = String(
+        form.get("manager") ?? currentUser?.fullName ?? managers[0],
+      );
+      const ownerId =
+        snapshot.users.find((user) => user.fullName === managerName)?.id ??
+        currentUser?.id ??
+        snapshot.session.currentUserId;
+      const nextStep = String(form.get("nextStep") ?? "").trim();
+      const nextStepAt = toIsoOrNull(form.get("nextStepAt"));
       const interaction: Interaction = {
         id: `ИВ-${Date.now().toString().slice(-4)}`,
+        ownerId,
+        createdAt: now,
+        updatedAt: now,
         occurredAt: now,
         clientId,
         contactId: null,
         kind: String(form.get("kind") ?? "Звонок") as InteractionKind,
         subject,
         result: String(form.get("result") ?? ""),
-        nextStep: String(form.get("nextStep") ?? ""),
-        nextStepAt: null,
-        managerName: String(form.get("manager") ?? managers[0]),
+        nextStep,
+        nextStepAt,
+        managerName,
         comment: "",
       };
+      const task: Task | null = nextStep
+        ? {
+            id: `TASK-ИВ-${Date.now()}`,
+            title: nextStep,
+            description: `Следующий шаг после взаимодействия «${subject}».`,
+            kind: "follow_up",
+            status: "open",
+            priority: "normal",
+            dueAt: nextStepAt,
+            completedAt: null,
+            assigneeId: ownerId,
+            createdById:
+              currentUser?.id ?? snapshot.session.currentUserId,
+            clientId,
+            dealId: null,
+            contactId: null,
+            createdAt: now,
+            updatedAt: now,
+          }
+        : null;
       commit(
         {
           ...snapshot,
           interactions: [interaction, ...snapshot.interactions],
+          tasks: task ? [task, ...snapshot.tasks] : snapshot.tasks,
         },
         "Взаимодействие записано",
       );
@@ -426,7 +809,31 @@ export function CrmApp() {
     notify("Демо-данные восстановлены");
   };
 
+  const switchDemoUser = (userId: string) => {
+    if (!snapshot || snapshot.session.currentUserId === userId) return;
+    const nextUser = snapshot.users.find((user) => user.id === userId);
+    if (!nextUser) return;
+    commit(
+      {
+        ...snapshot,
+        session: {
+          ...snapshot.session,
+          currentUserId: userId,
+          activeTeamId: nextUser.teamId,
+        },
+      },
+      `Открыт кабинет: ${nextUser.fullName}`,
+    );
+  };
+
   const activeMeta = MODULES.find((item) => item.id === activeModule)!;
+  const viewSnapshot = visibleSnapshot ?? snapshot;
+  const moduleHasOwnHeader = [
+    "dashboard",
+    "calendar",
+    "statistics",
+    "chat",
+  ].includes(activeModule);
 
   return (
     <div className="crm-app">
@@ -439,11 +846,11 @@ export function CrmApp() {
           </span>
         </div>
         <nav className="module-nav">
-          {MODULES.map((module) => (
+          {visibleModules.map((module) => (
             <button
               className={module.id === activeModule ? "is-active" : ""}
               key={module.id}
-              onClick={() => setActiveModule(module.id)}
+              onClick={() => navigateTo(module.id)}
               type="button"
             >
               <span className="nav-short">{module.short}</span>
@@ -451,56 +858,151 @@ export function CrmApp() {
             </button>
           ))}
         </nav>
-        <div className="demo-user">
-          <span>СР</span>
-          <div>
-            <strong>Софья Романова</strong>
-            <small>Руководитель продаж</small>
+        {snapshot && currentUser && (
+          <div className="side-nav-footer">
+            <div className="demo-user">
+              <span>{currentUser.initials}</span>
+              <label>
+                <small>Демо-кабинет</small>
+                <select
+                  aria-label="Выбрать кабинет сотрудника"
+                  onChange={(event) => switchDemoUser(event.target.value)}
+                  value={currentUser.id}
+                >
+                  {snapshot.users
+                    .filter((user) => user.isActive)
+                    .map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.fullName} ·{" "}
+                        {user.role === "manager" ? "руководитель" : "сотрудник"}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
           </div>
-        </div>
+        )}
       </aside>
 
       <main className="workspace">
-        <header className="workspace-header">
-          <div>
+        <header
+          className={`workspace-header ${
+            moduleHasOwnHeader ? "is-feature-module" : ""
+          }`}
+        >
+          <div className="workspace-title">
             <p>{activeMeta.eyebrow}</p>
             <h1>{activeMeta.label}</h1>
           </div>
-          <label className="global-search">
-            <span>Поиск по CRM</span>
+          <div className="global-search">
+            <label htmlFor="global-crm-search">Поиск по CRM</label>
             <input
               aria-label="Поиск по всей CRM"
+              id="global-crm-search"
               onChange={(event) => setGlobalSearch(event.target.value)}
               placeholder="Компания, ИНН, контакт, телефон"
               type="search"
               value={globalSearch}
             />
-          </label>
-          <button className="ghost-button" onClick={resetDemo} type="button">
-            Сбросить демо
-          </button>
+            {globalSearch.trim().length >= 2 && (
+              <div
+                aria-label="Результаты поиска"
+                className="global-search-results"
+                role="region"
+              >
+                {globalSearchResults.length ? (
+                  globalSearchResults.map((result) => (
+                    <button
+                      key={`${result.kind}-${result.id}`}
+                      onClick={() => openGlobalSearchResult(result)}
+                      type="button"
+                    >
+                      <span>{result.kind === "client" ? "КЛ" : result.kind === "deal" ? "СД" : "КТ"}</span>
+                      <strong>{result.title}</strong>
+                      <small>{result.meta}</small>
+                    </button>
+                  ))
+                ) : (
+                  <p>Совпадений не найдено</p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="header-actions">
+            {snapshot && currentUser && (
+              <select
+                aria-label="Выбрать демо-кабинет"
+                className="header-user-select"
+                onChange={(event) => switchDemoUser(event.target.value)}
+                value={currentUser.id}
+              >
+                {snapshot.users
+                  .filter((user) => user.isActive)
+                  .map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.fullName}
+                    </option>
+                  ))}
+              </select>
+            )}
+            <ThemeSwitch compact />
+            <button className="ghost-button" onClick={resetDemo} type="button">
+              Сбросить демо
+            </button>
+          </div>
         </header>
+
+        {(["clients", "deals", "contacts"] as AppModule[]).includes(
+          activeModule,
+        ) && (
+          <nav aria-label="Разделы CRM" className="mobile-crm-tabs">
+            {MODULES.filter((module) =>
+              ["clients", "deals", "contacts"].includes(module.id),
+            ).map((module) => (
+              <button
+                className={module.id === activeModule ? "is-active" : ""}
+                key={module.id}
+                onClick={() => navigateTo(module.id)}
+                type="button"
+              >
+                {module.label}
+              </button>
+            ))}
+          </nav>
+        )}
 
         <div className="prototype-note" role="note">
           <div>
             <strong>Frontend-only прототип</strong>
             <span>
-              Все сущности и статусы из таблицы уже в интерфейсе. Изменения
-              сохраняются только в этом браузере.
+              Кабинеты, задачи, чат и настройки сохраняются только в этом
+              браузере. Серверная авторизация будет подключена через API.
             </span>
           </div>
-          <span className="prototype-badge">API-ready</span>
+          <span className="prototype-badge">
+            {currentUser?.role === "manager" ? "Кабинет руководителя" : "Кабинет сотрудника"}
+          </span>
         </div>
 
         {loading ? (
           <WorkspaceSkeleton />
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
-        ) : snapshot ? (
+        ) : viewSnapshot && currentUser ? (
           <>
+            {activeModule === "dashboard" && (
+              <DashboardView
+                currentUser={currentUser}
+                loading={loading}
+                onOpenClient={(id) => setDrawer({ kind: "client", id })}
+                onOpenDeal={(id) => setDrawer({ kind: "deal", id })}
+                onSnapshotChange={commit}
+                snapshot={snapshot}
+              />
+            )}
             {activeModule === "clients" && (
               <ClientsView
-                clients={snapshot.clients}
+                clients={viewSnapshot.clients}
                 globalSearch={globalSearch}
                 onAdvance={(client) => {
                   const status = nextClientStatus(client.status);
@@ -515,9 +1017,10 @@ export function CrmApp() {
             )}
             {activeModule === "deals" && (
               <DealsView
-                clients={snapshot.clients}
-                deals={snapshot.deals}
+                clients={viewSnapshot.clients}
+                deals={viewSnapshot.deals}
                 globalSearch={globalSearch}
+                showFinancials={canViewFinancials(currentUser)}
                 onAdvance={(deal) => {
                   const status = nextDealStatus(deal.status);
                   if (status) moveDeal(deal.id, status);
@@ -529,8 +1032,8 @@ export function CrmApp() {
             )}
             {activeModule === "contacts" && (
               <ContactsView
-                clients={snapshot.clients}
-                contacts={snapshot.contacts}
+                clients={viewSnapshot.clients}
+                contacts={viewSnapshot.contacts}
                 globalSearch={globalSearch}
                 onCreate={() => openCreate("contact")}
                 onLog={(contact) =>
@@ -543,28 +1046,60 @@ export function CrmApp() {
             )}
             {activeModule === "activity" && (
               <ActivityView
-                clients={snapshot.clients}
+                clients={viewSnapshot.clients}
                 globalSearch={globalSearch}
-                interactions={snapshot.interactions}
+                interactions={viewSnapshot.interactions}
                 onCreate={() => openCreate("interaction")}
                 onOpenClient={(clientId) =>
                   setDrawer({ kind: "client", id: clientId })
                 }
               />
             )}
+            {activeModule === "calendar" && (
+              <CalendarView
+                currentUser={currentUser}
+                loading={loading}
+                onOpenClient={(id) => setDrawer({ kind: "client", id })}
+                onOpenDeal={(id) => setDrawer({ kind: "deal", id })}
+                onSnapshotChange={commit}
+                snapshot={snapshot}
+              />
+            )}
+            {activeModule === "statistics" && (
+              <StatisticsView
+                currentUser={currentUser}
+                loading={loading}
+                onOpenClient={(id) => setDrawer({ kind: "client", id })}
+                onOpenDeal={(id) => setDrawer({ kind: "deal", id })}
+                onSnapshotChange={commit}
+                snapshot={snapshot}
+              />
+            )}
+            {activeModule === "chat" && (
+              <ChatView
+                currentUser={currentUser}
+                onOpenClient={(id) => setDrawer({ kind: "client", id })}
+                snapshot={viewSnapshot}
+              />
+            )}
             {activeModule === "import" && (
               <ImportView
                 onCommit={(status) => {
+                  if (!snapshot) return;
+                  const importBatch = Date.now().toString(36);
+                  const importedAt = new Date().toISOString();
                   const importClients: Client[] = [
                     "Медовый край",
                     "Речной терминал",
                     "Формула заботы",
                   ].map((companyName, index) => ({
                     ...snapshot.clients[index],
-                    id: `КЛ-IM${index + 1}`,
+                    id: `КЛ-IM-${importBatch}-${index + 1}`,
                     companyName,
                     status,
                     inn: `${7812007000 + index * 93}`,
+                    createdAt: importedAt,
+                    updatedAt: importedAt,
                   }));
                   commit(
                     {
@@ -577,16 +1112,148 @@ export function CrmApp() {
               />
             )}
             {activeModule === "dictionaries" && (
-              <DictionariesView snapshot={snapshot} />
+              <DictionariesView snapshot={viewSnapshot} />
             )}
           </>
         ) : null}
       </main>
 
-      {drawer && snapshot && (
+      <nav aria-label="Основная навигация" className="mobile-nav">
+        <button
+          className={activeModule === "dashboard" ? "is-active" : ""}
+          onClick={() => navigateTo("dashboard")}
+          type="button"
+        >
+          <span>ГЛ</span>
+          Главная
+        </button>
+        <button
+          className={
+            ["clients", "deals", "contacts"].includes(activeModule)
+              ? "is-active"
+              : ""
+          }
+          onClick={() => navigateTo("clients")}
+          type="button"
+        >
+          <span>CRM</span>
+          Клиенты
+        </button>
+        <button
+          className={activeModule === "calendar" ? "is-active" : ""}
+          onClick={() => navigateTo("calendar")}
+          type="button"
+        >
+          <span>КД</span>
+          Календарь
+        </button>
+        <button
+          className={activeModule === "chat" ? "is-active" : ""}
+          onClick={() => navigateTo("chat")}
+          type="button"
+        >
+          <span>ЧТ</span>
+          Чат
+        </button>
+        <button
+          aria-expanded={mobileMoreOpen}
+          className={
+            ["activity", "statistics", "import", "dictionaries"].includes(
+              activeModule,
+            ) || mobileMoreOpen
+              ? "is-active"
+              : ""
+          }
+          onClick={() => setMobileMoreOpen((open) => !open)}
+          type="button"
+        >
+          <span>•••</span>
+          Ещё
+        </button>
+      </nav>
+
+      {mobileMoreOpen && (
+        <div
+          className="mobile-more-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setMobileMoreOpen(false);
+          }}
+          role="presentation"
+        >
+          <section
+            aria-label="Дополнительные разделы"
+            aria-modal="true"
+            className="mobile-more-sheet"
+            role="dialog"
+          >
+            <header>
+              <div>
+                <span className="section-kicker">Навигация</span>
+                <h2>Ещё</h2>
+              </div>
+              <button
+                aria-label="Закрыть меню"
+                className="ghost-button"
+                onClick={() => setMobileMoreOpen(false)}
+                type="button"
+              >
+                Закрыть
+              </button>
+            </header>
+            <div className="mobile-more-links">
+              {visibleModules
+                .filter((module) =>
+                  ["activity", "statistics", "import", "dictionaries"].includes(
+                    module.id,
+                  ),
+                )
+                .map((module) => (
+                  <button
+                    className={module.id === activeModule ? "is-active" : ""}
+                    key={module.id}
+                    onClick={() => navigateTo(module.id)}
+                    type="button"
+                  >
+                    <span>{module.short}</span>
+                    <strong>{module.label}</strong>
+                    <small>{module.eyebrow}</small>
+                  </button>
+                ))}
+            </div>
+            {snapshot && currentUser && (
+              <div className="mobile-account-settings">
+                <label>
+                  Демо-кабинет
+                  <select
+                    onChange={(event) => switchDemoUser(event.target.value)}
+                    value={currentUser.id}
+                  >
+                    {snapshot.users
+                      .filter((user) => user.isActive)
+                      .map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.fullName} ·{" "}
+                          {user.role === "manager"
+                            ? "руководитель"
+                            : "сотрудник"}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <div>
+                  <span>Оформление</span>
+                  <ThemeSwitch />
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {drawer && viewSnapshot && (
         <RecordDrawer
           drawer={drawer}
-          snapshot={snapshot}
+          snapshot={viewSnapshot}
           onAddContact={(clientId) => openCreate("contact", clientId)}
           onAddInteraction={(clientId) =>
             openCreate("interaction", clientId)
@@ -594,6 +1261,9 @@ export function CrmApp() {
           onClose={() => setDrawer(null)}
           onMoveClient={requestClientMove}
           onMoveDeal={requestDealMove}
+          showFinancials={
+            currentUser ? canViewFinancials(currentUser) : false
+          }
         />
       )}
 
@@ -611,16 +1281,17 @@ export function CrmApp() {
         />
       )}
 
-      {createKind && snapshot && (
+      {createKind && viewSnapshot && currentUser && (
         <CreateDialog
           clientId={createClientId}
+          currentUser={currentUser}
           kind={createKind}
           onClose={() => {
             setCreateKind(null);
             setCreateClientId(null);
           }}
           onSubmit={handleCreate}
-          snapshot={snapshot}
+          snapshot={viewSnapshot}
         />
       )}
 
@@ -1014,6 +1685,7 @@ function DealsView({
   clients,
   deals,
   globalSearch,
+  showFinancials,
   onAdvance,
   onCreate,
   onOpen,
@@ -1022,6 +1694,7 @@ function DealsView({
   clients: Client[];
   deals: Deal[];
   globalSearch: string;
+  showFinancials: boolean;
   onAdvance: (deal: Deal) => void;
   onCreate: () => void;
   onOpen: (deal: Deal) => void;
@@ -1062,7 +1735,15 @@ function DealsView({
       <div className="metric-strip">
         <Metric label="Сделки" value={deals.length} />
         <Metric label="В работе" value={formatMoney(pipeline)} />
-        <Metric label="Плановая маржа" value={formatMoney(margin)} tone="good" />
+        <Metric
+          label={showFinancials ? "Плановая маржа" : "Следующие шаги"}
+          value={
+            showFinancials
+              ? formatMoney(margin)
+              : deals.filter((deal) => deal.nextAction.trim()).length
+          }
+          tone={showFinancials ? "good" : "neutral"}
+        />
         <Metric label="Статусы доступны" value={DEAL_STATUSES.length} />
       </div>
       <div className="view-toolbar">
@@ -1110,6 +1791,7 @@ function DealsView({
                 clientMap.get(deal.clientId)?.companyName ?? "Клиент не найден"
               }
               deal={deal}
+              showFinancials={showFinancials}
               onAdvance={() => onAdvance(deal)}
               onOpen={() => onOpen(deal)}
               onStatus={() => onRequestMove(deal)}
@@ -1121,6 +1803,7 @@ function DealsView({
         <DealTable
           clientMap={clientMap}
           deals={filtered}
+          showFinancials={showFinancials}
           onOpen={onOpen}
           onStatus={onRequestMove}
         />
@@ -1132,12 +1815,14 @@ function DealsView({
 function DealCard({
   deal,
   clientName,
+  showFinancials,
   onAdvance,
   onOpen,
   onStatus,
 }: {
   deal: Deal;
   clientName: string;
+  showFinancials: boolean;
   onAdvance: () => void;
   onOpen: () => void;
   onStatus: () => void;
@@ -1150,17 +1835,19 @@ function DealCard({
         <h4>{deal.title}</h4>
         <p className="company-line">{clientName}</p>
         <span className="exact-status">{deal.status}</span>
-        <dl className="deal-numbers">
+        <dl className={`deal-numbers ${showFinancials ? "" : "is-single"}`}>
           <div>
             <dt>Сумма</dt>
             <dd>{formatMoney(deal.ourPrice)}</dd>
           </div>
-          <div>
-            <dt>Маржа</dt>
-            <dd className="positive">
-              {formatMoney(deal.margin)} · {deal.marginPercent}%
-            </dd>
-          </div>
+          {showFinancials && (
+            <div>
+              <dt>Маржа</dt>
+              <dd className="positive">
+                {formatMoney(deal.margin)} · {deal.marginPercent}%
+              </dd>
+            </div>
+          )}
         </dl>
         <div className="next-action">
           <span className={due.className}>{due.label}</span>
@@ -1193,11 +1880,13 @@ function DealCard({
 function DealTable({
   deals,
   clientMap,
+  showFinancials,
   onOpen,
   onStatus,
 }: {
   deals: Deal[];
   clientMap: Map<string, Client>;
+  showFinancials: boolean;
   onOpen: (deal: Deal) => void;
   onStatus: (deal: Deal) => void;
 }) {
@@ -1210,7 +1899,7 @@ function DealTable({
             <th>Клиент</th>
             <th>Товар / объём</th>
             <th>Сумма</th>
-            <th>Маржа</th>
+            {showFinancials && <th>Маржа</th>}
             <th>Точный статус</th>
             <th>Следующий шаг</th>
             <th aria-label="Действия" />
@@ -1235,9 +1924,11 @@ function DealTable({
                 <small>{deal.volume}</small>
               </td>
               <td className="mono">{formatMoney(deal.ourPrice)}</td>
-              <td className="positive">
-                {formatMoney(deal.margin)} · {deal.marginPercent}%
-              </td>
+              {showFinancials && (
+                <td className="positive">
+                  {formatMoney(deal.margin)} · {deal.marginPercent}%
+                </td>
+              )}
               <td>
                 <span className="exact-status">{deal.status}</span>
               </td>
@@ -1902,6 +2593,7 @@ function RecordDrawer({
   onMoveDeal,
   onAddContact,
   onAddInteraction,
+  showFinancials,
 }: {
   drawer: Exclude<DrawerTarget, null>;
   snapshot: CrmSnapshot;
@@ -1910,6 +2602,7 @@ function RecordDrawer({
   onMoveDeal: (deal: Deal) => void;
   onAddContact: (clientId: string) => void;
   onAddInteraction: (clientId: string) => void;
+  showFinancials: boolean;
 }) {
   const client =
     drawer.kind === "client"
@@ -2042,7 +2735,9 @@ function RecordDrawer({
 
           {deal && (
             <>
-              <DrawerSection title="Экономика сделки">
+              <DrawerSection
+                title={showFinancials ? "Экономика сделки" : "Детали сделки"}
+              >
                 <dl className="detail-grid">
                   <Detail label="Товар" value={deal.product} />
                   <Detail label="Объём" value={deal.volume} />
@@ -2056,21 +2751,25 @@ function RecordDrawer({
                     value={formatMoney(deal.ourPrice)}
                     mono
                   />
-                  <Detail
-                    label="Закупка"
-                    value={formatMoney(deal.purchasePrice)}
-                    mono
-                  />
-                  <Detail
-                    label="Логистика"
-                    value={formatMoney(deal.logistics)}
-                    mono
-                  />
-                  <Detail
-                    label="Маржа"
-                    value={`${formatMoney(deal.margin)} · ${deal.marginPercent}%`}
-                    mono
-                  />
+                  {showFinancials && (
+                    <>
+                      <Detail
+                        label="Закупка"
+                        value={formatMoney(deal.purchasePrice)}
+                        mono
+                      />
+                      <Detail
+                        label="Логистика"
+                        value={formatMoney(deal.logistics)}
+                        mono
+                      />
+                      <Detail
+                        label="Маржа"
+                        value={`${formatMoney(deal.margin)} · ${deal.marginPercent}%`}
+                        mono
+                      />
+                    </>
+                  )}
                   <Detail label="Дата КП" value={formatDate(deal.proposalDate)} />
                 </dl>
               </DrawerSection>
@@ -2165,12 +2864,14 @@ function StatusPicker({
 function CreateDialog({
   kind,
   clientId,
+  currentUser,
   snapshot,
   onClose,
   onSubmit,
 }: {
   kind: Exclude<CreateKind, null>;
   clientId: string | null;
+  currentUser: User;
   snapshot: CrmSnapshot;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -2181,6 +2882,12 @@ function CreateDialog({
     contact: "Новый контакт",
     interaction: "Новое взаимодействие",
   };
+  const managerOptions = (
+    currentUser.role === "manager"
+      ? snapshot.users.filter((user) => user.isActive)
+      : [currentUser]
+  ).map((user) => user.fullName);
+
   return (
     <div className="dialog-backdrop centered" role="presentation">
       <form
@@ -2233,8 +2940,18 @@ function CreateDialog({
                 name="source"
                 options={snapshot.dictionaries.sources}
               />
-              <SelectField label="Менеджер" name="manager" options={managers} />
+              <SelectField
+                label="Менеджер"
+                name="manager"
+                options={managerOptions}
+              />
               <Field label="Следующее действие" name="nextAction" wide />
+              <Field
+                label="Дата следующего действия"
+                name="nextActionAt"
+                type="datetime-local"
+                wide
+              />
             </>
           )}
 
@@ -2257,8 +2974,18 @@ function CreateDialog({
               <Field label="Товар" name="product" />
               <Field label="Объём" name="volume" />
               <Field label="Наша цена" name="ourPrice" type="number" />
-              <SelectField label="Менеджер" name="manager" options={managers} />
+              <SelectField
+                label="Менеджер"
+                name="manager"
+                options={managerOptions}
+              />
               <Field label="Следующее действие" name="nextAction" wide />
+              <Field
+                label="Дата следующего действия"
+                name="nextActionAt"
+                type="datetime-local"
+                wide
+              />
             </>
           )}
 
@@ -2299,7 +3026,17 @@ function CreateDialog({
               <Field label="Тема" name="subject" required wide />
               <Field label="Итог" name="result" wide />
               <Field label="Следующий шаг" name="nextStep" wide />
-              <SelectField label="Ответственный" name="manager" options={managers} />
+              <Field
+                label="Дата следующего шага"
+                name="nextStepAt"
+                type="datetime-local"
+                wide
+              />
+              <SelectField
+                label="Ответственный"
+                name="manager"
+                options={managerOptions}
+              />
             </>
           )}
         </div>

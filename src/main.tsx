@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { CrmApp } from "../app/crm/CrmApp";
+import { ThemeProvider } from "../app/crm/theme";
 import "../app/globals.css";
 
 const root = document.getElementById("root");
@@ -11,6 +12,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <CrmApp />
+    <ThemeProvider>
+      <CrmApp />
+    </ThemeProvider>
   </StrictMode>,
 );

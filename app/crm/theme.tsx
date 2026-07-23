@@ -120,7 +120,9 @@ export function ThemeSwitch({
         }
         type="button"
       >
-        <span aria-hidden="true">{resolvedTheme === "dark" ? "СВ" : "ТМ"}</span>
+        <span aria-hidden="true" className="theme-glyph">
+          {resolvedTheme === "dark" ? "☀️" : "🌙"}
+        </span>
       </button>
     );
   }
@@ -129,11 +131,11 @@ export function ThemeSwitch({
     <div aria-label="Тема интерфейса" className="theme-switch" role="group">
       {(
         [
-          ["system", "Система"],
-          ["light", "Светлая"],
-          ["dark", "Тёмная"],
+          ["system", "Система", "🖥️"],
+          ["light", "Светлая", "☀️"],
+          ["dark", "Тёмная", "🌙"],
         ] as const
-      ).map(([value, label]) => (
+      ).map(([value, label, icon]) => (
         <button
           aria-pressed={mode === value}
           className={mode === value ? "is-active" : ""}
@@ -141,7 +143,10 @@ export function ThemeSwitch({
           onClick={() => setMode(value)}
           type="button"
         >
-          {label}
+          <span aria-hidden="true" className="theme-glyph">
+            {icon}
+          </span>
+          <span>{label}</span>
         </button>
       ))}
     </div>

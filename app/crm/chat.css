@@ -83,7 +83,7 @@
   color: var(--chat-accent);
   display: block;
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 750;
   letter-spacing: 0.12em;
   line-height: 1.2;
@@ -117,7 +117,7 @@
   color: var(--chat-accent-contrast);
   display: inline-flex;
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 750;
   height: 20px;
   justify-content: center;
@@ -223,7 +223,7 @@
   background: transparent;
   border: 0;
   color: var(--chat-accent);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   height: 36px;
   padding: 0 10px;
@@ -259,7 +259,7 @@
   background: transparent;
   border: 0;
   color: var(--chat-accent);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   min-height: 30px;
   padding: 0 3px;
@@ -267,7 +267,7 @@
 
 .chat-new-conversation label {
   color: var(--chat-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 650;
   margin-top: 2px;
 }
@@ -319,7 +319,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--chat-danger) 18%, transparent);
   border-top: 1px solid color-mix(in srgb, var(--chat-danger) 18%, transparent);
   color: var(--chat-danger);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
   margin: 0;
   padding: 9px 13px;
@@ -393,7 +393,7 @@
   display: inline-flex;
   flex: 0 0 auto;
   font-family: "Geist Mono", monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 750;
   height: 46px;
   justify-content: center;
@@ -445,7 +445,7 @@
 
 .chat-avatar.is-compact {
   border-radius: 10px 10px 10px 4px;
-  font-size: 8px;
+  font-size: 11px;
   height: 30px;
   width: 30px;
 }
@@ -475,13 +475,13 @@
   color: var(--chat-faint);
   flex: 0 0 auto;
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .chat-conversation-preview {
   color: var(--chat-muted);
   display: -webkit-box;
-  font-size: 10.5px;
+  font-size: 11px;
   line-height: 1.35;
   min-height: 28px;
   overflow: hidden;
@@ -493,7 +493,7 @@
   align-items: center;
   color: var(--chat-accent);
   display: flex;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 650;
   gap: 4px;
   margin-top: 5px;
@@ -517,7 +517,7 @@
   color: var(--chat-accent-contrast);
   display: inline-flex;
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 750;
   height: 20px;
   justify-content: center;
@@ -555,7 +555,7 @@
 }
 
 .chat-list-empty p {
-  font-size: 10.5px;
+  font-size: 11px;
   line-height: 1.45;
   margin: 0 0 13px;
   max-width: 240px;
@@ -615,7 +615,7 @@
 .chat-thread-person > span {
   color: var(--chat-muted);
   display: block;
-  font-size: 9.5px;
+  font-size: 11px;
   margin-top: 3px;
 }
 
@@ -624,7 +624,7 @@
   color: var(--chat-faint);
   display: inline-flex;
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 11px;
   gap: 6px;
   margin-left: auto;
   text-transform: uppercase;
@@ -679,7 +679,7 @@
 .chat-client-context small {
   color: var(--chat-muted);
   font-family: "Geist Mono", monospace;
-  font-size: 7.5px;
+  font-size: 11px;
   font-style: normal;
   letter-spacing: 0.08em;
   margin-bottom: 2px;
@@ -695,7 +695,7 @@
 
 .chat-client-context em {
   color: var(--chat-muted);
-  font-size: 9px;
+  font-size: 11px;
   font-style: normal;
   margin-top: 2px;
   overflow: hidden;
@@ -708,7 +708,7 @@
   border: 1px solid color-mix(in srgb, var(--chat-accent) 28%, var(--chat-line));
   border-radius: 9px;
   color: var(--chat-accent-strong);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 720;
   min-height: 34px;
   padding: 0 11px;
@@ -755,7 +755,7 @@
   border-radius: 999px;
   color: var(--chat-muted);
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 11px;
   padding: 5px 9px;
 }
 
@@ -782,7 +782,7 @@
 .chat-message-author {
   color: var(--chat-muted);
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   margin: 0 0 4px 5px;
 }
 
@@ -824,7 +824,7 @@
   display: inline-flex;
   flex: 0 0 auto;
   font-family: "Geist Mono", monospace;
-  font-size: 7.5px;
+  font-size: 11px;
   gap: 4px;
   min-height: 12px;
   white-space: nowrap;
@@ -845,7 +845,7 @@
   border: 0;
   color: var(--chat-danger);
   display: inline-flex;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 680;
   gap: 4px;
   min-height: 30px;
@@ -926,7 +926,7 @@
 
 .chat-composer-hint {
   color: var(--chat-faint);
-  font-size: 8px;
+  font-size: 11px;
   grid-column: 1 / -1;
   margin: 6px 0 0 3px;
 }
@@ -1002,7 +1002,7 @@
 }
 
 .chat-thread-empty p {
-  font-size: 10.5px;
+  font-size: 11px;
   line-height: 1.5;
   margin: 0;
 }

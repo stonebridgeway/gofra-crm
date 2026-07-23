@@ -67,72 +67,72 @@ type GlobalSearchResult = {
 
 const MODULES: Array<{
   id: AppModule;
-  short: string;
+  icon: string;
   label: string;
   eyebrow: string;
   mobile?: boolean;
 }> = [
   {
     id: "dashboard",
-    short: "ГЛ",
+    icon: "🏠",
     label: "Главная",
     eyebrow: "Рабочий стол",
     mobile: true,
   },
   {
     id: "clients",
-    short: "КЛ",
+    icon: "🏢",
     label: "Клиенты",
     eyebrow: "Воронка клиентов",
     mobile: true,
   },
   {
     id: "deals",
-    short: "СД",
+    icon: "🤝",
     label: "Сделки",
     eyebrow: "Коммерческая воронка",
   },
   {
     id: "contacts",
-    short: "КТ",
+    icon: "👤",
     label: "Контакты",
     eyebrow: "Контактные лица",
   },
   {
     id: "activity",
-    short: "ИС",
+    icon: "🕘",
     label: "История",
     eyebrow: "Взаимодействия",
   },
   {
     id: "calendar",
-    short: "КД",
+    icon: "🗓️",
     label: "Календарь",
     eyebrow: "Задачи и напоминания",
     mobile: true,
   },
   {
     id: "statistics",
-    short: "СТ",
+    icon: "📊",
     label: "Статистика",
     eyebrow: "Результаты и динамика",
   },
   {
     id: "chat",
-    short: "ЧТ",
+    icon: "💬",
     label: "Чат",
     eyebrow: "Командные обсуждения",
     mobile: true,
   },
   {
     id: "import",
-    short: "ИМ",
+    icon: "📥",
     label: "Импорт",
     eyebrow: "Загрузка лидов",
   },
   {
     id: "dictionaries",
-    short: "СП",
+    icon: "⚙️",
     label: "Справочники",
     eyebrow: "Настройки CRM",
   },
@@ -229,6 +229,53 @@ const searchIncludes = (query: string, values: Array<string | null>) => {
     (value ?? "").toLocaleLowerCase("ru").includes(normalized),
   );
 };
+
+function AccountSwitcher({
+  currentUser,
+  users,
+  onChange,
+  variant,
+}: {
+  currentUser: User;
+  users: readonly User[];
+  onChange: (userId: string) => void;
+  variant: "nav" | "header" | "mobile";
+}) {
+  const roleLabel =
+    currentUser.role === "manager" ? "Руководитель" : "Сотрудник";
+
+  return (
+    <label
+      className={`account-switcher account-switcher-${variant}`}
+      title="Переключить демо-кабинет"
+    >
+      <span aria-hidden="true" className="account-avatar">
+        {currentUser.role === "manager" ? "🧑‍💼" : "👤"}
+      </span>
+      <span className="account-copy">
+        <strong>{currentUser.fullName}</strong>
+        <small>{roleLabel}</small>
+      </span>
+      <span aria-hidden="true" className="account-chevron">
+        ⌄
+      </span>
+      <select
+        aria-label="Выбрать кабинет сотрудника"
+        onChange={(event) => onChange(event.target.value)}
+        value={currentUser.id}
+      >
+        {users
+          .filter((user) => user.isActive)
+          .map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.fullName} ·{" "}
+              {user.role === "manager" ? "руководитель" : "сотрудник"}
+            </option>
+          ))}
+      </select>
+    </label>
+  );
+}
 
 export function CrmApp() {
   const [activeModule, setActiveModule] = useState<AppModule>(getModuleFromHash);
@@ -839,7 +886,9 @@ export function CrmApp() {
     <div className="crm-app">
       <aside className="side-nav" aria-label="Разделы CRM">
         <div className="brand-block">
-          <span className="brand-mark">ГФ</span>
+          <span aria-hidden="true" className="brand-mark">
+            📦
+          </span>
           <span className="brand-copy">
             <strong>ГОФРА</strong>
             <small>CRM workspace</small>
@@ -853,33 +902,21 @@ export function CrmApp() {
               onClick={() => navigateTo(module.id)}
               type="button"
             >
-              <span className="nav-short">{module.short}</span>
+              <span aria-hidden="true" className="nav-icon">
+                {module.icon}
+              </span>
               <span>{module.label}</span>
             </button>
           ))}
         </nav>
         {snapshot && currentUser && (
           <div className="side-nav-footer">
-            <div className="demo-user">
-              <span>{currentUser.initials}</span>
-              <label>
-                <small>Демо-кабинет</small>
-                <select
-                  aria-label="Выбрать кабинет сотрудника"
-                  onChange={(event) => switchDemoUser(event.target.value)}
-                  value={currentUser.id}
-                >
-                  {snapshot.users
-                    .filter((user) => user.isActive)
-                    .map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.fullName} ·{" "}
-                        {user.role === "manager" ? "руководитель" : "сотрудник"}
-                      </option>
-                    ))}
-                </select>
-              </label>
-            </div>
+            <AccountSwitcher
+              currentUser={currentUser}
+              onChange={switchDemoUser}
+              users={snapshot.users}
+              variant="nav"
+            />
           </div>
         )}
       </aside>
@@ -917,7 +954,13 @@ export function CrmApp() {
                       onClick={() => openGlobalSearchResult(result)}
                       type="button"
                     >
-                      <span>{result.kind === "client" ? "КЛ" : result.kind === "deal" ? "СД" : "КТ"}</span>
+                      <span aria-hidden="true">
+                        {result.kind === "client"
+                          ? "🏢"
+                          : result.kind === "deal"
+                            ? "🤝"
+                            : "👤"}
+                      </span>
                       <strong>{result.title}</strong>
                       <small>{result.meta}</small>
                     </button>
@@ -930,20 +973,12 @@ export function CrmApp() {
           </div>
           <div className="header-actions">
             {snapshot && currentUser && (
-              <select
-                aria-label="Выбрать демо-кабинет"
-                className="header-user-select"
-                onChange={(event) => switchDemoUser(event.target.value)}
-                value={currentUser.id}
-              >
-                {snapshot.users
-                  .filter((user) => user.isActive)
-                  .map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.fullName}
-                    </option>
-                  ))}
-              </select>
+              <AccountSwitcher
+                currentUser={currentUser}
+                onChange={switchDemoUser}
+                users={snapshot.users}
+                variant="header"
+              />
             )}
             <ThemeSwitch compact />
             <button className="ghost-button" onClick={resetDemo} type="button">
@@ -965,6 +1000,7 @@ export function CrmApp() {
                 onClick={() => navigateTo(module.id)}
                 type="button"
               >
+                <span aria-hidden="true">{module.icon}</span>
                 {module.label}
               </button>
             ))}
@@ -1124,7 +1160,7 @@ export function CrmApp() {
           onClick={() => navigateTo("dashboard")}
           type="button"
         >
-          <span>ГЛ</span>
+          <span aria-hidden="true">🏠</span>
           Главная
         </button>
         <button
@@ -1136,7 +1172,7 @@ export function CrmApp() {
           onClick={() => navigateTo("clients")}
           type="button"
         >
-          <span>CRM</span>
+          <span aria-hidden="true">🏢</span>
           Клиенты
         </button>
         <button
@@ -1144,7 +1180,7 @@ export function CrmApp() {
           onClick={() => navigateTo("calendar")}
           type="button"
         >
-          <span>КД</span>
+          <span aria-hidden="true">🗓️</span>
           Календарь
         </button>
         <button
@@ -1152,7 +1188,7 @@ export function CrmApp() {
           onClick={() => navigateTo("chat")}
           type="button"
         >
-          <span>ЧТ</span>
+          <span aria-hidden="true">💬</span>
           Чат
         </button>
         <button
@@ -1167,7 +1203,7 @@ export function CrmApp() {
           onClick={() => setMobileMoreOpen((open) => !open)}
           type="button"
         >
-          <span>•••</span>
+          <span aria-hidden="true">•••</span>
           Ещё
         </button>
       </nav>
@@ -1214,7 +1250,7 @@ export function CrmApp() {
                     onClick={() => navigateTo(module.id)}
                     type="button"
                   >
-                    <span>{module.short}</span>
+                    <span aria-hidden="true">{module.icon}</span>
                     <strong>{module.label}</strong>
                     <small>{module.eyebrow}</small>
                   </button>
@@ -1222,24 +1258,15 @@ export function CrmApp() {
             </div>
             {snapshot && currentUser && (
               <div className="mobile-account-settings">
-                <label>
-                  Демо-кабинет
-                  <select
-                    onChange={(event) => switchDemoUser(event.target.value)}
-                    value={currentUser.id}
-                  >
-                    {snapshot.users
-                      .filter((user) => user.isActive)
-                      .map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.fullName} ·{" "}
-                          {user.role === "manager"
-                            ? "руководитель"
-                            : "сотрудник"}
-                        </option>
-                      ))}
-                  </select>
-                </label>
+                <div className="mobile-account-block">
+                  <span>Демо-кабинет</span>
+                  <AccountSwitcher
+                    currentUser={currentUser}
+                    onChange={switchDemoUser}
+                    users={snapshot.users}
+                    variant="mobile"
+                  />
+                </div>
                 <div>
                   <span>Оформление</span>
                   <ThemeSwitch />
@@ -1587,11 +1614,8 @@ function ClientCard({
         </div>
       </button>
       <footer className="card-footer">
-        <span className="manager-chip">
-          {client.managerName
-            .split(" ")
-            .map((part) => part[0])
-            .join("")}
+        <span aria-hidden="true" className="manager-chip">
+          👤
         </span>
         <span>{client.managerName}</span>
         <div>
@@ -1855,11 +1879,8 @@ function DealCard({
         </div>
       </button>
       <footer className="card-footer">
-        <span className="manager-chip">
-          {deal.managerName
-            .split(" ")
-            .map((part) => part[0])
-            .join("")}
+        <span aria-hidden="true" className="manager-chip">
+          👤
         </span>
         <span>{deal.managerName}</span>
         <div>

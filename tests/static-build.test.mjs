@@ -91,6 +91,9 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(app, /StatisticsView/);
   assert.match(app, /ChatView/);
   assert.match(app, /mobile-nav/);
+  assert.match(app, /icon: "🏠"/u);
+  assert.match(app, /function AccountSwitcher/);
+  assert.doesNotMatch(app, /short: "ГЛ"/u);
   assert.match(app, /switchDemoUser/);
   assert.match(app, /canViewFinancials/);
   assert.match(app, /managerOptions/);
@@ -100,6 +103,8 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
 
   assert.match(theme, /ThemeMode = "system" \| "light" \| "dark"/);
   assert.match(theme, /document\.documentElement\.dataset\.theme/);
+  assert.match(theme, /☀️/u);
+  assert.match(theme, /🌙/u);
   assert.match(styles, /html\[data-theme="dark"\]/);
   assert.match(styles, /--surface-sunken: #12130f/);
   assert.match(styles, /--accent: #d27a3a/);

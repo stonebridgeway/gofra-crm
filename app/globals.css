@@ -205,9 +205,6 @@ button {
   color: var(--ink);
   display: inline-flex;
   flex: 0 0 auto;
-  font-family: "Geist Mono", monospace;
-  font-size: 10px;
-  font-weight: 700;
   height: 40px;
   justify-content: center;
   padding: 0;
@@ -219,6 +216,7 @@ button {
 }
 
 .theme-toggle-button:hover {
+  background: var(--surface-strong);
   border-color: var(--line-strong);
 }
 
@@ -237,20 +235,42 @@ button {
 }
 
 .theme-switch button {
+  align-items: center;
   background: transparent;
   border: 0;
   border-radius: 8px;
   color: var(--muted);
+  display: inline-flex;
   font-size: 11px;
   font-weight: 700;
+  gap: 7px;
+  justify-content: center;
   min-height: 36px;
   padding: 0 12px;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.theme-switch button:hover {
+  color: var(--ink);
+}
+
+.theme-switch button:active {
+  transform: scale(0.98);
 }
 
 .theme-switch button.is-active {
   background: var(--surface-raised);
   box-shadow: var(--shadow);
   color: var(--ink);
+}
+
+.theme-glyph {
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .crm-app {
@@ -298,20 +318,20 @@ html[data-theme="dark"] textarea {
 }
 
 .side-nav-footer {
+  border-top: 1px solid var(--nav-line);
   display: grid;
   gap: 12px;
+  padding-top: 17px;
 }
 
-.brand-block,
-.demo-user {
+.brand-block {
   align-items: center;
   display: flex;
   gap: 12px;
 }
 
 .brand-mark,
-.manager-chip,
-.demo-user > span {
+.manager-chip {
   align-items: center;
   background: var(--accent);
   border: 1px solid var(--nav-line);
@@ -319,8 +339,8 @@ html[data-theme="dark"] textarea {
   color: var(--on-accent);
   display: inline-flex;
   flex: 0 0 auto;
-  font-family: "Geist Mono", monospace;
-  font-size: 12px;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 16px;
   font-weight: 700;
   height: 38px;
   justify-content: center;
@@ -328,8 +348,7 @@ html[data-theme="dark"] textarea {
   width: 38px;
 }
 
-.brand-copy,
-.demo-user div {
+.brand-copy {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -340,8 +359,7 @@ html[data-theme="dark"] textarea {
   letter-spacing: 0.08em;
 }
 
-.brand-copy small,
-.demo-user small {
+.brand-copy small {
   color: var(--nav-muted);
   font-size: 11px;
   margin-top: 2px;
@@ -393,66 +411,119 @@ html[data-theme="dark"] textarea {
   color: var(--nav-ink);
 }
 
-.nav-short {
+.nav-icon {
   align-items: center;
   border: 1px solid var(--nav-line);
   border-radius: 7px;
   display: inline-flex;
-  font-family: "Geist Mono", monospace;
-  font-size: 10px;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 14px;
   height: 28px;
   justify-content: center;
-  letter-spacing: 0.04em;
   width: 28px;
 }
 
-.module-nav button.is-active .nav-short {
+.module-nav button.is-active .nav-icon {
   background: var(--accent);
   border-color: var(--accent);
 }
 
-.demo-user {
-  border-top: 1px solid var(--nav-line);
-  padding-top: 17px;
-}
-
-.demo-user label {
+.account-switcher {
+  align-items: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
   display: grid;
-  gap: 4px;
-  min-width: 0;
+  gap: 9px;
+  grid-template-columns: 36px minmax(0, 1fr) 14px;
+  min-height: 52px;
+  padding: 7px 9px;
+  position: relative;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
 }
 
-.demo-user select {
+.account-switcher:hover {
+  background: var(--surface-muted);
+  border-color: var(--line-strong);
+}
+
+.account-switcher:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.account-switcher select {
   appearance: none;
-  background: transparent;
-  border: 0;
-  color: var(--nav-ink);
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  min-width: 0;
-  outline: none;
-  padding: 0;
-  text-overflow: ellipsis;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
   width: 100%;
 }
 
-.demo-user select option {
-  background: var(--nav-bg);
-  color: var(--nav-ink);
+.account-avatar {
+  align-items: center;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: 9px;
+  display: inline-flex;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 18px;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
 }
 
-.demo-user > span {
-  background: var(--nav-active);
-  color: var(--nav-ink);
-  border-radius: 50%;
+.account-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.demo-user strong {
-  font-size: 12px;
+.account-copy strong {
+  font-size: 11px;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.account-copy small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.account-chevron {
+  color: var(--faint);
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-2px);
+}
+
+.account-switcher-nav {
+  background: var(--nav-hover);
+  border-color: var(--nav-line);
+  color: var(--nav-ink);
+}
+
+.account-switcher-nav .account-avatar {
+  background: var(--nav-active);
+  border-color: var(--nav-line);
+}
+
+.account-switcher-nav .account-copy small,
+.account-switcher-nav .account-chevron {
+  color: var(--nav-muted);
+}
+
+.account-switcher-nav:hover {
+  background: var(--nav-active);
+  border-color: var(--nav-line);
 }
 
 .workspace {
@@ -502,17 +573,10 @@ html[data-theme="dark"] textarea {
   justify-content: flex-end;
 }
 
-.header-user-select {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  color: var(--ink);
+.account-switcher-header {
   display: none;
-  font-size: 12px;
-  font-weight: 650;
   min-height: 40px;
-  max-width: 180px;
-  padding-inline: 10px;
+  width: 205px;
 }
 
 .mobile-nav,
@@ -609,8 +673,8 @@ html[data-theme="dark"] textarea {
   border-radius: 8px;
   color: var(--accent-strong);
   display: flex;
-  font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 14px;
   grid-row: 1 / 3;
   height: 32px;
   justify-content: center;
@@ -940,7 +1004,7 @@ html[data-theme="dark"] textarea {
 
 .substatus-list span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.25;
 }
 
@@ -1005,7 +1069,7 @@ html[data-theme="dark"] textarea {
 .record-id {
   color: var(--faint);
   display: block;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.05em;
   margin-bottom: 4px;
   text-transform: uppercase;
@@ -1064,7 +1128,7 @@ html[data-theme="dark"] textarea {
   border-radius: 999px;
   color: var(--muted);
   display: inline-flex;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1.25;
   margin-top: 9px;
@@ -1085,7 +1149,7 @@ html[data-theme="dark"] textarea {
 .deal-numbers dt,
 .detail-grid dt {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 10px;
   margin-bottom: 2px;
 }
 
@@ -1110,7 +1174,7 @@ html[data-theme="dark"] textarea {
 
 .next-action > span {
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -1161,7 +1225,7 @@ html[data-theme="dark"] textarea {
 
 .card-footer > span:nth-child(2) {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1176,7 +1240,7 @@ html[data-theme="dark"] textarea {
   border: 0;
   border-radius: 6px;
   color: var(--accent);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 750;
   min-height: 28px;
   padding: 0 5px;
@@ -1206,7 +1270,7 @@ html[data-theme="dark"] textarea {
 }
 
 .column-empty span {
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.4;
 }
 
@@ -1265,7 +1329,7 @@ html[data-theme="dark"] textarea {
   background: var(--surface-muted);
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.04em;
   padding: 11px 12px;
   position: sticky;
@@ -1297,7 +1361,7 @@ html[data-theme="dark"] textarea {
 
 .table-shell td small {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 10px;
   margin-top: 3px;
 }
 
@@ -1417,7 +1481,7 @@ html[data-theme="dark"] textarea {
   color: var(--accent-strong);
   display: flex;
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   height: 34px;
   justify-content: center;
@@ -1448,7 +1512,7 @@ html[data-theme="dark"] textarea {
   color: var(--faint);
   flex: 0 0 auto;
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .company-button {
@@ -1477,7 +1541,7 @@ html[data-theme="dark"] textarea {
 
 .activity-next span {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .activity-next strong {
@@ -1486,7 +1550,7 @@ html[data-theme="dark"] textarea {
 
 .activity-content footer {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 10px;
   margin-top: 9px;
 }
 
@@ -1705,13 +1769,13 @@ html[data-theme="dark"] textarea {
 
 .wide-field small {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .row-state {
   border-radius: 999px;
   display: inline-flex;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   padding: 4px 7px;
 }
@@ -1869,7 +1933,7 @@ html[data-theme="dark"] textarea {
 .dictionary-order {
   color: var(--faint);
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .dictionary-list li strong {
@@ -1878,7 +1942,7 @@ html[data-theme="dark"] textarea {
 
 .dictionary-state {
   color: var(--accent);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -1895,7 +1959,7 @@ html[data-theme="dark"] textarea {
   border: 0;
   border-radius: 6px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   min-height: 30px;
   padding: 0 7px;
 }
@@ -2009,7 +2073,7 @@ html[data-theme="dark"] textarea {
 .drawer-next small {
   color: var(--faint);
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .detail-grid {
@@ -2046,7 +2110,7 @@ html[data-theme="dark"] textarea {
 .related-list span,
 .related-list small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .muted-copy {
@@ -2071,7 +2135,7 @@ html[data-theme="dark"] textarea {
 .mini-timeline time,
 .mini-timeline span {
   color: var(--faint);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .mini-timeline strong {
@@ -2133,7 +2197,7 @@ html[data-theme="dark"] textarea {
 .status-options button span {
   color: var(--faint);
   font-family: "Geist Mono", monospace;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .status-options button strong {
@@ -2297,8 +2361,8 @@ html[data-theme="dark"] textarea {
 
   .brand-copy,
   .module-nav button > span:last-child,
-  .demo-user div,
-  .demo-user label {
+  .account-switcher-nav .account-copy,
+  .account-switcher-nav .account-chevron {
     display: none;
   }
 
@@ -2307,17 +2371,24 @@ html[data-theme="dark"] textarea {
     padding-inline: 5px;
   }
 
-  .module-nav button .nav-short {
+  .module-nav button .nav-icon {
     height: 34px;
     width: 34px;
+  }
+
+  .account-switcher-nav {
+    display: grid;
+    grid-template-columns: 38px;
+    justify-content: center;
+    padding: 5px;
   }
 
   .activity-layout {
     grid-template-columns: minmax(0, 1fr) 220px;
   }
 
-  .header-user-select {
-    display: block;
+  .account-switcher-header {
+    display: grid;
   }
 }
 
@@ -2407,7 +2478,7 @@ html[data-theme="dark"] textarea {
     color: var(--nav-muted);
     display: flex;
     flex-direction: column;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 650;
     gap: 4px;
     justify-content: center;
@@ -2420,11 +2491,10 @@ html[data-theme="dark"] textarea {
     border: 1px solid var(--nav-line);
     border-radius: 7px;
     display: flex;
-    font-family: "Geist Mono", monospace;
-    font-size: 9px;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+    font-size: 14px;
     height: 25px;
     justify-content: center;
-    letter-spacing: 0.02em;
     min-width: 28px;
     padding-inline: 5px;
   }
@@ -2467,12 +2537,16 @@ html[data-theme="dark"] textarea {
   }
 
   .mobile-crm-tabs button {
+    align-items: center;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 10px;
     color: var(--muted);
+    display: inline-flex;
     font-size: 11px;
     font-weight: 700;
+    gap: 6px;
+    justify-content: center;
     min-height: 42px;
     padding-inline: 8px;
   }
@@ -2481,6 +2555,11 @@ html[data-theme="dark"] textarea {
     background: var(--accent-soft);
     border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
     color: var(--accent-strong);
+  }
+
+  .mobile-crm-tabs button span {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+    font-size: 14px;
   }
 
   .mobile-more-backdrop {
@@ -2543,8 +2622,8 @@ html[data-theme="dark"] textarea {
     border: 1px solid var(--line);
     border-radius: 8px;
     display: flex;
-    font-family: "Geist Mono", monospace;
-    font-size: 9px;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+    font-size: 16px;
     grid-row: 1 / 3;
     height: 34px;
     justify-content: center;
@@ -2557,7 +2636,7 @@ html[data-theme="dark"] textarea {
 
   .mobile-more-links > button small {
     color: var(--muted);
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .mobile-more-links > button.is-active {
@@ -2573,7 +2652,7 @@ html[data-theme="dark"] textarea {
     padding-top: 16px;
   }
 
-  .mobile-account-settings label,
+  .mobile-account-block,
   .mobile-account-settings > div {
     color: var(--muted);
     display: grid;
@@ -2582,14 +2661,9 @@ html[data-theme="dark"] textarea {
     gap: 7px;
   }
 
-  .mobile-account-settings select {
+  .account-switcher-mobile {
     background: var(--surface-muted);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    color: var(--ink);
-    font-size: 16px;
-    min-height: 46px;
-    padding-inline: 12px;
+    min-height: 58px;
     width: 100%;
   }
 
@@ -2679,7 +2753,7 @@ html[data-theme="dark"] textarea {
 
   .mobile-stage-tabs button span {
     font-family: "Geist Mono", monospace;
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .kanban-board {

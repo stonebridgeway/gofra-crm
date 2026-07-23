@@ -1,0 +1,1012 @@
+/*
+ * GOFRA / Operations System
+ * Industrial-editorial design layer.
+ *
+ * This file intentionally sits after the product styles. It keeps the existing
+ * application behavior while replacing the generic rounded-card language with
+ * a stricter, brand-specific visual system.
+ */
+
+:root {
+  --canvas: #e5e2d8;
+  --surface: #efede5;
+  --surface-raised: #f7f4eb;
+  --surface-muted: #dcd9cf;
+  --surface-strong: #c9c6ba;
+  --surface-sunken: #d4d1c7;
+  --surface-glass: rgba(229, 226, 216, 0.94);
+  --ink: #171914;
+  --muted: #5e6158;
+  --faint: #81847a;
+  --line: #b9baaf;
+  --line-strong: #85887d;
+  --accent: #bd4d21;
+  --accent-strong: #8f3212;
+  --accent-soft: #edc3a5;
+  --accent-line: #c8784e;
+  --danger: #a13b33;
+  --danger-soft: #e7c0b9;
+  --warning: #8a571e;
+  --warning-soft: #e3cfad;
+  --success: #4f6943;
+  --success-soft: #cbd7c4;
+  --nav-bg: #151712;
+  --nav-ink: #f0eee6;
+  --nav-muted: rgba(240, 238, 230, 0.58);
+  --nav-hover: rgba(240, 238, 230, 0.055);
+  --nav-active: rgba(240, 238, 230, 0.095);
+  --nav-line: rgba(240, 238, 230, 0.15);
+  --on-accent: #fff8ef;
+  --grid-line: rgba(48, 50, 43, 0.065);
+  --hover-row: rgba(189, 77, 33, 0.055);
+  --focus-ring: color-mix(in srgb, var(--accent) 72%, white);
+  --overlay: rgba(12, 14, 11, 0.64);
+  --shadow: none;
+  --shadow-elevated: 0 24px 70px -46px rgba(32, 30, 24, 0.72);
+  --shadow-drawer: -24px 0 70px -48px rgba(20, 20, 16, 0.82);
+  --radius-lg: 4px;
+  --radius-md: 3px;
+  --radius-sm: 2px;
+}
+
+html[data-theme="dark"] {
+  --canvas: #0d0f0c;
+  --surface: #141611;
+  --surface-raised: #191b16;
+  --surface-muted: #20231c;
+  --surface-strong: #2c2f27;
+  --surface-sunken: #11130f;
+  --surface-glass: rgba(13, 15, 12, 0.94);
+  --ink: #ebe8df;
+  --muted: #a7a99f;
+  --faint: #74786d;
+  --line: #32362d;
+  --line-strong: #555a4e;
+  --accent: #de6429;
+  --accent-strong: #f08a4d;
+  --accent-soft: #422719;
+  --accent-line: #794326;
+  --danger: #df7367;
+  --danger-soft: #3c211d;
+  --warning: #d49a50;
+  --warning-soft: #362816;
+  --success: #94aa81;
+  --success-soft: #222d1d;
+  --nav-bg: #090b08;
+  --nav-ink: #eeece4;
+  --nav-muted: rgba(238, 236, 228, 0.56);
+  --nav-hover: rgba(238, 236, 228, 0.05);
+  --nav-active: rgba(238, 236, 228, 0.09);
+  --nav-line: rgba(238, 236, 228, 0.13);
+  --grid-line: rgba(220, 224, 210, 0.045);
+  --hover-row: rgba(222, 100, 41, 0.075);
+  --focus-ring: color-mix(in srgb, var(--accent) 76%, white);
+  --overlay: rgba(5, 6, 4, 0.76);
+}
+
+html {
+  background: var(--canvas);
+}
+
+body {
+  background-color: var(--canvas);
+  background-image: none;
+  background-size: auto;
+}
+
+body::before {
+  background-image: repeating-radial-gradient(
+    circle at 22% 31%,
+    color-mix(in srgb, var(--ink) 8%, transparent) 0 0.35px,
+    transparent 0.45px 3px
+  );
+  background-size: 5px 5px;
+  content: "";
+  inset: 0;
+  opacity: 0.14;
+  pointer-events: none;
+  position: fixed;
+  z-index: 60;
+}
+
+button,
+input,
+select,
+textarea {
+  border-radius: 2px;
+}
+
+button {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Application shell */
+
+.crm-app {
+  grid-template-columns: 216px minmax(0, 1fr);
+}
+
+.side-nav {
+  gap: 0;
+  padding: 0;
+  scrollbar-color: var(--nav-line) transparent;
+  scrollbar-width: thin;
+}
+
+.side-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.side-nav::-webkit-scrollbar-thumb {
+  background: var(--nav-line);
+}
+
+.brand-block {
+  border-bottom: 1px solid var(--nav-line);
+  gap: 12px;
+  min-height: 92px;
+  padding: 17px 16px;
+  position: relative;
+}
+
+.brand-block::after {
+  color: var(--nav-muted);
+  content: "LOCAL";
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  position: absolute;
+  right: 15px;
+  top: 16px;
+}
+
+.brand-mark {
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+  height: 42px;
+  width: 42px;
+}
+
+.brand-copy strong {
+  font-size: 16px;
+  font-weight: 760;
+  letter-spacing: 0.095em;
+}
+
+.brand-copy small {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.07em;
+  margin-top: 5px;
+}
+
+.module-nav {
+  counter-reset: gofra-module;
+  gap: 1px;
+  padding: 13px 10px;
+}
+
+.module-nav button {
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  counter-increment: gofra-module;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 26px minmax(0, 1fr) 20px;
+  min-height: 44px;
+  padding: 6px 8px;
+}
+
+.module-nav button::after {
+  color: var(--nav-muted);
+  content: counter(gofra-module, decimal-leading-zero);
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
+.module-nav button:hover {
+  background: var(--nav-hover);
+  border-left-color: color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.module-nav button.is-active {
+  background: var(--nav-active);
+  border-left-color: var(--accent);
+  color: var(--nav-ink);
+}
+
+.nav-icon {
+  border: 0;
+  border-radius: 0;
+  color: var(--nav-muted);
+  height: 26px;
+  width: 26px;
+}
+
+.module-nav button.is-active .nav-icon {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+}
+
+.side-nav-footer {
+  border-top: 1px solid var(--nav-line);
+  padding: 12px 10px;
+}
+
+.account-switcher {
+  border-radius: 0;
+}
+
+.account-switcher-nav {
+  background: transparent;
+  border-color: var(--nav-line);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+.account-switcher-nav:hover {
+  background: var(--nav-hover);
+}
+
+.account-avatar,
+.account-switcher-nav .account-avatar {
+  background: transparent;
+  border: 1px solid var(--nav-line);
+  border-radius: 0;
+}
+
+.account-copy strong {
+  font-size: 10px;
+  letter-spacing: 0.015em;
+}
+
+.account-copy small {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Command rail */
+
+.workspace {
+  padding: 0 28px 48px;
+}
+
+.workspace-header {
+  background: var(--surface-glass);
+  border-bottom: 1px solid var(--line);
+  gap: 22px;
+  margin: 0 -28px 18px;
+  max-width: none;
+  min-height: 76px;
+  padding: 13px 28px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+}
+
+.workspace-header.is-feature-module {
+  grid-template-columns: minmax(300px, 1fr) auto;
+}
+
+.workspace-header p,
+.section-kicker,
+.wf-eyebrow,
+.chat-kicker {
+  letter-spacing: 0.14em;
+}
+
+.workspace-header h1 {
+  font-size: clamp(27px, 3vw, 41px);
+  font-weight: 720;
+  letter-spacing: -0.065em;
+}
+
+.global-search {
+  gap: 5px;
+}
+
+.global-search > label {
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.global-search input,
+.view-toolbar select,
+.form-grid input,
+.form-grid select,
+.wide-field input,
+.wide-field select,
+.mapping-grid select,
+.wf-filter-bar input,
+.wf-filter-bar select,
+.wf-stat-filters select,
+.chat-search input,
+.chat-composer textarea {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.global-search input {
+  font-size: 13px;
+  min-height: 39px;
+  padding: 0 4px;
+}
+
+.global-search input:focus,
+.view-toolbar select:focus,
+.form-grid input:focus,
+.form-grid select:focus,
+.wide-field select:focus,
+.wf-filter-bar input:focus,
+.wf-filter-bar select:focus,
+.wf-stat-filters select:focus,
+.chat-search input:focus,
+.chat-composer textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 2px 0 var(--accent);
+}
+
+.global-search-results {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  padding: 5px;
+}
+
+.global-search-results > button,
+.global-search-results > button > span {
+  border-radius: 0;
+}
+
+.theme-toggle-button,
+.ghost-button,
+.primary-button,
+.text-button,
+.wf-primary-button,
+.wf-secondary-button,
+.wf-today-button,
+.wf-text-action,
+.wf-icon-button,
+.chat-icon-button,
+.chat-primary-button {
+  border-radius: 2px;
+}
+
+.theme-toggle-button,
+.ghost-button {
+  background: transparent;
+  border-color: var(--line);
+}
+
+.theme-toggle-button:hover,
+.ghost-button:hover {
+  background: var(--surface-muted);
+}
+
+/* System status and base surfaces */
+
+.prototype-note {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  margin-bottom: 22px;
+  padding: 10px 12px;
+}
+
+.prototype-note strong {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prototype-note span {
+  font-size: 10px;
+}
+
+.prototype-badge {
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  padding: 5px 0 5px 14px;
+}
+
+.metric-strip,
+.wf-metric-grid {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  gap: 0;
+  overflow: visible;
+}
+
+.metric,
+.wf-metric-card {
+  background: transparent;
+  border-left: 1px solid var(--line);
+}
+
+.metric:first-child,
+.wf-metric-card:first-child {
+  border-left: 4px solid var(--accent);
+}
+
+.wf-metric-card {
+  min-height: 124px;
+  padding: 19px 18px 21px;
+}
+
+.wf-metric-card > strong {
+  font-size: clamp(25px, 2.5vw, 38px);
+  letter-spacing: -0.075em;
+}
+
+.wf-metric-card > i {
+  border-radius: 0;
+}
+
+.wf-metric-card.tone-accent {
+  box-shadow: none;
+}
+
+.wf-panel,
+.table-shell,
+.activity-feed,
+.activity-summary,
+.import-panel,
+.dictionary-shell,
+.wf-funnel-table,
+.wf-team-stat-table,
+.chat-view {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.wf-panel,
+.import-panel,
+.dictionary-shell,
+.activity-feed,
+.activity-summary {
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
+}
+
+.wf-panel-heading {
+  border-bottom: 1px solid var(--line);
+  min-height: 69px;
+  padding: 15px 17px 13px;
+}
+
+.wf-panel-heading h2 {
+  font-size: 16px;
+  letter-spacing: -0.045em;
+}
+
+.wf-panel-count {
+  font-family: "Geist Mono", monospace;
+  letter-spacing: 0.06em;
+}
+
+.wf-feature-header {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 19px;
+  padding: 8px 0 20px;
+}
+
+.wf-feature-header h1 {
+  font-size: clamp(34px, 4.2vw, 62px);
+  font-weight: 720;
+  letter-spacing: -0.075em;
+  line-height: 0.92;
+}
+
+.wf-feature-header p {
+  margin-top: 12px;
+}
+
+.wf-current-date {
+  min-width: 190px;
+}
+
+.wf-dashboard-grid {
+  gap: 1px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.7fr);
+}
+
+.wf-dashboard-grid > .wf-panel {
+  clip-path: none;
+}
+
+.wf-dashboard-grid > .wf-panel + .wf-panel {
+  margin-left: -1px;
+}
+
+.wf-stat-overview-grid,
+.wf-stat-visual-grid,
+.wf-activity-grid,
+.wf-sales-grid {
+  gap: 1px;
+}
+
+.wf-stat-visual-grid {
+  margin-top: 1px;
+}
+
+.wf-stat-tabs {
+  gap: 0;
+}
+
+.wf-stat-tabs button {
+  border-left: 1px solid var(--line);
+  min-width: 112px;
+  padding: 0 16px;
+}
+
+.wf-stat-tabs button:first-child {
+  border-left: 0;
+}
+
+.wf-stat-tabs button.is-active {
+  background: var(--surface-muted);
+}
+
+.wf-bar-column > div i,
+.wf-bar-column > div b,
+.wf-stage-bar,
+.wf-stage-bar i,
+.wf-mini-funnel-row > div > i,
+.wf-mini-funnel-row > div > i b {
+  border-radius: 0;
+}
+
+.wf-chart-legend i {
+  border-radius: 0;
+}
+
+.wf-task-row,
+.wf-filter-bar,
+.wf-segmented,
+.wf-calendar-month,
+.wf-day-agenda,
+.wf-task-editor,
+.wf-drill-panel {
+  border-radius: 0;
+}
+
+.wf-filter-bar {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.wf-task-check,
+.wf-kind-mark,
+.wf-due,
+.wf-inline-person > i,
+.wf-avatar,
+.wf-team-person > i {
+  border-radius: 2px;
+}
+
+.wf-funnel-table > button,
+.wf-team-stat-table > button,
+.wf-drill-list > button,
+.wf-drill-list > article {
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Kanban / lists */
+
+.view-toolbar {
+  background: var(--surface-glass);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  box-shadow: none;
+  padding: 8px 0;
+  top: 76px;
+}
+
+.check-filter {
+  border-radius: 2px;
+}
+
+.kanban-board {
+  gap: 1px;
+  grid-auto-columns: minmax(302px, 1fr);
+  padding-top: 0;
+}
+
+.kanban-column {
+  border-radius: 0;
+  border-width: 1px 0 1px 1px;
+}
+
+.kanban-column:last-child {
+  border-right-width: 1px;
+}
+
+.column-header {
+  border-radius: 0;
+  padding: 14px 13px 12px;
+}
+
+.column-header::before {
+  color: var(--faint);
+  content: "///";
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+}
+
+.column-stack {
+  gap: 7px;
+  padding: 8px;
+}
+
+.record-card {
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+
+.record-card:hover {
+  border-color: var(--accent-line);
+  transform: translateY(-2px);
+}
+
+.record-card .potential,
+.record-card .exact-status,
+.manager-chip {
+  border-radius: 2px;
+}
+
+.card-open {
+  padding: 14px 13px 12px;
+}
+
+.card-footer {
+  padding-bottom: 9px;
+  padding-top: 9px;
+}
+
+.table-shell {
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
+}
+
+.table-shell th {
+  font-family: "Geist Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
+.table-shell tr:hover td {
+  background: var(--hover-row);
+}
+
+/* Drawers and dialogs */
+
+.record-drawer,
+.status-dialog,
+.create-dialog,
+.mobile-more-sheet {
+  border-radius: 0;
+}
+
+.record-drawer,
+.wf-drill-panel {
+  border-left: 3px solid var(--accent);
+}
+
+.drawer-tab,
+.status-option,
+.drawer-actions button,
+.create-dialog button,
+.status-dialog button {
+  border-radius: 2px;
+}
+
+/* Chat */
+
+.chat-view {
+  grid-template-columns: minmax(290px, 326px) minmax(0, 1fr);
+}
+
+.chat-sidebar-header,
+.chat-thread-header {
+  min-height: 72px;
+}
+
+.chat-conversation {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  min-height: 78px;
+  padding-block: 11px;
+}
+
+.chat-conversation::before {
+  border-radius: 0;
+  bottom: 0;
+  top: 0;
+}
+
+.chat-conversation.is-active {
+  background: var(--chat-surface-muted);
+}
+
+.chat-avatar,
+.chat-client-context-icon,
+.chat-unread,
+.chat-total-unread {
+  border-radius: 2px;
+}
+
+.chat-avatar {
+  height: 40px;
+  width: 40px;
+}
+
+.chat-client-context {
+  background: transparent;
+  border-left: 3px solid var(--chat-accent);
+}
+
+.chat-message-bubble {
+  border-radius: 2px;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+.chat-composer {
+  padding-block: 10px;
+}
+
+.chat-composer textarea {
+  min-height: 44px;
+  padding-inline: 4px;
+}
+
+.chat-composer > button {
+  border-radius: 2px;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+/* Controlled motion */
+
+@keyframes gofra-system-enter {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.prototype-note,
+.wf-feature-header,
+.metric-strip,
+.wf-metric-grid,
+.view-toolbar,
+.module-view > .kanban-board,
+.wf-dashboard-grid,
+.wf-stat-section,
+.chat-view {
+  animation: gofra-system-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.wf-metric-grid,
+.view-toolbar {
+  animation-delay: 55ms;
+}
+
+.wf-dashboard-grid,
+.wf-stat-section,
+.module-view > .kanban-board,
+.chat-view {
+  animation-delay: 95ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prototype-note,
+  .wf-feature-header,
+  .metric-strip,
+  .wf-metric-grid,
+  .view-toolbar,
+  .module-view > .kanban-board,
+  .wf-dashboard-grid,
+  .wf-stat-section,
+  .chat-view {
+    animation: none;
+  }
+}
+
+/* Responsive system */
+
+@media (max-width: 1120px) {
+  .crm-app {
+    grid-template-columns: 74px minmax(0, 1fr);
+  }
+
+  .workspace-header:not(.is-feature-module) {
+    grid-template-columns: minmax(150px, 0.65fr) minmax(240px, 1fr);
+  }
+
+  .workspace-header:not(.is-feature-module) .header-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .header-actions > .ghost-button {
+    display: none;
+  }
+
+  .brand-block {
+    justify-content: center;
+    padding-inline: 9px;
+  }
+
+  .brand-block::after,
+  .module-nav button::after {
+    display: none;
+  }
+
+  .module-nav {
+    padding-inline: 8px;
+  }
+
+  .module-nav button {
+    display: flex;
+    justify-content: center;
+    padding-inline: 4px;
+  }
+}
+
+@media (max-width: 980px) {
+  .wf-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wf-dashboard-grid,
+  .wf-stat-overview-grid,
+  .wf-stat-visual-grid,
+  .wf-activity-grid,
+  .wf-sales-grid {
+    gap: 10px;
+  }
+
+  .wf-dashboard-grid > .wf-panel + .wf-panel {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .crm-app {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  .workspace {
+    padding: 0 14px 36px;
+  }
+
+  .workspace-header {
+    margin: 0 -14px 16px;
+    padding: 12px 14px;
+    position: relative;
+    top: auto;
+  }
+
+  .workspace-header:not(.is-feature-module) {
+    grid-template-columns: 1fr;
+  }
+
+  .prototype-note {
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+
+  .prototype-note div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .prototype-badge {
+    display: none;
+  }
+
+  .mobile-nav {
+    background: color-mix(in srgb, var(--nav-bg) 97%, transparent);
+  }
+
+  .mobile-nav button,
+  .mobile-nav button span {
+    border-radius: 2px;
+  }
+
+  .mobile-nav button.is-active {
+    background: var(--nav-active);
+  }
+
+  .mobile-more-sheet,
+  .mobile-more-links > button,
+  .mobile-more-links > button > span,
+  .theme-switch,
+  .theme-switch button {
+    border-radius: 2px;
+  }
+
+  .wf-feature-header {
+    padding-top: 4px;
+  }
+
+  .wf-feature-header h1 {
+    font-size: clamp(34px, 10vw, 46px);
+  }
+
+  .wf-metric-grid,
+  .metric-strip {
+    border: 1px solid var(--line);
+  }
+
+  .wf-metric-card,
+  .metric {
+    border-left: 0;
+  }
+
+  .wf-metric-card + .wf-metric-card,
+  .metric + .metric {
+    border-top: 1px solid var(--line);
+  }
+
+  .wf-metric-card:first-child,
+  .metric:first-child {
+    border-left: 3px solid var(--accent);
+  }
+
+  .wf-stat-tabs button {
+    min-width: auto;
+    padding-inline: 12px;
+  }
+
+  .view-toolbar {
+    padding-inline: 0;
+    top: 0;
+  }
+
+  .kanban-board {
+    gap: 8px;
+  }
+
+  .kanban-column {
+    border-width: 1px;
+  }
+
+  .chat-view {
+    border-left: 0;
+    border-right: 0;
+  }
+}

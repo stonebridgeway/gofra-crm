@@ -53,6 +53,7 @@ test("keeps every CRM status in the frontend contract", async () => {
 test("ships the role, theme, calendar, statistics and chat frontend modules", async () => {
   const [
     app,
+    entry,
     icons,
     domain,
     gateway,
@@ -63,9 +64,11 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
     styles,
     featureStyles,
     chatStyles,
+    agencyStyles,
   ] =
     await Promise.all([
       readFile(new URL("../app/crm/CrmApp.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../src/main.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/Icons.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/domain.ts", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/crm-gateway.ts", import.meta.url), "utf8"),
@@ -82,6 +85,7 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
         "utf8",
       ),
       readFile(new URL("../app/crm/chat.css", import.meta.url), "utf8"),
+      readFile(new URL("../app/agency-redesign.css", import.meta.url), "utf8"),
     ]);
 
   assert.match(domain, /CRM_SCHEMA_VERSION = 2/);
@@ -98,6 +102,8 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(app, /mobile-nav/);
   assert.match(app, /icon: "home"/);
   assert.match(app, /CrmIcon/);
+  assert.match(app, /data-module=\{activeModule\}/);
+  assert.match(entry, /agency-redesign\.css/);
   assert.match(app, /function AccountSwitcher/);
   assert.doesNotMatch(app, /short: "ГЛ"/u);
   assert.match(app, /switchDemoUser/);
@@ -121,6 +127,9 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.doesNotMatch(featureStyles, /#26352f|#a9d3c6|#77b6a2/);
   assert.doesNotMatch(chatStyles, /#456d89|#805b66/);
   assert.match(styles, /@media \(max-width: 720px\)/);
+  assert.match(agencyStyles, /Industrial-editorial design layer/);
+  assert.match(agencyStyles, /clip-path: polygon/);
+  assert.match(agencyStyles, /@media \(prefers-reduced-motion: reduce\)/);
 
   assert.match(features, /export function DashboardView/);
   assert.match(features, /export function CalendarView/);

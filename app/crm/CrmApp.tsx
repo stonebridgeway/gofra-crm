@@ -887,7 +887,7 @@ export function CrmApp() {
   ].includes(activeModule);
 
   return (
-    <div className="crm-app">
+    <div className="crm-app" data-module={activeModule}>
       <aside className="side-nav" aria-label="Разделы CRM">
         <div className="brand-block">
           <span aria-hidden="true" className="brand-mark">
@@ -895,7 +895,7 @@ export function CrmApp() {
           </span>
           <span className="brand-copy">
             <strong>ГОФРА</strong>
-            <small>CRM workspace</small>
+            <small>OPS SYSTEM / REV 03</small>
           </span>
         </div>
         <nav className="module-nav">

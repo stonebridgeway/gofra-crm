@@ -628,7 +628,7 @@ function FeatureHeader({
 }: {
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
   actions?: ReactNode;
 }) {
   return (
@@ -636,7 +636,7 @@ function FeatureHeader({
       <div>
         <span className="wf-eyebrow">{eyebrow}</span>
         <h1>{title}</h1>
-        <p>{description}</p>
+        {description ? <p>{description}</p> : null}
       </div>
       {actions ? <div className="wf-header-actions">{actions}</div> : null}
     </header>
@@ -685,7 +685,7 @@ function MissingIdentity() {
     <section className="wf-view">
       <EmptyState
         title="Не выбран пользователь"
-        description="Выберите сотрудника в демо-профиле, чтобы открыть его рабочий кабинет."
+        description="Выберите сотрудника, чтобы открыть его кабинет."
       />
     </section>
   );
@@ -1055,11 +1055,6 @@ export function DashboardView({
               {DAY_FORMATTER.format(today)}
             </span>
           </div>
-        }
-        description={
-          isManager
-            ? "Команда, выручка и точки внимания — в одном рабочем поле."
-            : "Приоритеты на сегодня, личная воронка и ближайшие контакты."
         }
         eyebrow={isManager ? "Кабинет руководителя" : "Личный кабинет"}
         title={
@@ -1853,7 +1848,6 @@ export function CalendarView({
             Новая задача
           </button>
         }
-        description="Напоминания по клиентам и сделкам, сроки команды и быстрый перенос задач."
         eyebrow="Планирование"
         title="Календарь"
       />
@@ -2781,11 +2775,6 @@ export function StatisticsView({
             snapshot={snapshot}
           />
         }
-        description={
-          currentUser.role === "manager"
-            ? "Результаты команды, движение воронки и детализация до каждой записи."
-            : "Личная динамика продаж, активности и выполнения задач."
-        }
         eyebrow="Аналитика"
         title="Статистика"
       />
@@ -3248,9 +3237,6 @@ export function StatisticsView({
                   ? "Результаты команды"
                   : "Мои показатели"}
               </h2>
-              <p>
-                Выручка, активность и просрочки за выбранный период.
-              </p>
             </div>
           </header>
           {teamRows.length ? (

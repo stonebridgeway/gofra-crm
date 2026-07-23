@@ -744,47 +744,6 @@ html[data-theme="dark"] textarea {
   background: var(--accent-soft);
 }
 
-.prototype-note {
-  align-items: center;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-line);
-  border-radius: var(--radius-md);
-  display: flex;
-  justify-content: space-between;
-  margin: 0 auto 16px;
-  max-width: 1680px;
-  padding: 11px 14px;
-}
-
-.prototype-note div {
-  align-items: baseline;
-  display: flex;
-  gap: 10px;
-}
-
-.prototype-note strong {
-  color: var(--accent-strong);
-  font-size: 12px;
-}
-
-.prototype-note span {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.prototype-badge {
-  background: var(--surface-raised);
-  border: 1px solid var(--accent-line);
-  border-radius: 999px;
-  color: var(--accent-strong) !important;
-  flex: 0 0 auto;
-  font-family: "Geist Mono", monospace;
-  font-size: 10px !important;
-  font-weight: 700;
-  padding: 6px 9px;
-  text-transform: uppercase;
-}
-
 .module-view {
   margin: 0 auto;
   max-width: 1680px;
@@ -2671,21 +2630,6 @@ html[data-theme="dark"] textarea {
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  .prototype-note {
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .prototype-note div {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .prototype-note .prototype-badge {
-    display: none;
   }
 
   .metric {

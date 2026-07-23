@@ -1051,10 +1051,6 @@ export function ChatView({
                     <MessageIcon />
                   </span>
                   <h3>Начните диалог</h3>
-                  <p>
-                    Сообщения сохраняются только в браузере и доступны в этой
-                    демонстрационной CRM.
-                  </p>
                 </div>
               )}
             </div>
@@ -1089,12 +1085,7 @@ export function ChatView({
             <span className="chat-placeholder-mark" aria-hidden="true">
               <MessageIcon />
             </span>
-            <span className="chat-kicker">Внутренняя связь</span>
             <h2>Выберите диалог</h2>
-            <p>
-              Обсуждайте расчёты и сроки рядом с контекстом клиента, не теряя
-              связь с CRM.
-            </p>
           </div>
         )}
       </main>

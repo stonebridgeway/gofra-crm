@@ -128,8 +128,18 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.doesNotMatch(chatStyles, /#456d89|#805b66/);
   assert.match(styles, /@media \(max-width: 720px\)/);
   assert.match(agencyStyles, /Industrial-editorial design layer/);
+  assert.match(agencyStyles, /--accent: #3f6873/);
+  assert.match(agencyStyles, /--accent: #7fa7b1/);
+  assert.doesNotMatch(agencyStyles, /#bd4d21|#de6429/);
+  assert.doesNotMatch(agencyStyles, /gofra-module|decimal-leading-zero/);
+  assert.doesNotMatch(agencyStyles, /content: "LOCAL"|content: "\/\/\/"/);
   assert.match(agencyStyles, /clip-path: polygon/);
   assert.match(agencyStyles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(app, /OPS SYSTEM \/ REV 03/);
+  assert.doesNotMatch(app, /Frontend-only прототип|Сбросить демо|Клиенты в прототипе/);
+  assert.doesNotMatch(app, /prototype-note|prototype-badge/);
+  assert.doesNotMatch(features, /Команда, выручка и точки внимания/);
+  assert.doesNotMatch(features, /Результаты команды, движение воронки/);
 
   assert.match(features, /export function DashboardView/);
   assert.match(features, /export function CalendarView/);

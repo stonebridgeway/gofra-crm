@@ -248,7 +248,7 @@ function AccountSwitcher({
   return (
     <label
       className={`account-switcher account-switcher-${variant} group/account cursor-pointer`}
-      title="Переключить демо-кабинет"
+      title="Переключить аккаунт"
     >
       <span aria-hidden="true" className="account-avatar">
         <CrmIcon
@@ -426,7 +426,7 @@ export function CrmApp() {
       if (
         !(loadError instanceof DOMException && loadError.name === "AbortError")
       ) {
-        setError("Не удалось открыть демо-данные. Попробуйте ещё раз.");
+        setError("Не удалось загрузить данные. Попробуйте ещё раз.");
       }
     } finally {
       setLoading(false);
@@ -445,7 +445,7 @@ export function CrmApp() {
             loadError.name === "AbortError"
           )
         ) {
-          setError("Не удалось открыть демо-данные. Попробуйте ещё раз.");
+          setError("Не удалось загрузить данные. Попробуйте ещё раз.");
         }
       })
       .finally(() => setLoading(false));
@@ -519,7 +519,7 @@ export function CrmApp() {
   const commit = (next: CrmSnapshot, message?: string) => {
     setSnapshot(next);
     void crmGateway.save(next).catch(() => {
-      setError("Не удалось сохранить изменение в локальном демо-режиме.");
+      setError("Не удалось сохранить изменение.");
     });
     if (message) notify(message);
   };
@@ -683,7 +683,7 @@ export function CrmApp() {
           clients: [client, ...snapshot.clients],
           tasks: task ? [task, ...snapshot.tasks] : snapshot.tasks,
         },
-        "Клиент добавлен в демо-режиме",
+        "Клиент добавлен",
       );
     }
 
@@ -750,7 +750,7 @@ export function CrmApp() {
           deals: [deal, ...snapshot.deals],
           tasks: task ? [task, ...snapshot.tasks] : snapshot.tasks,
         },
-        "Сделка добавлена в демо-режиме",
+        "Сделка добавлена",
       );
     }
 
@@ -857,7 +857,7 @@ export function CrmApp() {
     const next = await crmGateway.reset();
     setSnapshot(next);
     setLoading(false);
-    notify("Демо-данные восстановлены");
+    notify("Данные восстановлены");
   };
 
   const switchDemoUser = (userId: string) => {
@@ -895,7 +895,6 @@ export function CrmApp() {
           </span>
           <span className="brand-copy">
             <strong>ГОФРА</strong>
-            <small>OPS SYSTEM / REV 03</small>
           </span>
         </div>
         <nav className="module-nav">
@@ -994,7 +993,7 @@ export function CrmApp() {
             )}
             <ThemeSwitch compact />
             <button className="ghost-button" onClick={resetDemo} type="button">
-              Сбросить демо
+              Сбросить данные
             </button>
           </div>
         </header>
@@ -1020,19 +1019,6 @@ export function CrmApp() {
             ))}
           </nav>
         )}
-
-        <div className="prototype-note" role="note">
-          <div>
-            <strong>Frontend-only прототип</strong>
-            <span>
-              Кабинеты, задачи, чат и настройки сохраняются только в этом
-              браузере. Серверная авторизация будет подключена через API.
-            </span>
-          </div>
-          <span className="prototype-badge">
-            {currentUser?.role === "manager" ? "Кабинет руководителя" : "Кабинет сотрудника"}
-          </span>
-        </div>
 
         {loading ? (
           <WorkspaceSkeleton />
@@ -1156,7 +1142,7 @@ export function CrmApp() {
                       ...snapshot,
                       clients: [...importClients, ...snapshot.clients],
                     },
-                    "Три лида добавлены в клиентский прототип",
+                    "Три лида добавлены",
                   );
                 }}
               />
@@ -1285,7 +1271,7 @@ export function CrmApp() {
             {snapshot && currentUser && (
               <div className="mobile-account-settings">
                 <div className="mobile-account-block">
-                  <span>Демо-кабинет</span>
+                  <span>Аккаунт</span>
                   <AccountSwitcher
                     currentUser={currentUser}
                     onChange={switchDemoUser}
@@ -1514,7 +1500,7 @@ function ClientsView({
   return (
     <section className="module-view">
       <div className="metric-strip">
-        <Metric label="Клиенты в прототипе" value={clients.length} />
+        <Metric label="Всего клиентов" value={clients.length} />
         <Metric label="Потенциал A" value={potentialA} />
         <Metric label="Действия сегодня" value={needsAction} tone="attention" />
         <Metric label="Статусы доступны" value={CLIENT_STATUSES.length} />
@@ -2031,11 +2017,7 @@ function ContactsView({
     <section className="module-view">
       <div className="section-heading">
         <div>
-          <span className="section-kicker">Единая контактная база</span>
           <h2>Лица, принимающие решения</h2>
-          <p>
-            Контакты связаны с клиентами, сделками и историей взаимодействий.
-          </p>
         </div>
         <button className="primary-button" onClick={onCreate} type="button">
           Добавить контакт
@@ -2311,12 +2293,7 @@ function ImportView({
         <div>
           <span className="section-kicker">Импорт лидов</span>
           <h2>Проверка данных до загрузки</h2>
-          <p>
-            CSV, TSV и вставка из Google Sheets. XLSX будет передан будущему
-            backend-обработчику.
-          </p>
         </div>
-        <span className="prototype-badge">Frontend simulation</span>
       </div>
       <ol className="import-steps">
         {["Файл", "Сопоставление", "Проверка", "Результат"].map(
@@ -2354,7 +2331,7 @@ function ImportView({
               onClick={() => setFileName("demo-leads.csv")}
               type="button"
             >
-              Использовать демо-файл
+              Загрузить пример
             </button>
           </div>
         )}
@@ -2454,7 +2431,7 @@ function ImportView({
             <span>3 / 4</span>
             <h3>Партия готова</h3>
             <p>
-              Три лида добавлены в локальный прототип со статусом «{status}».
+              Три лида добавлены со статусом «{status}».
               Дубль пропущен.
             </p>
             <button
@@ -2542,10 +2519,7 @@ function DictionariesView({ snapshot }: { snapshot: CrmSnapshot }) {
       <div className="section-heading">
         <div>
           <span className="section-kicker">Справочники</span>
-          <h2>Единые значения для форм и воронок</h2>
-          <p>
-            Все значения из листа «Справочники» представлены в прототипе.
-          </p>
+          <h2>Значения форм и воронок</h2>
         </div>
         <button
           className="ghost-button"
@@ -2886,10 +2860,6 @@ function StatusPicker({
           <div>
             <span className="section-kicker">Точный статус</span>
             <h2>{intent.title}</h2>
-            <p>
-              Выберите конкретный статус внутри этапа. Цвет не заменяет
-              текстовое значение.
-            </p>
           </div>
           <button autoFocus className="ghost-button" onClick={onClose} type="button">
             Закрыть

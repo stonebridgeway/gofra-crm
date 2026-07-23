@@ -45,7 +45,7 @@ const applyTheme = (theme: ResolvedTheme) => {
   const themeColor = document.querySelector<HTMLMetaElement>(
     'meta[name="theme-color"]',
   );
-  themeColor?.setAttribute("content", theme === "dark" ? "#0f0f0c" : "#ede7dc");
+  themeColor?.setAttribute("content", theme === "dark" ? "#0d1213" : "#e6e9e8");
 };
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

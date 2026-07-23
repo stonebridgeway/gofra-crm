@@ -48,7 +48,18 @@ test("keeps every CRM status in the frontend contract", async () => {
 });
 
 test("ships the role, theme, calendar, statistics and chat frontend modules", async () => {
-  const [app, domain, gateway, theme, features, chat, chatGateway, styles] =
+  const [
+    app,
+    domain,
+    gateway,
+    theme,
+    features,
+    chat,
+    chatGateway,
+    styles,
+    featureStyles,
+    chatStyles,
+  ] =
     await Promise.all([
       readFile(new URL("../app/crm/CrmApp.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/domain.ts", import.meta.url), "utf8"),
@@ -61,6 +72,11 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
       readFile(new URL("../app/crm/ChatView.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/chat-gateway.ts", import.meta.url), "utf8"),
       readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+      readFile(
+        new URL("../app/crm/workspace-features.css", import.meta.url),
+        "utf8",
+      ),
+      readFile(new URL("../app/crm/chat.css", import.meta.url), "utf8"),
     ]);
 
   assert.match(domain, /CRM_SCHEMA_VERSION = 2/);
@@ -85,6 +101,11 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(theme, /ThemeMode = "system" \| "light" \| "dark"/);
   assert.match(theme, /document\.documentElement\.dataset\.theme/);
   assert.match(styles, /html\[data-theme="dark"\]/);
+  assert.match(styles, /--surface-sunken: #12130f/);
+  assert.match(styles, /--accent: #d27a3a/);
+  assert.doesNotMatch(styles, /#ecefea|#bfd8cf|#fafbf8/);
+  assert.doesNotMatch(featureStyles, /#26352f|#a9d3c6|#77b6a2/);
+  assert.doesNotMatch(chatStyles, /#456d89|#805b66/);
   assert.match(styles, /@media \(max-width: 720px\)/);
 
   assert.match(features, /export function DashboardView/);

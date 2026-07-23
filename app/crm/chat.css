@@ -1,24 +1,22 @@
 .chat-view {
-  --chat-canvas: var(--canvas, #f5f6f2);
-  --chat-surface: var(--surface, #ffffff);
-  --chat-surface-muted: var(--surface-muted, #eef1ec);
-  --chat-surface-strong: var(--surface-strong, #e5e9e2);
-  --chat-ink: var(--ink, #1f2421);
-  --chat-muted: var(--muted, #667069);
-  --chat-faint: var(--faint, #8a928d);
-  --chat-line: var(--line, #dde1da);
-  --chat-line-strong: var(--line-strong, #cbd2ca);
-  --chat-accent: var(--accent, #236b5d);
-  --chat-accent-strong: var(--accent-strong, #185448);
-  --chat-accent-soft: var(--accent-soft, #dcebe6);
-  --chat-accent-contrast: #ffffff;
-  --chat-danger: var(--danger, #b5473d);
-  --chat-danger-soft: var(--danger-soft, #f7e5e2);
-  --chat-shadow: var(
-    --shadow,
-    0 18px 48px -32px rgba(35, 61, 51, 0.34)
-  );
-  background: var(--chat-surface);
+  --chat-canvas: var(--canvas, #ede7dc);
+  --chat-surface: var(--surface, #f8f3e9);
+  --chat-surface-raised: var(--surface-raised, #fffaf0);
+  --chat-surface-muted: var(--surface-muted, #e8e0d3);
+  --chat-surface-strong: var(--surface-strong, #ddd3c3);
+  --chat-ink: var(--ink, #29251f);
+  --chat-muted: var(--muted, #6d665b);
+  --chat-faint: var(--faint, #938a7c);
+  --chat-line: var(--line, #d4c9b9);
+  --chat-line-strong: var(--line-strong, #bbae9a);
+  --chat-accent: var(--accent, #a95222);
+  --chat-accent-strong: var(--accent-strong, #813913);
+  --chat-accent-soft: var(--accent-soft, #ead2bd);
+  --chat-accent-contrast: var(--on-accent, #fff8ee);
+  --chat-danger: var(--danger, #a9473d);
+  --chat-danger-soft: var(--danger-soft, #edd6d0);
+  --chat-shadow: var(--shadow, 0 18px 48px -34px rgba(65, 47, 29, 0.28));
+  background: var(--chat-surface-raised);
   border: 1px solid var(--chat-line);
   border-radius: var(--radius-lg, 20px);
   box-shadow: var(--chat-shadow);
@@ -411,27 +409,27 @@
 }
 
 .chat-avatar[data-tone="1"] {
-  --chat-avatar-background: color-mix(in srgb, #9b713e 16%, var(--chat-surface));
-  --chat-avatar-border: color-mix(in srgb, #9b713e 27%, var(--chat-line));
-  --chat-avatar-ink: color-mix(in srgb, #9b713e 82%, var(--chat-ink));
+  --chat-avatar-background: color-mix(in srgb, var(--chat-accent) 10%, var(--chat-surface));
+  --chat-avatar-border: color-mix(in srgb, var(--chat-accent) 18%, var(--chat-line));
+  --chat-avatar-ink: color-mix(in srgb, var(--chat-accent) 62%, var(--chat-ink));
 }
 
 .chat-avatar[data-tone="2"] {
-  --chat-avatar-background: color-mix(in srgb, #456d89 16%, var(--chat-surface));
-  --chat-avatar-border: color-mix(in srgb, #456d89 27%, var(--chat-line));
-  --chat-avatar-ink: color-mix(in srgb, #456d89 82%, var(--chat-ink));
+  --chat-avatar-background: color-mix(in srgb, var(--chat-accent) 6%, var(--chat-surface-strong));
+  --chat-avatar-border: color-mix(in srgb, var(--chat-accent) 14%, var(--chat-line-strong));
+  --chat-avatar-ink: var(--chat-muted);
 }
 
 .chat-avatar[data-tone="3"] {
-  --chat-avatar-background: color-mix(in srgb, #805b66 15%, var(--chat-surface));
-  --chat-avatar-border: color-mix(in srgb, #805b66 26%, var(--chat-line));
-  --chat-avatar-ink: color-mix(in srgb, #805b66 82%, var(--chat-ink));
+  --chat-avatar-background: color-mix(in srgb, var(--chat-accent) 20%, var(--chat-surface));
+  --chat-avatar-border: color-mix(in srgb, var(--chat-accent) 31%, var(--chat-line));
+  --chat-avatar-ink: var(--chat-accent-strong);
 }
 
 .chat-avatar[data-tone="4"] {
-  --chat-avatar-background: color-mix(in srgb, #666f54 16%, var(--chat-surface));
-  --chat-avatar-border: color-mix(in srgb, #666f54 27%, var(--chat-line));
-  --chat-avatar-ink: color-mix(in srgb, #666f54 82%, var(--chat-ink));
+  --chat-avatar-background: color-mix(in srgb, var(--chat-ink) 5%, var(--chat-surface));
+  --chat-avatar-border: var(--chat-line-strong);
+  --chat-avatar-ink: var(--chat-ink);
 }
 
 .chat-avatar > i {

@@ -1,20 +1,33 @@
 .wf-view {
-  --wf-canvas: var(--canvas, #f5f6f2);
-  --wf-surface: var(--surface, #ffffff);
-  --wf-surface-muted: var(--surface-muted, #eef1ec);
-  --wf-surface-strong: var(--surface-strong, #e5e9e2);
-  --wf-ink: var(--ink, #1f2421);
-  --wf-muted: var(--muted, #667069);
-  --wf-faint: var(--faint, #8a928d);
-  --wf-line: var(--line, #dde1da);
-  --wf-line-strong: var(--line-strong, #cbd2ca);
-  --wf-accent: var(--accent, #236b5d);
-  --wf-accent-strong: var(--accent-strong, #185448);
-  --wf-accent-soft: var(--accent-soft, #dcebe6);
-  --wf-danger: var(--danger, #b5473d);
-  --wf-danger-soft: var(--danger-soft, #f7e5e2);
-  --wf-warning: var(--warning, #9a641c);
-  --wf-warning-soft: var(--warning-soft, #f4ead8);
+  --wf-canvas: var(--canvas, #ede7dc);
+  --wf-surface: var(--surface, #f8f3e9);
+  --wf-surface-raised: var(--surface-raised, #fffaf0);
+  --wf-surface-muted: var(--surface-muted, #e8e0d3);
+  --wf-surface-strong: var(--surface-strong, #ddd3c3);
+  --wf-ink: var(--ink, #29251f);
+  --wf-muted: var(--muted, #6d665b);
+  --wf-faint: var(--faint, #938a7c);
+  --wf-line: var(--line, #d4c9b9);
+  --wf-line-strong: var(--line-strong, #bbae9a);
+  --wf-accent: var(--accent, #a95222);
+  --wf-accent-strong: var(--accent-strong, #813913);
+  --wf-accent-soft: var(--accent-soft, #ead2bd);
+  --wf-on-accent: var(--on-accent, #fff8ee);
+  --wf-danger: var(--danger, #a9473d);
+  --wf-danger-soft: var(--danger-soft, #edd6d0);
+  --wf-warning: var(--warning, #925a1d);
+  --wf-warning-soft: var(--warning-soft, #eadcc4);
+  --wf-overlay: var(--overlay, rgba(22, 18, 12, 0.54));
+  --wf-shadow: var(--shadow, 0 18px 48px -34px rgba(65, 47, 29, 0.28));
+  --wf-shadow-drawer: var(--shadow-drawer, -28px 0 70px -48px rgba(45, 30, 17, 0.64));
+  --wf-toast-bg: var(--toast-bg, #1d1c17);
+  --wf-toast-ink: var(--toast-ink, #f6efe2);
+  --wf-hero-surface: var(--hero-surface, #2b2821);
+  --wf-hero-ink: var(--hero-ink, #f5eddf);
+  --wf-hero-muted: var(--hero-muted, rgba(245, 237, 223, 0.6));
+  --wf-hero-line: var(--hero-line, rgba(245, 237, 223, 0.14));
+  --wf-hero-tile: var(--hero-tile, rgba(245, 237, 223, 0.08));
+  --wf-hero-accent: var(--hero-accent, #e1a26e);
   color: var(--wf-ink);
   margin: 0 auto;
   max-width: 1680px;
@@ -130,7 +143,7 @@
 .wf-primary-button {
   background: var(--wf-accent);
   border: 1px solid var(--wf-accent);
-  color: #ffffff;
+  color: var(--wf-on-accent);
 }
 
 .wf-primary-button:hover {
@@ -140,7 +153,7 @@
 
 .wf-secondary-button,
 .wf-today-button {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   color: var(--wf-ink);
 }
@@ -168,7 +181,7 @@
 .wf-icon-button,
 .wf-dialog-close {
   align-items: center;
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 9px;
   color: var(--wf-muted);
@@ -195,7 +208,7 @@
 .wf-icon-button.is-accent {
   background: var(--wf-accent);
   border-color: var(--wf-accent);
-  color: #ffffff;
+  color: var(--wf-on-accent);
 }
 
 .wf-icon-button svg,
@@ -248,7 +261,7 @@
 }
 
 .wf-metric-card {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 0;
   color: var(--wf-ink);
   display: flex;
@@ -321,7 +334,7 @@ button.wf-metric-card:active {
 button.wf-metric-card:hover > i {
   background: var(--wf-accent);
   border-color: var(--wf-accent);
-  color: #ffffff;
+  color: var(--wf-on-accent);
   transform: translateX(2px);
 }
 
@@ -338,7 +351,7 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-panel {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 15px;
   min-width: 0;
@@ -426,7 +439,7 @@ button.wf-metric-card:hover > i {
 
 .wf-task-row {
   align-items: flex-start;
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 11px;
   display: grid;
@@ -469,7 +482,7 @@ button.wf-metric-card:hover > i {
   background: transparent;
   border: 1px solid var(--wf-line-strong);
   border-radius: 7px;
-  color: #ffffff;
+  color: var(--wf-on-accent);
   display: flex;
   height: 21px;
   justify-content: center;
@@ -981,7 +994,7 @@ button.wf-metric-card:hover > i {
 
 .wf-filter-bar {
   align-items: end;
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 13px;
   display: flex;
@@ -1085,9 +1098,9 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-segmented button.is-active {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   color: var(--wf-ink);
-  box-shadow: 0 2px 8px -5px rgba(22, 49, 39, 0.48);
+  box-shadow: var(--wf-shadow);
 }
 
 .wf-calendar-layout {
@@ -1100,7 +1113,7 @@ button.wf-metric-card:hover > i {
 .wf-month-card,
 .wf-day-agenda,
 .wf-agenda-view {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 15px;
   min-width: 0;
@@ -1182,7 +1195,7 @@ button.wf-metric-card:hover > i {
 .wf-calendar-day.is-today .wf-day-number {
   background: var(--wf-accent);
   border-radius: 50%;
-  color: #ffffff;
+  color: var(--wf-on-accent);
 }
 
 .wf-day-tasks {
@@ -1367,7 +1380,7 @@ button.wf-metric-card:hover > i {
 
 .wf-dialog-backdrop {
   align-items: stretch;
-  background: rgba(24, 33, 29, 0.5);
+  background: var(--wf-overlay);
   display: flex;
   inset: 0;
   justify-content: flex-end;
@@ -1377,9 +1390,9 @@ button.wf-metric-card:hover > i {
 
 .wf-task-editor,
 .wf-drill-panel {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border-left: 1px solid var(--wf-line);
-  box-shadow: -28px 0 70px -48px rgba(20, 44, 35, 0.76);
+  box-shadow: var(--wf-shadow-drawer);
   display: flex;
   flex-direction: column;
   max-width: 100%;
@@ -1462,7 +1475,7 @@ button.wf-metric-card:hover > i {
 .wf-field input:focus,
 .wf-field select:focus,
 .wf-field textarea:focus {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
 }
 
 .wf-field-wide {
@@ -1499,11 +1512,11 @@ button.wf-metric-card:hover > i {
 
 .wf-notice {
   align-items: center;
-  background: #26352f;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--wf-toast-bg);
+  border: 1px solid var(--wf-hero-line);
   border-radius: 9px;
   bottom: 24px;
-  color: #ffffff;
+  color: var(--wf-toast-ink);
   display: flex;
   font-size: 10px;
   font-weight: 650;
@@ -1803,7 +1816,7 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-funnel-table {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 15px;
   overflow: hidden;
@@ -1904,9 +1917,13 @@ button.wf-metric-card:hover > i {
 
 .wf-sales-hero {
   background:
-    radial-gradient(circle at 84% 12%, rgba(88, 145, 126, 0.2), transparent 38%),
-    #26352f;
-  color: #f7faf8;
+    radial-gradient(
+      circle at 84% 12%,
+      color-mix(in srgb, var(--wf-hero-accent) 18%, transparent),
+      transparent 38%
+    ),
+    var(--wf-hero-surface);
+  color: var(--wf-hero-ink);
   min-height: 335px;
   padding: 21px;
 }
@@ -1927,17 +1944,17 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-sales-hero p {
-  color: rgba(247, 250, 248, 0.58);
+  color: var(--wf-hero-muted);
   font-size: 9px;
   margin: 0;
 }
 
 .wf-sales-mark {
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--wf-hero-tile);
+  border: 1px solid var(--wf-hero-line);
   border-radius: 12px;
-  color: #a9d3c6;
+  color: var(--wf-hero-accent);
   display: flex;
   height: 45px;
   justify-content: center;
@@ -1950,7 +1967,7 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-target-progress {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--wf-hero-line);
   margin-top: 75px;
   padding-top: 17px;
 }
@@ -1968,29 +1985,29 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-target-progress > header strong {
-  color: #a9d3c6;
+  color: var(--wf-hero-accent);
   font-family: "Geist Mono", monospace;
   font-size: 11px;
 }
 
 .wf-target-progress > i {
-  background: rgba(255, 255, 255, 0.13);
+  background: var(--wf-hero-line);
   height: 5px;
 }
 
 .wf-target-progress > i b {
-  background: #77b6a2;
+  background: var(--wf-hero-accent);
 }
 
 .wf-target-progress > footer {
-  color: rgba(247, 250, 248, 0.45);
+  color: var(--wf-hero-muted);
   font-family: "Geist Mono", monospace;
   font-size: 7px;
   margin-top: 7px;
 }
 
 .wf-no-target {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--wf-hero-line);
   line-height: 1.5;
   margin-top: 80px !important;
   padding-top: 16px;
@@ -2191,7 +2208,7 @@ button.wf-metric-card:hover > i {
 }
 
 .wf-team-stat-table {
-  background: var(--wf-surface);
+  background: var(--wf-surface-raised);
   border: 1px solid var(--wf-line);
   border-radius: 15px;
   overflow: hidden;

@@ -23,14 +23,20 @@
 Требуется Node.js `>=22.13.0`.
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Проверка перед публикацией:
 
 ```bash
-npm run lint
-npm run build
-npm test
+pnpm run lint
+pnpm run build
+pnpm test
 ```
+
+## GitHub Pages
+
+Публикация выполняется вручную через workflow `Deploy GitHub Pages`. Статическая
+сборка автоматически учитывает имя репозитория, поэтому JS, CSS, шрифты и
+изображения корректно работают на project Pages без backend-сервера.

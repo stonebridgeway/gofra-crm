@@ -39,7 +39,10 @@ test("keeps every CRM status in the frontend contract", async () => {
   assert.match(domain, /"Отменена"/);
   assert.match(gateway, /localStorage/);
   assert.doesNotMatch(packageJson, /next|vinext|wrangler|drizzle|cloudflare/i);
+  assert.match(packageJson, /"tailwindcss": "4\.3\.3"/);
+  assert.match(packageJson, /"@tailwindcss\/vite": "4\.3\.3"/);
   assert.match(viteConfig, /GITHUB_REPOSITORY/);
+  assert.match(viteConfig, /tailwindcss\(\)/);
   assert.match(workflow, /workflow_dispatch/);
   assert.doesNotMatch(workflow, /\bpush:/);
 
@@ -50,6 +53,7 @@ test("keeps every CRM status in the frontend contract", async () => {
 test("ships the role, theme, calendar, statistics and chat frontend modules", async () => {
   const [
     app,
+    icons,
     domain,
     gateway,
     theme,
@@ -62,6 +66,7 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   ] =
     await Promise.all([
       readFile(new URL("../app/crm/CrmApp.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/crm/Icons.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/domain.ts", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/crm-gateway.ts", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/theme.tsx", import.meta.url), "utf8"),
@@ -91,7 +96,8 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(app, /StatisticsView/);
   assert.match(app, /ChatView/);
   assert.match(app, /mobile-nav/);
-  assert.match(app, /icon: "🏠"/u);
+  assert.match(app, /icon: "home"/);
+  assert.match(app, /CrmIcon/);
   assert.match(app, /function AccountSwitcher/);
   assert.doesNotMatch(app, /short: "ГЛ"/u);
   assert.match(app, /switchDemoUser/);
@@ -103,9 +109,12 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
 
   assert.match(theme, /ThemeMode = "system" \| "light" \| "dark"/);
   assert.match(theme, /document\.documentElement\.dataset\.theme/);
-  assert.match(theme, /☀️/u);
-  assert.match(theme, /🌙/u);
+  assert.match(theme, /name=\{resolvedTheme === "dark" \? "sun" : "moon"\}/);
+  assert.match(icons, /export function CrmIcon/);
+  assert.match(icons, /case "brand"/);
+  assert.match(icons, /strokeWidth="1\.8"/);
   assert.match(styles, /html\[data-theme="dark"\]/);
+  assert.match(styles, /@import "tailwindcss"/);
   assert.match(styles, /--surface-sunken: #12130f/);
   assert.match(styles, /--accent: #d27a3a/);
   assert.doesNotMatch(styles, /#ecefea|#bfd8cf|#fafbf8/);
@@ -116,6 +125,8 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(features, /export function DashboardView/);
   assert.match(features, /export function CalendarView/);
   assert.match(features, /export function StatisticsView/);
+  assert.match(features, /function DonutChart/);
+  assert.match(features, /function DistributionChart/);
   assert.match(chat, /export function ChatView/);
   assert.match(chatGateway, /indexedDB/);
   assert.match(chatGateway, /localStorage/);

@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { CrmIcon, type CrmIconName } from "./Icons";
 
 export type ThemeMode = "system" | "light" | "dark";
 type ResolvedTheme = Exclude<ThemeMode, "system">;
@@ -121,7 +122,10 @@ export function ThemeSwitch({
         type="button"
       >
         <span aria-hidden="true" className="theme-glyph">
-          {resolvedTheme === "dark" ? "☀️" : "🌙"}
+          <CrmIcon
+            className="size-[17px]"
+            name={resolvedTheme === "dark" ? "sun" : "moon"}
+          />
         </span>
       </button>
     );
@@ -131,10 +135,12 @@ export function ThemeSwitch({
     <div aria-label="Тема интерфейса" className="theme-switch" role="group">
       {(
         [
-          ["system", "Система", "🖥️"],
-          ["light", "Светлая", "☀️"],
-          ["dark", "Тёмная", "🌙"],
-        ] as const
+          ["system", "Система", "system"],
+          ["light", "Светлая", "sun"],
+          ["dark", "Тёмная", "moon"],
+        ] as const satisfies ReadonlyArray<
+          readonly [ThemeMode, string, CrmIconName]
+        >
       ).map(([value, label, icon]) => (
         <button
           aria-pressed={mode === value}
@@ -144,7 +150,7 @@ export function ThemeSwitch({
           type="button"
         >
           <span aria-hidden="true" className="theme-glyph">
-            {icon}
+            <CrmIcon className="size-[16px]" name={icon} />
           </span>
           <span>{label}</span>
         </button>

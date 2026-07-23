@@ -11,6 +11,7 @@ import {
 } from "react";
 import { crmGateway } from "./crm-gateway";
 import { ChatView } from "./ChatView";
+import { CrmIcon, type CrmIconName } from "./Icons";
 import {
   CalendarView,
   DashboardView,
@@ -67,72 +68,72 @@ type GlobalSearchResult = {
 
 const MODULES: Array<{
   id: AppModule;
-  icon: string;
+  icon: CrmIconName;
   label: string;
   eyebrow: string;
   mobile?: boolean;
 }> = [
   {
     id: "dashboard",
-    icon: "🏠",
+    icon: "home",
     label: "Главная",
     eyebrow: "Рабочий стол",
     mobile: true,
   },
   {
     id: "clients",
-    icon: "🏢",
+    icon: "clients",
     label: "Клиенты",
     eyebrow: "Воронка клиентов",
     mobile: true,
   },
   {
     id: "deals",
-    icon: "🤝",
+    icon: "deals",
     label: "Сделки",
     eyebrow: "Коммерческая воронка",
   },
   {
     id: "contacts",
-    icon: "👤",
+    icon: "contacts",
     label: "Контакты",
     eyebrow: "Контактные лица",
   },
   {
     id: "activity",
-    icon: "🕘",
+    icon: "activity",
     label: "История",
     eyebrow: "Взаимодействия",
   },
   {
     id: "calendar",
-    icon: "🗓️",
+    icon: "calendar",
     label: "Календарь",
     eyebrow: "Задачи и напоминания",
     mobile: true,
   },
   {
     id: "statistics",
-    icon: "📊",
+    icon: "statistics",
     label: "Статистика",
     eyebrow: "Результаты и динамика",
   },
   {
     id: "chat",
-    icon: "💬",
+    icon: "chat",
     label: "Чат",
     eyebrow: "Командные обсуждения",
     mobile: true,
   },
   {
     id: "import",
-    icon: "📥",
+    icon: "import",
     label: "Импорт",
     eyebrow: "Загрузка лидов",
   },
   {
     id: "dictionaries",
-    icon: "⚙️",
+    icon: "settings",
     label: "Справочники",
     eyebrow: "Настройки CRM",
   },
@@ -246,18 +247,21 @@ function AccountSwitcher({
 
   return (
     <label
-      className={`account-switcher account-switcher-${variant}`}
+      className={`account-switcher account-switcher-${variant} group/account cursor-pointer`}
       title="Переключить демо-кабинет"
     >
       <span aria-hidden="true" className="account-avatar">
-        {currentUser.role === "manager" ? "🧑‍💼" : "👤"}
+        <CrmIcon
+          className="size-[18px] transition-transform duration-200 group-hover/account:scale-105"
+          name={currentUser.role === "manager" ? "manager" : "user"}
+        />
       </span>
       <span className="account-copy">
         <strong>{currentUser.fullName}</strong>
         <small>{roleLabel}</small>
       </span>
       <span aria-hidden="true" className="account-chevron">
-        ⌄
+        <CrmIcon className="size-[14px]" name="chevron-down" />
       </span>
       <select
         aria-label="Выбрать кабинет сотрудника"
@@ -887,7 +891,7 @@ export function CrmApp() {
       <aside className="side-nav" aria-label="Разделы CRM">
         <div className="brand-block">
           <span aria-hidden="true" className="brand-mark">
-            📦
+            <CrmIcon className="size-[21px]" name="brand" />
           </span>
           <span className="brand-copy">
             <strong>ГОФРА</strong>
@@ -897,13 +901,16 @@ export function CrmApp() {
         <nav className="module-nav">
           {visibleModules.map((module) => (
             <button
-              className={module.id === activeModule ? "is-active" : ""}
+              className={`${module.id === activeModule ? "is-active" : ""} group/nav`}
               key={module.id}
               onClick={() => navigateTo(module.id)}
               type="button"
             >
               <span aria-hidden="true" className="nav-icon">
-                {module.icon}
+                <CrmIcon
+                  className="size-[17px] transition-transform duration-200 group-hover/nav:scale-105"
+                  name={module.icon}
+                />
               </span>
               <span>{module.label}</span>
             </button>
@@ -955,11 +962,16 @@ export function CrmApp() {
                       type="button"
                     >
                       <span aria-hidden="true">
-                        {result.kind === "client"
-                          ? "🏢"
-                          : result.kind === "deal"
-                            ? "🤝"
-                            : "👤"}
+                        <CrmIcon
+                          className="size-[16px]"
+                          name={
+                            result.kind === "client"
+                              ? "clients"
+                              : result.kind === "deal"
+                                ? "deals"
+                                : "user"
+                          }
+                        />
                       </span>
                       <strong>{result.title}</strong>
                       <small>{result.meta}</small>
@@ -1000,7 +1012,9 @@ export function CrmApp() {
                 onClick={() => navigateTo(module.id)}
                 type="button"
               >
-                <span aria-hidden="true">{module.icon}</span>
+                <span aria-hidden="true">
+                  <CrmIcon className="size-[15px]" name={module.icon} />
+                </span>
                 {module.label}
               </button>
             ))}
@@ -1160,7 +1174,9 @@ export function CrmApp() {
           onClick={() => navigateTo("dashboard")}
           type="button"
         >
-          <span aria-hidden="true">🏠</span>
+          <span aria-hidden="true">
+            <CrmIcon className="size-[17px]" name="home" />
+          </span>
           Главная
         </button>
         <button
@@ -1172,7 +1188,9 @@ export function CrmApp() {
           onClick={() => navigateTo("clients")}
           type="button"
         >
-          <span aria-hidden="true">🏢</span>
+          <span aria-hidden="true">
+            <CrmIcon className="size-[17px]" name="clients" />
+          </span>
           Клиенты
         </button>
         <button
@@ -1180,7 +1198,9 @@ export function CrmApp() {
           onClick={() => navigateTo("calendar")}
           type="button"
         >
-          <span aria-hidden="true">🗓️</span>
+          <span aria-hidden="true">
+            <CrmIcon className="size-[17px]" name="calendar" />
+          </span>
           Календарь
         </button>
         <button
@@ -1188,7 +1208,9 @@ export function CrmApp() {
           onClick={() => navigateTo("chat")}
           type="button"
         >
-          <span aria-hidden="true">💬</span>
+          <span aria-hidden="true">
+            <CrmIcon className="size-[17px]" name="chat" />
+          </span>
           Чат
         </button>
         <button
@@ -1203,7 +1225,9 @@ export function CrmApp() {
           onClick={() => setMobileMoreOpen((open) => !open)}
           type="button"
         >
-          <span aria-hidden="true">•••</span>
+          <span aria-hidden="true">
+            <CrmIcon className="size-[17px]" name="more" />
+          </span>
           Ещё
         </button>
       </nav>
@@ -1250,7 +1274,9 @@ export function CrmApp() {
                     onClick={() => navigateTo(module.id)}
                     type="button"
                   >
-                    <span aria-hidden="true">{module.icon}</span>
+                    <span aria-hidden="true">
+                      <CrmIcon className="size-[18px]" name={module.icon} />
+                    </span>
                     <strong>{module.label}</strong>
                     <small>{module.eyebrow}</small>
                   </button>
@@ -1615,7 +1641,7 @@ function ClientCard({
       </button>
       <footer className="card-footer">
         <span aria-hidden="true" className="manager-chip">
-          👤
+          <CrmIcon className="size-[13px]" name="user" />
         </span>
         <span>{client.managerName}</span>
         <div>
@@ -1880,7 +1906,7 @@ function DealCard({
       </button>
       <footer className="card-footer">
         <span aria-hidden="true" className="manager-chip">
-          👤
+          <CrmIcon className="size-[13px]" name="user" />
         </span>
         <span>{deal.managerName}</span>
         <div>

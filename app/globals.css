@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 @font-face {
   font-family: "Geist";
   font-style: normal;
@@ -268,9 +270,10 @@ button {
 }
 
 .theme-glyph {
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-  font-size: 16px;
-  line-height: 1;
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  line-height: 0;
 }
 
 .crm-app {
@@ -339,8 +342,6 @@ html[data-theme="dark"] textarea {
   color: var(--on-accent);
   display: inline-flex;
   flex: 0 0 auto;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-  font-size: 16px;
   font-weight: 700;
   height: 38px;
   justify-content: center;
@@ -416,8 +417,6 @@ html[data-theme="dark"] textarea {
   border: 1px solid var(--nav-line);
   border-radius: 7px;
   display: inline-flex;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-  font-size: 14px;
   height: 28px;
   justify-content: center;
   width: 28px;
@@ -471,8 +470,6 @@ html[data-theme="dark"] textarea {
   border: 1px solid var(--accent-line);
   border-radius: 9px;
   display: inline-flex;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-  font-size: 18px;
   height: 36px;
   justify-content: center;
   width: 36px;
@@ -499,8 +496,10 @@ html[data-theme="dark"] textarea {
 }
 
 .account-chevron {
+  align-items: center;
   color: var(--faint);
-  font-size: 16px;
+  display: inline-flex;
+  justify-content: center;
   line-height: 1;
   transform: translateY(-2px);
 }
@@ -673,8 +672,6 @@ html[data-theme="dark"] textarea {
   border-radius: 8px;
   color: var(--accent-strong);
   display: flex;
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-  font-size: 14px;
   grid-row: 1 / 3;
   height: 32px;
   justify-content: center;
@@ -2491,8 +2488,6 @@ html[data-theme="dark"] textarea {
     border: 1px solid var(--nav-line);
     border-radius: 7px;
     display: flex;
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-    font-size: 14px;
     height: 25px;
     justify-content: center;
     min-width: 28px;
@@ -2558,8 +2553,9 @@ html[data-theme="dark"] textarea {
   }
 
   .mobile-crm-tabs button span {
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-    font-size: 14px;
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
   }
 
   .mobile-more-backdrop {
@@ -2622,8 +2618,6 @@ html[data-theme="dark"] textarea {
     border: 1px solid var(--line);
     border-radius: 8px;
     display: flex;
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-    font-size: 16px;
     grid-row: 1 / 3;
     height: 34px;
     justify-content: center;

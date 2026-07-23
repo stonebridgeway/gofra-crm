@@ -2194,6 +2194,204 @@ function BarChart({
   );
 }
 
+type ChartDatum = {
+  id: string;
+  label: string;
+  value: number;
+  detail: string;
+  onSelect?: () => void;
+};
+
+const chartSeriesColor = (index: number) =>
+  `var(--wf-chart-${(index % 5) + 1})`;
+
+function DonutChart({
+  data,
+  centerLabel,
+}: {
+  data: ChartDatum[];
+  centerLabel: string;
+}) {
+  const titleId = useId();
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  if (!total) {
+    return (
+      <EmptyState
+        description="Распределение появится после добавления активных сделок."
+        title="Нет данных для диаграммы"
+      />
+    );
+  }
+
+  return (
+    <div className="grid gap-4 px-4 pb-5 pt-1 sm:grid-cols-[176px_minmax(0,1fr)] sm:items-center">
+      <div className="relative mx-auto grid size-[176px] place-items-center">
+        <svg
+          aria-labelledby={titleId}
+          className="size-[176px] -rotate-90 overflow-visible"
+          role="img"
+          viewBox="0 0 100 100"
+        >
+          <title id={titleId}>
+            {centerLabel}: {total}. Распределение по этапам воронки.
+          </title>
+          <circle
+            className="fill-none stroke-[var(--wf-surface-strong)]"
+            cx="50"
+            cy="50"
+            r={radius}
+            strokeWidth="10"
+          />
+          {data.map((item, index) => {
+            const segment = (item.value / total) * circumference;
+            const dashOffset = -offset;
+            offset += segment;
+            return (
+              <circle
+                className="fill-none transition-[stroke-width,opacity] duration-200 hover:opacity-80"
+                cx="50"
+                cy="50"
+                key={item.id}
+                r={radius}
+                stroke={chartSeriesColor(index)}
+                strokeDasharray={`${Math.max(segment - 2.5, 0)} ${circumference}`}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+                strokeWidth="10"
+              />
+            );
+          })}
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <strong className="font-mono text-[28px] font-semibold tracking-[-0.07em]">
+            {total}
+          </strong>
+          <span className="mt-1 max-w-[88px] text-[11px] leading-tight text-[var(--wf-muted)]">
+            {centerLabel}
+          </span>
+        </div>
+      </div>
+      <div className="grid gap-1.5">
+        {data.map((item, index) => {
+          const content = (
+            <>
+              <i
+                className="size-2.5 rounded-[3px]"
+                style={{ background: chartSeriesColor(index) }}
+              />
+              <span className="min-w-0">
+                <strong className="block truncate text-[11px] font-semibold">
+                  {item.label}
+                </strong>
+                <small className="mt-0.5 block truncate text-[11px] text-[var(--wf-faint)]">
+                  {item.detail}
+                </small>
+              </span>
+              <strong className="font-mono text-[12px] font-semibold">
+                {item.value}
+              </strong>
+            </>
+          );
+
+          return item.onSelect ? (
+            <button
+              className="grid min-h-11 grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-2 text-left transition-colors duration-150 hover:bg-[var(--wf-surface-muted)]"
+              key={item.id}
+              onClick={item.onSelect}
+              type="button"
+            >
+              {content}
+            </button>
+          ) : (
+            <div
+              className="grid min-h-11 grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 px-2"
+              key={item.id}
+            >
+              {content}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DistributionChart({ data }: { data: ChartDatum[] }) {
+  const titleId = useId();
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  if (!total) {
+    return (
+      <EmptyState
+        description="Структура каналов появится после первых контактов."
+        title="Нет активности за период"
+      />
+    );
+  }
+
+  return (
+    <div className="grid gap-5 px-4 pb-5 pt-2">
+      <div>
+        <div className="mb-2 flex items-end justify-between gap-4">
+          <span className="text-[11px] text-[var(--wf-muted)]">
+            Всего взаимодействий
+          </span>
+          <strong className="font-mono text-[24px] font-semibold tracking-[-0.06em]">
+            {total}
+          </strong>
+        </div>
+        <div
+          aria-labelledby={titleId}
+          className="flex h-4 w-full gap-[2px] overflow-hidden rounded-[5px] bg-[var(--wf-surface-strong)] p-[2px]"
+          role="img"
+        >
+          <span className="sr-only" id={titleId}>
+            Распределение взаимодействий по каналам
+          </span>
+          {data.map((item, index) => (
+            <button
+              aria-label={`${item.label}: ${item.value}, ${item.detail}`}
+              className="h-full min-w-1 rounded-[2px] transition-[filter,opacity] duration-150 hover:brightness-110 focus-visible:z-10"
+              key={item.id}
+              onClick={item.onSelect}
+              style={{
+                background: chartSeriesColor(index),
+                width: `${(item.value / total) * 100}%`,
+              }}
+              type="button"
+            />
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2">
+        {data.map((item, index) => (
+          <button
+            className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg p-2 text-left transition-colors duration-150 hover:bg-[var(--wf-surface-muted)]"
+            key={item.id}
+            onClick={item.onSelect}
+            type="button"
+          >
+            <i
+              className="size-2.5 rounded-[3px]"
+              style={{ background: chartSeriesColor(index) }}
+            />
+            <span className="truncate text-[11px] font-semibold">
+              {item.label}
+            </span>
+            <span className="font-mono text-[11px] text-[var(--wf-muted)]">
+              {formatPercent((item.value / total) * 100)}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DrillPanel({
   state,
   onClose,
@@ -2495,6 +2693,35 @@ export function StatisticsView({
   )
     .map(([kind, items]) => ({ kind, items, count: items.length }))
     .sort((left, right) => right.count - left.count);
+  const funnelDonutData: ChartDatum[] = funnelRows
+    .filter(
+      (row) =>
+        !row.closed && row.id !== "won" && row.count > 0,
+    )
+    .map((row) => ({
+      id: row.id,
+      label: row.label,
+      value: row.count,
+      detail: formatCompactMoney(row.value),
+      onSelect: () =>
+        openDrill(row.label, "Сделки этапа", dealRows(row.deals)),
+    }));
+  const activityDistributionData: ChartDatum[] = activityKinds.map((item) => ({
+    id: item.kind,
+    label: item.kind,
+    value: item.count,
+    detail: `${item.count} ${plural(item.count, [
+      "контакт",
+      "контакта",
+      "контактов",
+    ])}`,
+    onSelect: () =>
+      openDrill(
+        item.kind,
+        "Взаимодействия",
+        interactionRows(item.items, snapshot),
+      ),
+  }));
   const maxActivity = Math.max(
     ...activityKinds.map((item) => item.count),
     completedTasks.length,
@@ -2689,6 +2916,37 @@ export function StatisticsView({
                   <span>по успешным сделкам</span>
                 </div>
               </dl>
+            </section>
+          </div>
+
+          <div className="wf-stat-visual-grid">
+            <section className="wf-panel min-h-[296px]">
+              <header className="wf-panel-heading">
+                <div>
+                  <span className="wf-eyebrow">Срез воронки</span>
+                  <h2>Сделки по этапам</h2>
+                </div>
+                <span className="wf-panel-count">
+                  {activeDeals.length.toString().padStart(2, "0")}
+                </span>
+              </header>
+              <DonutChart
+                centerLabel="сделок в работе"
+                data={funnelDonutData}
+              />
+            </section>
+
+            <section className="wf-panel min-h-[296px]">
+              <header className="wf-panel-heading">
+                <div>
+                  <span className="wf-eyebrow">Каналы</span>
+                  <h2>Структура коммуникаций</h2>
+                </div>
+                <span className="wf-panel-count">
+                  {interactions.length.toString().padStart(2, "0")}
+                </span>
+              </header>
+              <DistributionChart data={activityDistributionData} />
             </section>
           </div>
         </div>

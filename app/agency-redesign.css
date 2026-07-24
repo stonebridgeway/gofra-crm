@@ -446,6 +446,23 @@ button {
   clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
 }
 
+.wf-sales-hero {
+  --wf-hero-accent: var(--accent);
+  --wf-hero-ink: var(--ink);
+  --wf-hero-line: var(--line);
+  --wf-hero-muted: var(--muted);
+  --wf-hero-tile: var(--surface-muted);
+  background:
+    radial-gradient(
+      circle at 88% 8%,
+      color-mix(in srgb, var(--accent-soft) 74%, transparent),
+      transparent 38%
+    ),
+    var(--surface-raised);
+  border-left: 3px solid var(--accent);
+  color: var(--ink);
+}
+
 .wf-panel-heading {
   border-bottom: 1px solid var(--line);
   min-height: 69px;

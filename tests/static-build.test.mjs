@@ -133,6 +133,7 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.doesNotMatch(agencyStyles, /#bd4d21|#de6429/);
   assert.doesNotMatch(agencyStyles, /gofra-module|decimal-leading-zero/);
   assert.doesNotMatch(agencyStyles, /content: "LOCAL"|content: "\/\/\/"/);
+  assert.match(agencyStyles, /\.wf-sales-hero[\s\S]*--wf-hero-ink: var\(--ink\)/);
   assert.match(agencyStyles, /clip-path: polygon/);
   assert.match(agencyStyles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(app, /OPS SYSTEM \/ REV 03/);

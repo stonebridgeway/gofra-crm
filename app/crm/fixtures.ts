@@ -2,10 +2,12 @@ import {
   CLIENT_STATUSES,
   CRM_SCHEMA_VERSION,
   DEAL_STATUSES,
+  createEmptyDealBrief,
   type Client,
   type Contact,
   type CrmSnapshot,
   type Deal,
+  type DealBrief,
   type Interaction,
   type Potential,
   type Session,
@@ -371,6 +373,156 @@ const dealProducts = [
   "Архивный короб",
 ] as const;
 
+type BriefSeed = {
+  packagingType: string;
+  fefco: string;
+  inner: [number, number, number];
+  outer: [number, number, number];
+  cardboardGrade: string;
+  fluteProfile: string;
+  printMethod: string;
+  printColors: number | null;
+  coating: string;
+  packingMethod: DealBrief["packingMethod"];
+  loadRequirement: string;
+  storageRequirement: string;
+  palletizing: string;
+  currentSupplier: string;
+  currentPrice: number;
+  clientProblem: string;
+};
+
+/** По одному техническому сценарию на каждый демонстрационный товар. */
+const briefSeeds: BriefSeed[] = [
+  {
+    packagingType: "Гофроящик",
+    fefco: "0201",
+    inner: [600, 400, 400],
+    outer: [608, 408, 406],
+    cardboardGrade: "Т-23",
+    fluteProfile: "C",
+    printMethod: "Флексопечать",
+    printColors: 2,
+    coating: "Без покрытия",
+    packingMethod: "Вручную",
+    loadRequirement: "Штабелирование в 4 яруса, до 18 кг на короб",
+    storageRequirement: "Сухой склад, до 70% влажности",
+    palletizing: "Паллета 1200×800, 480 шт., стрейч-обмотка",
+    currentSupplier: "Упак-Регион",
+    currentPrice: 34.8,
+    clientProblem: "Короба рвутся по фальцу при перегрузке.",
+  },
+  {
+    packagingType: "Листовой гофрокартон",
+    fefco: "",
+    inner: [1200, 800, 0],
+    outer: [1200, 800, 0],
+    cardboardGrade: "П-32",
+    fluteProfile: "BC",
+    printMethod: "Без печати",
+    printColors: null,
+    coating: "Без покрытия",
+    packingMethod: "На линии",
+    loadRequirement: "Прокладка между ярусами, до 900 кг на паллету",
+    storageRequirement: "Хранение на паллетах, без прямого солнца",
+    palletizing: "Паллета 1200×800, пачки по 250 листов",
+    currentSupplier: "КартонТорг",
+    currentPrice: 96,
+    clientProblem: "Поставщик срывает сроки в сезон.",
+  },
+  {
+    packagingType: "Лоток",
+    fefco: "0427",
+    inner: [400, 300, 120],
+    outer: [406, 306, 124],
+    cardboardGrade: "Т-24",
+    fluteProfile: "E (микрогофра)",
+    printMethod: "Офсет (кашировка)",
+    printColors: 4,
+    coating: "Лак",
+    packingMethod: "На линии",
+    loadRequirement: "Нагрузка до 12 кг, штабель 6 ярусов",
+    storageRequirement: "Отапливаемый склад, товар пищевой",
+    palletizing: "Паллета 1200×800, 720 шт., термоусадка",
+    currentSupplier: "Полиграф-Пак",
+    currentPrice: 41.2,
+    clientProblem: "Печать плывёт, оттенок гуляет от партии к партии.",
+  },
+  {
+    packagingType: "Короб с крышкой",
+    fefco: "0402",
+    inner: [325, 245, 260],
+    outer: [331, 251, 264],
+    cardboardGrade: "Т-22",
+    fluteProfile: "B",
+    printMethod: "Трафарет",
+    printColors: 1,
+    coating: "Без покрытия",
+    packingMethod: "Вручную",
+    loadRequirement: "Архивное хранение, до 15 кг, штабель 5 ярусов",
+    storageRequirement: "Стеллажное хранение, сухое помещение",
+    palletizing: "Паллета 1200×800, 200 шт., без обмотки",
+    currentSupplier: "Своё производство",
+    currentPrice: 62,
+    clientProblem: "Крышка не держит форму под весом документов.",
+  },
+];
+
+/**
+ * Заполненность брифа растёт вместе с продвижением сделки: на входящих
+ * заявках почти ничего нет, на расчёте — половина, дальше бриф закрыт.
+ */
+const buildDemoBrief = (index: number, updatedAt: string): DealBrief => {
+  const seed = briefSeeds[index % briefSeeds.length];
+  const brief = createEmptyDealBrief();
+  if (index === 0) return brief;
+
+  brief.packagingType = seed.packagingType;
+  brief.clientProblem = seed.clientProblem;
+  brief.batchVolume = `${18 + index * 3} тыс. шт.`;
+  brief.assets.spec = {
+    status: index > 1 ? "received" : "requested",
+    note: index > 1 ? "ТЗ во вложении к письму от клиента" : "Запросили у технолога",
+  };
+  brief.updatedAt = updatedAt;
+  if (index < 2) return brief;
+
+  brief.fefco = seed.fefco;
+  brief.innerDimensions = {
+    length: seed.inner[0],
+    width: seed.inner[1],
+    height: seed.inner[2] || null,
+  };
+  brief.cardboardGrade = seed.cardboardGrade;
+  brief.fluteProfile = seed.fluteProfile;
+  brief.printMethod = seed.printMethod;
+  brief.printColors = seed.printColors;
+  brief.monthlyVolume = `${6 + index} тыс. шт.`;
+  brief.currentSupplier = seed.currentSupplier;
+  brief.currentPrice = seed.currentPrice;
+  brief.assets.photo = { status: "received", note: "Фото образца с производства" };
+  if (index < 5) return brief;
+
+  brief.outerDimensions = {
+    length: seed.outer[0],
+    width: seed.outer[1],
+    height: seed.outer[2] || null,
+  };
+  brief.coating = seed.coating;
+  brief.annualVolume = `${(6 + index) * 12} тыс. шт.`;
+  brief.packingMethod = seed.packingMethod;
+  brief.loadRequirement = seed.loadRequirement;
+  brief.storageRequirement = seed.storageRequirement;
+  brief.palletizing = seed.palletizing;
+  brief.assets.drawing = { status: "received", note: "Чертёж в PDF от клиента" };
+  brief.assets.sample = {
+    status: index < 8 ? "requested" : "received",
+    note: index < 8 ? "Образец обещали передать с курьером" : "Образец на складе",
+  };
+
+  return brief;
+};
+
 const dealsFromStatuses: Deal[] = DEAL_STATUSES.map((status, index) => {
   const ourPrice = 168000 + index * 21300;
   const purchasePrice = 114000 + index * 16700;
@@ -395,6 +547,10 @@ const dealsFromStatuses: Deal[] = DEAL_STATUSES.map((status, index) => {
     margin,
     marginPercent: Math.round((margin / ourPrice) * 1000) / 10,
     status,
+    brief: buildDemoBrief(
+      index,
+      `2026-07-${String(8 + index).padStart(2, "0")}T12:00:00.000Z`,
+    ),
     proposalDate:
       index < 3 ? null : `2026-07-${String(4 + index).padStart(2, "0")}`,
     nextAction:
@@ -414,6 +570,15 @@ const dealsFromStatuses: Deal[] = DEAL_STATUSES.map((status, index) => {
   };
 });
 
+const briefFrom = (
+  patch: Partial<Omit<DealBrief, "assets">> & {
+    assets?: Partial<DealBrief["assets"]>;
+  },
+): DealBrief => {
+  const base = createEmptyDealBrief();
+  return { ...base, ...patch, assets: { ...base.assets, ...patch.assets } };
+};
+
 const mariaDeals: Deal[] = [
   {
     id: "СД-0830",
@@ -432,6 +597,34 @@ const mariaDeals: Deal[] = [
     margin: 105000,
     marginPercent: 26.6,
     status: "Согласование условий",
+    brief: briefFrom({
+      packagingType: "Гофроящик",
+      fefco: "0201",
+      innerDimensions: { length: 400, width: 300, height: 250 },
+      outerDimensions: { length: 406, width: 306, height: 254 },
+      cardboardGrade: "Т-23",
+      fluteProfile: "B",
+      printMethod: "Флексопечать",
+      printColors: 1,
+      coating: "Без покрытия",
+      batchVolume: "24 тыс. шт.",
+      monthlyVolume: "8 тыс. шт.",
+      annualVolume: "96 тыс. шт.",
+      packingMethod: "Вручную",
+      loadRequirement: "До 16 кг на короб, штабель 5 ярусов",
+      storageRequirement: "Сухой склад без отопления",
+      palletizing: "Паллета 1200×800, 540 шт., стрейч",
+      currentSupplier: "Упак-Регион",
+      currentPrice: 33.5,
+      clientProblem: "Текущий поставщик поднял цену на 12% без предупреждения.",
+      assets: {
+        drawing: { status: "received", note: "Чертёж PDF, письмо от 12 числа" },
+        photo: { status: "received", note: "Фото короба на линии" },
+        spec: { status: "received", note: "ТЗ согласовано с технологом" },
+        sample: { status: "received", note: "Образец на складе" },
+      },
+      updatedAt: offsetIso(-12, 11),
+    }),
     proposalDate: offsetDay(-19),
     nextAction: "",
     nextActionAt: null,
@@ -455,6 +648,29 @@ const mariaDeals: Deal[] = [
     margin: 64000,
     marginPercent: 25.7,
     status: "КП отправлено",
+    brief: briefFrom({
+      packagingType: "Лоток",
+      fefco: "0427",
+      innerDimensions: { length: 380, width: 280, height: 110 },
+      cardboardGrade: "Т-24",
+      fluteProfile: "E (микрогофра)",
+      printMethod: "Офсет (кашировка)",
+      printColors: 4,
+      coating: "Лак",
+      batchVolume: "12 тыс. шт.",
+      monthlyVolume: "4 тыс. шт.",
+      packingMethod: "На линии",
+      loadRequirement: "До 10 кг, штабель 6 ярусов",
+      currentSupplier: "Полиграф-Пак",
+      currentPrice: 44,
+      clientProblem: "Нужна стабильная печать под фирменный цвет.",
+      assets: {
+        photo: { status: "received", note: "Фото текущего лотка" },
+        spec: { status: "received", note: "ТЗ на печать от маркетолога" },
+        drawing: { status: "requested", note: "Ждём развёртку от клиента" },
+      },
+      updatedAt: offsetIso(-8, 14),
+    }),
     proposalDate: offsetDay(-7),
     nextAction: "Напомнить о коммерческом предложении",
     nextActionAt: offsetIso(2, 10),
@@ -478,6 +694,33 @@ const mariaDeals: Deal[] = [
     margin: 131000,
     marginPercent: 26.3,
     status: "Закрыта успешно",
+    brief: briefFrom({
+      packagingType: "Гофроящик",
+      fefco: "0203",
+      innerDimensions: { length: 800, width: 400, height: 400 },
+      outerDimensions: { length: 810, width: 410, height: 408 },
+      cardboardGrade: "П-32",
+      fluteProfile: "BC",
+      printMethod: "Без печати",
+      coating: "Влагостойкая пропитка",
+      batchVolume: "30 тыс. шт.",
+      monthlyVolume: "10 тыс. шт.",
+      annualVolume: "120 тыс. шт.",
+      packingMethod: "На линии",
+      loadRequirement: "До 25 кг, штабель 4 яруса, транспортировка фурами",
+      storageRequirement: "Открытый навес, нужна влагостойкость",
+      palletizing: "Паллета 1200×1000, 300 шт., обвязка лентой",
+      currentSupplier: "Своё производство",
+      currentPrice: 78,
+      clientProblem: "Ящики размокали при перевозке зимой.",
+      assets: {
+        drawing: { status: "received", note: "Чертёж согласован с производством" },
+        photo: { status: "received", note: "Фото паллеты после отгрузки" },
+        spec: { status: "received", note: "ТЗ подписано" },
+        sample: { status: "received", note: "Образец утверждён клиентом" },
+      },
+      updatedAt: offsetIso(-52, 10),
+    }),
     proposalDate: offsetDay(-58),
     nextAction: "",
     nextActionAt: null,
@@ -501,6 +744,19 @@ const mariaDeals: Deal[] = [
     margin: 81000,
     marginPercent: 26,
     status: "Переговоры",
+    brief: briefFrom({
+      packagingType: "Лоток",
+      innerDimensions: { length: 300, width: 200, height: 90 },
+      cardboardGrade: "Т-22",
+      printMethod: "Флексопечать",
+      printColors: 2,
+      batchVolume: "18 тыс. шт.",
+      clientProblem: "Лотки мнутся при выкладке в торговом зале.",
+      assets: {
+        spec: { status: "requested", note: "Клиент готовит ТЗ на печать" },
+      },
+      updatedAt: offsetIso(-4, 9),
+    }),
     proposalDate: offsetDay(-9),
     nextAction: "Подтвердить график отгрузок на август",
     nextActionAt: offsetIso(3, 12),

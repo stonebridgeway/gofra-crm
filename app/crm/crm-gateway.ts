@@ -1,10 +1,18 @@
 import {
+  BRIEF_ASSET_KINDS,
   CRM_SCHEMA_VERSION,
+  PACKING_METHODS,
+  createEmptyDealBrief,
+  type BriefAsset,
+  type BriefAssetStatus,
+  type BriefDimensions,
   type Client,
   type Contact,
   type CrmSnapshot,
   type Deal,
+  type DealBrief,
   type Dictionaries,
+  type PackingMethod,
   type Interaction,
   type Session,
   type StatusEvent,
@@ -477,6 +485,72 @@ const createInitialStatusEvents = (
   })),
 ];
 
+const asNullableNumber = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+const normalizeDimensions = (value: unknown): BriefDimensions => {
+  const record = asRecord(value);
+
+  return {
+    length: asNullableNumber(record.length),
+    width: asNullableNumber(record.width),
+    height: asNullableNumber(record.height),
+  };
+};
+
+const normalizeBriefAsset = (value: unknown): BriefAsset => {
+  const record = asRecord(value);
+  const status: BriefAssetStatus =
+    record.status === "received" || record.status === "requested"
+      ? record.status
+      : "missing";
+
+  return { status, note: asString(record.note) };
+};
+
+/**
+ * Технический бриф добавлен после схемы v2, поэтому в сохранённых снимках его
+ * может не быть: недостающие поля добираются из пустого брифа.
+ */
+const normalizeDealBrief = (value: unknown): DealBrief => {
+  const record = asRecord(value);
+  const empty = createEmptyDealBrief();
+  const packingMethod = PACKING_METHODS.find(
+    (method) => method === record.packingMethod,
+  ) as PackingMethod | undefined;
+
+  return {
+    ...empty,
+    ...record,
+    packagingType: asString(record.packagingType),
+    fefco: asString(record.fefco),
+    innerDimensions: normalizeDimensions(record.innerDimensions),
+    outerDimensions: normalizeDimensions(record.outerDimensions),
+    cardboardGrade: asString(record.cardboardGrade),
+    fluteProfile: asString(record.fluteProfile),
+    printMethod: asString(record.printMethod),
+    printColors: asNullableNumber(record.printColors),
+    coating: asString(record.coating),
+    batchVolume: asString(record.batchVolume),
+    monthlyVolume: asString(record.monthlyVolume),
+    annualVolume: asString(record.annualVolume),
+    packingMethod: packingMethod ?? empty.packingMethod,
+    loadRequirement: asString(record.loadRequirement),
+    storageRequirement: asString(record.storageRequirement),
+    palletizing: asString(record.palletizing),
+    currentSupplier: asString(record.currentSupplier),
+    currentPrice: asNullableNumber(record.currentPrice),
+    clientProblem: asString(record.clientProblem),
+    assets: Object.fromEntries(
+      BRIEF_ASSET_KINDS.map((kind) => [
+        kind,
+        normalizeBriefAsset(asRecord(record.assets)[kind]),
+      ]),
+    ) as DealBrief["assets"],
+    updatedAt: asNullableString(record.updatedAt),
+  };
+};
+
 /**
  * Upgrades an unversioned/v1 browser snapshot to schema v2.
  * Existing record IDs and legacy display fields are kept verbatim.
@@ -644,6 +718,7 @@ export const migrateCrmSnapshot = (
         record.managerName,
         userById.get(ownerId)?.fullName ?? "",
       ),
+      brief: normalizeDealBrief(record.brief),
       createdAt,
       updatedAt: asString(record.updatedAt, createdAt),
     } as unknown as Deal;

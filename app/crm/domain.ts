@@ -189,6 +189,225 @@ export interface Contact extends OwnedEntity {
   comment: string;
 }
 
+/** Вид упаковки — верхний уровень технического брифа. */
+export const PACKAGING_TYPES = [
+  "Гофроящик",
+  "Лоток",
+  "Обечайка",
+  "Короб с крышкой",
+  "Вкладыш / решётка",
+  "Листовой гофрокартон",
+  "Другое",
+] as const;
+
+/** Конструкции FEFCO, которые встречаются в заявках чаще всего. */
+export const FEFCO_CODES = [
+  "0201",
+  "0203",
+  "0215",
+  "0300",
+  "0310",
+  "0401",
+  "0402",
+  "0409",
+  "0426",
+  "0427",
+  "0470",
+  "0711",
+] as const;
+
+export const CARDBOARD_GRADES = [
+  "Т-21",
+  "Т-22",
+  "Т-23",
+  "Т-24",
+  "П-31",
+  "П-32",
+  "П-33",
+  "П-34",
+] as const;
+
+export const FLUTE_PROFILES = [
+  "E (микрогофра)",
+  "B",
+  "C",
+  "BC",
+  "BE",
+  "T (наногофра)",
+] as const;
+
+export const PRINT_METHODS = [
+  "Без печати",
+  "Флексопечать",
+  "Офсет (кашировка)",
+  "Цифровая печать",
+  "Трафарет",
+] as const;
+
+export const COATINGS = [
+  "Без покрытия",
+  "Лак",
+  "Ламинация",
+  "Влагостойкая пропитка",
+  "Парафинирование",
+] as const;
+
+export const PACKING_METHODS = [
+  "Не уточнено",
+  "Вручную",
+  "На линии",
+  "Смешанно",
+] as const;
+
+export type PackingMethod = (typeof PACKING_METHODS)[number];
+
+/** Материалы, которые нужно получить от клиента до расчёта цены. */
+export const BRIEF_ASSET_KINDS = [
+  "drawing",
+  "photo",
+  "spec",
+  "sample",
+] as const;
+
+export type BriefAssetKind = (typeof BRIEF_ASSET_KINDS)[number];
+
+export const BRIEF_ASSET_LABELS: Record<BriefAssetKind, string> = {
+  drawing: "Чертёж",
+  photo: "Фотография",
+  spec: "ТЗ",
+  sample: "Образец",
+};
+
+export type BriefAssetStatus = "missing" | "requested" | "received";
+
+export const BRIEF_ASSET_STATUS_LABELS: Record<BriefAssetStatus, string> = {
+  missing: "Нет",
+  requested: "Запрошен",
+  received: "Получен",
+};
+
+export interface BriefAsset {
+  status: BriefAssetStatus;
+  /** Ссылка на файл или пометка, где материал лежит: хранилища файлов нет. */
+  note: string;
+}
+
+/** Габариты в миллиметрах: длина × ширина × высота. */
+export interface BriefDimensions {
+  length: number | null;
+  width: number | null;
+  height: number | null;
+}
+
+/**
+ * Технический бриф сделки: то, без чего нельзя считать цену гофроупаковки.
+ * Живёт на сделке, заполняется на статусах «Уточняем ТЗ» и «Считаем цену».
+ */
+export interface DealBrief {
+  packagingType: string;
+  fefco: string;
+  innerDimensions: BriefDimensions;
+  outerDimensions: BriefDimensions;
+  cardboardGrade: string;
+  fluteProfile: string;
+  printMethod: string;
+  printColors: number | null;
+  coating: string;
+  /** Объём одной партии, свободный текст: «24 тыс. шт.». */
+  batchVolume: string;
+  monthlyVolume: string;
+  annualVolume: string;
+  packingMethod: PackingMethod;
+  loadRequirement: string;
+  storageRequirement: string;
+  palletizing: string;
+  currentSupplier: string;
+  /** Текущая цена клиента за единицу, RUB. */
+  currentPrice: number | null;
+  clientProblem: string;
+  assets: Record<BriefAssetKind, BriefAsset>;
+  updatedAt: string | null;
+}
+
+export const createEmptyDimensions = (): BriefDimensions => ({
+  length: null,
+  width: null,
+  height: null,
+});
+
+export const createEmptyDealBrief = (): DealBrief => ({
+  packagingType: "",
+  fefco: "",
+  innerDimensions: createEmptyDimensions(),
+  outerDimensions: createEmptyDimensions(),
+  cardboardGrade: "",
+  fluteProfile: "",
+  printMethod: "",
+  printColors: null,
+  coating: "",
+  batchVolume: "",
+  monthlyVolume: "",
+  annualVolume: "",
+  packingMethod: "Не уточнено",
+  loadRequirement: "",
+  storageRequirement: "",
+  palletizing: "",
+  currentSupplier: "",
+  currentPrice: null,
+  clientProblem: "",
+  assets: {
+    drawing: { status: "missing", note: "" },
+    photo: { status: "missing", note: "" },
+    spec: { status: "missing", note: "" },
+    sample: { status: "missing", note: "" },
+  },
+  updatedAt: null,
+});
+
+export const hasDimensions = (dimensions: BriefDimensions): boolean =>
+  dimensions.length !== null ||
+  dimensions.width !== null ||
+  dimensions.height !== null;
+
+/**
+ * Заполненность брифа для индикатора в карточке сделки:
+ * 19 полей плюс четыре материала от клиента.
+ */
+export const getDealBriefCompletion = (
+  brief: DealBrief,
+): { filled: number; total: number } => {
+  const text = [
+    brief.packagingType,
+    brief.fefco,
+    brief.cardboardGrade,
+    brief.fluteProfile,
+    brief.printMethod,
+    brief.coating,
+    brief.batchVolume,
+    brief.monthlyVolume,
+    brief.annualVolume,
+    brief.loadRequirement,
+    brief.storageRequirement,
+    brief.palletizing,
+    brief.currentSupplier,
+    brief.clientProblem,
+  ].filter((value) => value.trim().length > 0).length;
+
+  const checks = [
+    hasDimensions(brief.innerDimensions),
+    hasDimensions(brief.outerDimensions),
+    // Без печати количество красок уточнять не нужно.
+    brief.printMethod === "Без печати" || brief.printColors !== null,
+    brief.packingMethod !== "Не уточнено",
+    brief.currentPrice !== null,
+    ...BRIEF_ASSET_KINDS.map(
+      (kind) => brief.assets[kind].status === "received",
+    ),
+  ].filter(Boolean).length;
+
+  return { filled: text + checks, total: 23 };
+};
+
 export interface Deal extends OwnedEntity {
   id: string;
   clientId: string;
@@ -203,6 +422,7 @@ export interface Deal extends OwnedEntity {
   margin: number;
   marginPercent: number;
   status: DealStatus;
+  brief: DealBrief;
   proposalDate: string | null;
   nextAction: string;
   nextActionAt: string | null;

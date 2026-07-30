@@ -247,15 +247,19 @@ button {
 }
 
 .account-copy strong {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.015em;
 }
 
+/* Роль набрана моноширинным капсом — на 8px он был нечитаем. */
 .account-copy small {
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
-  letter-spacing: 0.05em;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* Command rail */
@@ -297,7 +301,7 @@ button {
 
 .global-search > label {
   font-family: "Geist Mono", monospace;
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -442,6 +446,44 @@ button {
   clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
 }
 
+/* Справочники: рабочий экран редактирования, а не подпись — нужен крупный кегль. */
+.dictionary-tabs button {
+  font-size: 13px;
+  min-height: 46px;
+}
+
+.dictionary-tabs small {
+  font-size: 12px;
+}
+
+.dictionary-list .section-kicker {
+  font-size: 11px;
+}
+
+.dictionary-list h3 {
+  font-size: 18px;
+}
+
+.dictionary-list > header > span,
+.dictionary-order,
+.dictionary-state {
+  font-size: 12px;
+}
+
+.dictionary-list li {
+  min-height: 54px;
+}
+
+.dictionary-list li strong {
+  font-size: 14px;
+}
+
+.dictionary-list li button {
+  font-size: 12px;
+  min-height: 34px;
+  padding: 0 9px;
+}
+
 .wf-sales-hero {
   --wf-hero-accent: var(--accent);
   --wf-hero-ink: var(--ink);
@@ -466,13 +508,99 @@ button {
 }
 
 .wf-panel-heading h2 {
-  font-size: 16px;
+  font-size: 18px;
   letter-spacing: -0.045em;
 }
 
 .wf-panel-count {
   font-family: "Geist Mono", monospace;
+  font-size: 13px;
   letter-spacing: 0.06em;
+}
+
+/*
+ * Списки рабочего стола («Сроки», «Приоритеты», «План дня» и остальные панели
+ * фокуса) — основной рабочий инструмент менеджера, 10–11px там нечитаемы.
+ * Блок живёт здесь, а не в workspace-features.css: этот слой подключается
+ * последним и перекрывает базовые размеры.
+ */
+.wf-eyebrow {
+  font-size: 12px;
+}
+
+.wf-task-main > header > strong {
+  font-size: 13px;
+}
+
+.wf-task-main > p,
+.wf-task-origin,
+.wf-task-checklist > li,
+.wf-checklist-progress,
+.wf-task-main > footer time,
+.wf-inline-person,
+.wf-link-button,
+.wf-due {
+  font-size: 12px;
+}
+
+.wf-checklist-progress > strong {
+  font-size: 11px;
+}
+
+.wf-kind-mark {
+  font-size: 12px;
+  height: 22px;
+  width: 27px;
+}
+
+.wf-task-actions > button:not(.wf-icon-button) {
+  font-size: 12px;
+  min-height: 32px;
+}
+
+.wf-attention-list strong {
+  font-size: 13px;
+}
+
+.wf-attention-list small,
+.wf-attention-list time {
+  font-size: 12px;
+}
+
+/* Бейдж растёт вместе с текстом — первая колонка строки идёт следом. */
+.wf-focus-badge {
+  font-size: 12px;
+  height: 28px;
+  width: 28px;
+}
+
+.wf-attention-list button {
+  grid-template-columns: 28px minmax(0, 1fr) auto 14px;
+}
+
+.wf-empty h3 {
+  font-size: 15px;
+}
+
+.wf-empty p {
+  font-size: 12px;
+}
+
+/* Сводка руководителя: «Нагрузка сотрудников». */
+.wf-avatar,
+.wf-team-list article > div strong {
+  font-size: 13px;
+}
+
+.wf-team-list article > div small,
+.wf-overdue-number small,
+.wf-zero-number small {
+  font-size: 12px;
+}
+
+.wf-overdue-number,
+.wf-zero-number {
+  font-size: 16px;
 }
 
 .wf-feature-header {
@@ -636,6 +764,23 @@ button {
   padding: 14px 13px 12px;
 }
 
+/* Заголовки колонок канбана — та же логика читаемости, что и у карточек. */
+.column-header h3 {
+  font-size: 15px;
+}
+
+.column-header > div:first-child > span {
+  font-size: 12px;
+  height: 28px;
+  min-width: 28px;
+}
+
+/* font-size задан и на контейнере: min-height списка статусов считается в em. */
+.substatus-list,
+.substatus-list span {
+  font-size: 12px;
+}
+
 .column-stack {
   gap: 7px;
   padding: 8px;
@@ -667,6 +812,66 @@ button {
   padding-top: 9px;
 }
 
+/*
+ * Читаемость карточек канбана (клиенты и сделки): базовые 10px слишком мелкие
+ * для рабочего экрана. Правила намеренно ограничены `.record-card`, чтобы не
+ * задеть те же классы в таблицах, ленте активности и drawer'ах.
+ */
+.record-card h4 {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.record-card .record-id {
+  font-size: 11px;
+}
+
+.record-card .exact-status {
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
+.record-card .brief-chip {
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
+.record-card .potential {
+  font-size: 12px;
+  height: 28px;
+  min-width: 28px;
+}
+
+.record-card .card-facts dt,
+.record-card .deal-numbers dt {
+  font-size: 12px;
+}
+
+.record-card .card-facts dd {
+  font-size: 13px;
+}
+
+.record-card .company-line {
+  font-size: 12px;
+}
+
+.record-card .deal-numbers dd {
+  font-size: 13px;
+}
+
+.record-card .next-action > span {
+  font-size: 11px;
+}
+
+.record-card .next-action strong {
+  font-size: 12px;
+}
+
+.card-footer > span:nth-child(2),
+.card-footer button {
+  font-size: 12px;
+}
+
 .table-shell {
   clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
 }
@@ -678,6 +883,32 @@ button {
 
 .table-shell tr:hover td {
   background: var(--hover-row);
+}
+
+/* Режим списка: та же читаемость, что и у карточек канбана. */
+.table-shell table {
+  font-size: 13px;
+}
+
+.table-shell th {
+  font-size: 12px;
+}
+
+.table-shell td small {
+  font-size: 12px;
+}
+
+.table-shell .exact-status,
+.table-shell .brief-chip,
+.table-shell .row-state {
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
+.table-shell .potential {
+  font-size: 12px;
+  height: 28px;
+  min-width: 28px;
 }
 
 /* Drawers and dialogs */

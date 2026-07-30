@@ -19,16 +19,32 @@ import {
 } from "./WorkspaceFeatures";
 import { ThemeSwitch } from "./theme";
 import {
+  BRIEF_ASSET_KINDS,
+  BRIEF_ASSET_LABELS,
+  BRIEF_ASSET_STATUS_LABELS,
+  CARDBOARD_GRADES,
   CLIENT_PIPELINE,
   CLIENT_STATUSES,
+  COATINGS,
   DEAL_PIPELINE,
   DEAL_STATUSES,
+  FEFCO_CODES,
+  FLUTE_PROFILES,
+  PACKAGING_TYPES,
+  PACKING_METHODS,
+  PRINT_METHODS,
+  createEmptyDealBrief,
+  getDealBriefCompletion,
+  hasDimensions,
   type AppModule,
+  type BriefAssetStatus,
+  type BriefDimensions,
   type Client,
   type ClientStatus,
   type Contact,
   type CrmSnapshot,
   type Deal,
+  type DealBrief,
   type DealStatus,
   type Interaction,
   type InteractionKind,
@@ -166,6 +182,29 @@ const formatDate = (value: string | null, withTime = false) => {
     month: "short",
     ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
   }).format(date);
+};
+
+/** Цена за единицу нужна с копейками, в отличие от сумм сделки. */
+const formatUnitPrice = (value: number | null) =>
+  value === null
+    ? ""
+    : `${new Intl.NumberFormat("ru-RU", {
+        maximumFractionDigits: 2,
+      }).format(value)} ₽/шт.`;
+
+const formatDimensions = (dimensions: BriefDimensions) => {
+  if (!hasDimensions(dimensions)) return "";
+  const parts = [dimensions.length, dimensions.width, dimensions.height]
+    .filter((value): value is number => value !== null)
+    .map((value) => new Intl.NumberFormat("ru-RU").format(value));
+  return `${parts.join(" × ")} мм`;
+};
+
+const toNumberOrNull = (value: FormDataEntryValue | null) => {
+  const raw = String(value ?? "").trim().replace(",", ".");
+  if (!raw) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const toIsoOrNull = (value: FormDataEntryValue | null) => {
@@ -524,6 +563,22 @@ export function CrmApp() {
     if (message) notify(message);
   };
 
+  const saveDealBrief = (dealId: string, brief: DealBrief) => {
+    if (!snapshot) return;
+    const now = new Date().toISOString();
+    commit(
+      {
+        ...snapshot,
+        deals: snapshot.deals.map((deal) =>
+          deal.id === dealId
+            ? { ...deal, brief: { ...brief, updatedAt: now }, updatedAt: now }
+            : deal,
+        ),
+      },
+      "Технический бриф сохранён",
+    );
+  };
+
   const moveClient = (id: string, status: ClientStatus) => {
     if (!snapshot) return;
     const previous = snapshot.clients.find((client) => client.id === id);
@@ -721,6 +776,11 @@ export function CrmApp() {
         margin: Math.round(ourPrice * 0.24),
         marginPercent: 24,
         status: String(form.get("status") ?? "Новая заявка") as DealStatus,
+        brief: {
+          ...createEmptyDealBrief(),
+          packagingType: String(form.get("packagingType") ?? ""),
+          batchVolume: String(form.get("volume") ?? ""),
+        },
         proposalDate: null,
         nextAction,
         nextActionAt,
@@ -1309,6 +1369,7 @@ export function CrmApp() {
           onClose={() => setDrawer(null)}
           onMoveClient={requestClientMove}
           onMoveDeal={requestDealMove}
+          onSaveBrief={saveDealBrief}
           showFinancials={
             currentUser ? canViewFinancials(currentUser) : false
           }
@@ -1948,7 +2009,10 @@ function DealCard({
         <span className="record-id">{deal.id}</span>
         <h4>{deal.title}</h4>
         <p className="company-line">{clientName}</p>
-        <span className="exact-status">{deal.status}</span>
+        <span className="card-status-line">
+          <span className="exact-status">{deal.status}</span>
+          <BriefChip brief={deal.brief} />
+        </span>
         <dl className={`deal-numbers ${showFinancials ? "" : "is-single"}`}>
           <div>
             <dt>Сумма</dt>
@@ -1988,6 +2052,21 @@ function DealCard({
   );
 }
 
+/** Заполненность технического брифа — сигнал готовности сделки к расчёту. */
+function BriefChip({ brief }: { brief: DealBrief }) {
+  const { filled, total } = getDealBriefCompletion(brief);
+  const tone = filled === total ? "is-complete" : filled ? "" : "is-empty";
+
+  return (
+    <span
+      className={`brief-chip ${tone}`}
+      title={`Технический бриф заполнен на ${filled} из ${total} пунктов`}
+    >
+      Бриф {filled}/{total}
+    </span>
+  );
+}
+
 function DealTable({
   deals,
   clientMap,
@@ -2009,6 +2088,7 @@ function DealTable({
             <th>Сделка</th>
             <th>Клиент</th>
             <th>Товар / объём</th>
+            <th>Бриф</th>
             <th>Сумма</th>
             {showFinancials && <th>Маржа</th>}
             <th>Точный статус</th>
@@ -2033,6 +2113,9 @@ function DealTable({
               <td>
                 <strong>{deal.product}</strong>
                 <small>{deal.volume}</small>
+              </td>
+              <td>
+                <BriefChip brief={deal.brief} />
               </td>
               <td className="mono">{formatMoney(deal.ourPrice)}</td>
               {showFinancials && (
@@ -2690,6 +2773,7 @@ function RecordDrawer({
   onClose,
   onMoveClient,
   onMoveDeal,
+  onSaveBrief,
   onAddContact,
   onAddInteraction,
   showFinancials,
@@ -2699,6 +2783,7 @@ function RecordDrawer({
   onClose: () => void;
   onMoveClient: (client: Client) => void;
   onMoveDeal: (deal: Deal) => void;
+  onSaveBrief: (dealId: string, brief: DealBrief) => void;
   onAddContact: (clientId: string) => void;
   onAddInteraction: (clientId: string) => void;
   showFinancials: boolean;
@@ -2872,6 +2957,11 @@ function RecordDrawer({
                   <Detail label="Дата КП" value={formatDate(deal.proposalDate)} />
                 </dl>
               </DrawerSection>
+              <DealBriefSection
+                key={deal.id}
+                brief={deal.brief}
+                onSave={(brief) => onSaveBrief(deal.id, brief)}
+              />
               <DrawerSection title="Следующий шаг">
                 <div className="next-action drawer-next">
                   <span className={getDueState(deal.nextActionAt).className}>
@@ -2913,6 +3003,436 @@ function RecordDrawer({
           </DrawerSection>
         </div>
       </aside>
+    </div>
+  );
+}
+
+const readBriefForm = (form: FormData, previous: DealBrief): DealBrief => {
+  const text = (name: string) => String(form.get(name) ?? "").trim();
+  const dimensions = (prefix: string): BriefDimensions => ({
+    length: toNumberOrNull(form.get(`${prefix}Length`)),
+    width: toNumberOrNull(form.get(`${prefix}Width`)),
+    height: toNumberOrNull(form.get(`${prefix}Height`)),
+  });
+  const packingMethod = PACKING_METHODS.find(
+    (method) => method === text("packingMethod"),
+  );
+
+  return {
+    ...previous,
+    packagingType: text("packagingType"),
+    fefco: text("fefco"),
+    innerDimensions: dimensions("inner"),
+    outerDimensions: dimensions("outer"),
+    cardboardGrade: text("cardboardGrade"),
+    fluteProfile: text("fluteProfile"),
+    printMethod: text("printMethod"),
+    printColors: toNumberOrNull(form.get("printColors")),
+    coating: text("coating"),
+    batchVolume: text("batchVolume"),
+    monthlyVolume: text("monthlyVolume"),
+    annualVolume: text("annualVolume"),
+    packingMethod: packingMethod ?? previous.packingMethod,
+    loadRequirement: text("loadRequirement"),
+    storageRequirement: text("storageRequirement"),
+    palletizing: text("palletizing"),
+    currentSupplier: text("currentSupplier"),
+    currentPrice: toNumberOrNull(form.get("currentPrice")),
+    clientProblem: text("clientProblem"),
+    assets: Object.fromEntries(
+      BRIEF_ASSET_KINDS.map((kind) => {
+        const status = text(`asset-${kind}`);
+        return [
+          kind,
+          {
+            status:
+              status === "received" || status === "requested"
+                ? (status as BriefAssetStatus)
+                : "missing",
+            note: text(`asset-${kind}-note`),
+          },
+        ];
+      }),
+    ) as DealBrief["assets"],
+  };
+};
+
+/**
+ * Технический бриф сделки: то, что нужно уточнить у клиента до расчёта цены.
+ * Читается компактно, редактируется одной формой прямо в карточке.
+ */
+function DealBriefSection({
+  brief,
+  onSave,
+}: {
+  brief: DealBrief;
+  onSave: (brief: DealBrief) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const completion = getDealBriefCompletion(brief);
+  const printSummary = [
+    brief.printMethod,
+    brief.printColors !== null ? `${brief.printColors} цв.` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  if (editing) {
+    return (
+      <section className="drawer-section deal-brief">
+        <header>
+          <h3>Технический бриф</h3>
+          <span className="brief-progress">
+            {completion.filled}/{completion.total}
+          </span>
+        </header>
+        <form
+          className="brief-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSave(readBriefForm(new FormData(event.currentTarget), brief));
+            setEditing(false);
+          }}
+        >
+          <BriefField label="Вид упаковки">
+            <input
+              defaultValue={brief.packagingType}
+              list="brief-packaging-types"
+              name="packagingType"
+            />
+            <datalist id="brief-packaging-types">
+              {PACKAGING_TYPES.map((type) => (
+                <option key={type} value={type} />
+              ))}
+            </datalist>
+          </BriefField>
+          <BriefField label="Конструкция FEFCO">
+            <input defaultValue={brief.fefco} list="brief-fefco" name="fefco" />
+            <datalist id="brief-fefco">
+              {FEFCO_CODES.map((code) => (
+                <option key={code} value={code} />
+              ))}
+            </datalist>
+          </BriefField>
+          <BriefDimensionsField
+            dimensions={brief.innerDimensions}
+            label="Внутренние размеры, мм"
+            prefix="inner"
+          />
+          <BriefDimensionsField
+            dimensions={brief.outerDimensions}
+            label="Внешние размеры, мм"
+            prefix="outer"
+          />
+          <BriefField label="Марка картона">
+            <input
+              defaultValue={brief.cardboardGrade}
+              list="brief-cardboard"
+              name="cardboardGrade"
+            />
+            <datalist id="brief-cardboard">
+              {CARDBOARD_GRADES.map((grade) => (
+                <option key={grade} value={grade} />
+              ))}
+            </datalist>
+          </BriefField>
+          <BriefField label="Профиль гофры">
+            <BriefSelect
+              name="fluteProfile"
+              options={FLUTE_PROFILES}
+              value={brief.fluteProfile}
+            />
+          </BriefField>
+          <BriefField label="Печать">
+            <BriefSelect
+              name="printMethod"
+              options={PRINT_METHODS}
+              value={brief.printMethod}
+            />
+          </BriefField>
+          <BriefField label="Количество цветов">
+            <input
+              defaultValue={brief.printColors ?? ""}
+              min={0}
+              name="printColors"
+              type="number"
+            />
+          </BriefField>
+          <BriefField label="Покрытие">
+            <BriefSelect
+              name="coating"
+              options={COATINGS}
+              value={brief.coating}
+            />
+          </BriefField>
+          <BriefField label="Способ упаковки">
+            <select defaultValue={brief.packingMethod} name="packingMethod">
+              {PACKING_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </BriefField>
+          <BriefField label="Объём партии">
+            <input defaultValue={brief.batchVolume} name="batchVolume" />
+          </BriefField>
+          <BriefField label="Потребление в месяц">
+            <input defaultValue={brief.monthlyVolume} name="monthlyVolume" />
+          </BriefField>
+          <BriefField label="Потребление в год">
+            <input defaultValue={brief.annualVolume} name="annualVolume" />
+          </BriefField>
+          <BriefField label="Требования к нагрузке" wide>
+            <input defaultValue={brief.loadRequirement} name="loadRequirement" />
+          </BriefField>
+          <BriefField label="Хранение" wide>
+            <input
+              defaultValue={brief.storageRequirement}
+              name="storageRequirement"
+            />
+          </BriefField>
+          <BriefField label="Паллетирование" wide>
+            <input defaultValue={brief.palletizing} name="palletizing" />
+          </BriefField>
+          <BriefField label="Текущий поставщик">
+            <input defaultValue={brief.currentSupplier} name="currentSupplier" />
+          </BriefField>
+          <BriefField label="Текущая цена, ₽/шт.">
+            <input
+              defaultValue={brief.currentPrice ?? ""}
+              min={0}
+              name="currentPrice"
+              step="0.01"
+              type="number"
+            />
+          </BriefField>
+          <BriefField label="Проблема клиента" wide>
+            <textarea
+              defaultValue={brief.clientProblem}
+              name="clientProblem"
+              rows={2}
+            />
+          </BriefField>
+
+          <fieldset className="brief-assets-editor">
+            <legend>Материалы от клиента</legend>
+            {BRIEF_ASSET_KINDS.map((kind) => (
+              <div key={kind}>
+                <span>{BRIEF_ASSET_LABELS[kind]}</span>
+                <select
+                  aria-label={`${BRIEF_ASSET_LABELS[kind]}: статус`}
+                  defaultValue={brief.assets[kind].status}
+                  name={`asset-${kind}`}
+                >
+                  {(
+                    ["missing", "requested", "received"] as BriefAssetStatus[]
+                  ).map((status) => (
+                    <option key={status} value={status}>
+                      {BRIEF_ASSET_STATUS_LABELS[status]}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  aria-label={`${BRIEF_ASSET_LABELS[kind]}: ссылка или комментарий`}
+                  defaultValue={brief.assets[kind].note}
+                  name={`asset-${kind}-note`}
+                  placeholder="Ссылка или где лежит"
+                />
+              </div>
+            ))}
+          </fieldset>
+
+          <footer className="brief-actions">
+            <button
+              className="ghost-button"
+              onClick={() => setEditing(false)}
+              type="button"
+            >
+              Отмена
+            </button>
+            <button className="primary-button" type="submit">
+              Сохранить бриф
+            </button>
+          </footer>
+        </form>
+      </section>
+    );
+  }
+
+  return (
+    <section className="drawer-section deal-brief">
+      <header>
+        <h3>Технический бриф</h3>
+        <div className="brief-header-actions">
+          <span
+            className={`brief-progress ${
+              completion.filled === completion.total ? "is-complete" : ""
+            }`}
+          >
+            {completion.filled}/{completion.total}
+          </span>
+          <button
+            className="text-button"
+            onClick={() => setEditing(true)}
+            type="button"
+          >
+            {completion.filled ? "Изменить" : "Заполнить"}
+          </button>
+        </div>
+      </header>
+
+      {!completion.filled ? (
+        <p className="muted-copy">
+          Бриф пустой. Без конструкции, размеров, марки картона и объёмов
+          сделку нельзя отдать в расчёт.
+        </p>
+      ) : (
+        <BriefReadout brief={brief} printSummary={printSummary} />
+      )}
+    </section>
+  );
+}
+
+function BriefReadout({
+  brief,
+  printSummary,
+}: {
+  brief: DealBrief;
+  printSummary: string;
+}) {
+  return (
+    <>
+      <dl className="detail-grid brief-grid">
+        <Detail label="Вид упаковки" value={brief.packagingType} />
+        <Detail label="Конструкция FEFCO" value={brief.fefco} mono />
+        <Detail
+          label="Внутренние размеры"
+          value={formatDimensions(brief.innerDimensions)}
+          mono
+        />
+        <Detail
+          label="Внешние размеры"
+          value={formatDimensions(brief.outerDimensions)}
+          mono
+        />
+        <Detail label="Марка картона" value={brief.cardboardGrade} />
+        <Detail label="Профиль гофры" value={brief.fluteProfile} />
+        <Detail label="Печать" value={printSummary} />
+        <Detail label="Покрытие" value={brief.coating} />
+        <Detail label="Партия" value={brief.batchVolume} />
+        <Detail label="В месяц" value={brief.monthlyVolume} />
+        <Detail label="В год" value={brief.annualVolume} />
+        <Detail
+          label="Способ упаковки"
+          value={
+            brief.packingMethod === "Не уточнено" ? "" : brief.packingMethod
+          }
+        />
+        <Detail label="Нагрузка" value={brief.loadRequirement} />
+        <Detail label="Хранение" value={brief.storageRequirement} />
+        <Detail label="Паллетирование" value={brief.palletizing} />
+        <Detail label="Текущий поставщик" value={brief.currentSupplier} />
+        <Detail
+          label="Текущая цена"
+          value={formatUnitPrice(brief.currentPrice)}
+          mono
+        />
+        <Detail label="Проблема клиента" value={brief.clientProblem} />
+      </dl>
+
+      <div className="brief-assets">
+        {BRIEF_ASSET_KINDS.map((kind) => {
+          const asset = brief.assets[kind];
+          return (
+            <span className={`brief-asset is-${asset.status}`} key={kind}>
+              <strong>{BRIEF_ASSET_LABELS[kind]}</strong>
+              <small>{BRIEF_ASSET_STATUS_LABELS[asset.status]}</small>
+              {asset.note && <em title={asset.note}>{asset.note}</em>}
+            </span>
+          );
+        })}
+      </div>
+
+      {brief.updatedAt && (
+        <p className="brief-updated">
+          Обновлён {formatDate(brief.updatedAt, true)}
+        </p>
+      )}
+    </>
+  );
+}
+
+function BriefField({
+  label,
+  children,
+  wide,
+}: {
+  label: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
+  return (
+    <label className={wide ? "wide-field" : ""}>
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function BriefSelect({
+  name,
+  options,
+  value,
+}: {
+  name: string;
+  options: readonly string[];
+  value: string;
+}) {
+  return (
+    <select defaultValue={value} name={name}>
+      <option value="">Не выбрано</option>
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function BriefDimensionsField({
+  label,
+  prefix,
+  dimensions,
+}: {
+  label: string;
+  prefix: "inner" | "outer";
+  dimensions: BriefDimensions;
+}) {
+  const axes = [
+    { key: "Length", title: "Длина", value: dimensions.length },
+    { key: "Width", title: "Ширина", value: dimensions.width },
+    { key: "Height", title: "Высота", value: dimensions.height },
+  ] as const;
+
+  return (
+    <div className="brief-dimensions">
+      <span className="brief-dimensions-label">{label}</span>
+      <div>
+        {axes.map((axis) => (
+          <input
+            aria-label={`${label}: ${axis.title}`}
+            defaultValue={axis.value ?? ""}
+            key={axis.key}
+            min={0}
+            name={`${prefix}${axis.key}`}
+            placeholder={axis.title[0]}
+            title={axis.title}
+            type="number"
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -3067,6 +3587,14 @@ function CreateDialog({
                 options={[...DEAL_STATUSES]}
               />
               <Field label="Товар" name="product" />
+              <SelectField
+                label="Вид упаковки"
+                name="packagingType"
+                options={[
+                  { label: "Не выбран", value: "" },
+                  ...PACKAGING_TYPES,
+                ]}
+              />
               <Field label="Объём" name="volume" />
               <Field label="Наша цена" name="ourPrice" type="number" />
               <SelectField

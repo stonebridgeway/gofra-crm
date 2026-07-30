@@ -38,6 +38,13 @@ test("keeps every CRM status in the frontend contract", async () => {
   assert.match(domain, /"Закрыта успешно"/);
   assert.match(domain, /"Отменена"/);
   assert.match(gateway, /localStorage/);
+  assert.match(domain, /interface DealBrief/);
+  assert.match(domain, /brief: DealBrief/);
+  assert.match(domain, /BRIEF_ASSET_KINDS/);
+  assert.match(domain, /"Гофроящик"/);
+  assert.match(domain, /"0201"/);
+  assert.match(domain, /getDealBriefCompletion/);
+  assert.match(gateway, /normalizeDealBrief/);
   assert.doesNotMatch(packageJson, /next|vinext|wrangler|drizzle|cloudflare/i);
   assert.match(packageJson, /"tailwindcss": "4\.3\.3"/);
   assert.match(packageJson, /"@tailwindcss\/vite": "4\.3\.3"/);
@@ -117,6 +124,12 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(app, /TASK-КЛ-/);
   assert.match(app, /nextActionAt/);
   assert.match(app, /importBatch/);
+  assert.match(app, /function DealBriefSection/);
+  assert.match(app, /Технический бриф/);
+  assert.match(app, /Материалы от клиента/);
+  assert.match(styles, /\.brief-form/);
+  assert.match(styles, /\.brief-assets-editor/);
+  assert.match(agencyStyles, /\.brief-chip/);
 
   assert.match(theme, /ThemeMode = "system" \| "light" \| "dark"/);
   assert.match(theme, /document\.documentElement\.dataset\.theme/);

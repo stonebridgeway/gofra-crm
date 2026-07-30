@@ -2063,6 +2063,231 @@ html[data-theme="dark"] textarea {
   margin: 0;
 }
 
+/* Технический бриф сделки */
+
+.brief-grid {
+  gap: 12px 14px;
+}
+
+.brief-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.brief-progress {
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+}
+
+.brief-progress.is-complete {
+  border-color: var(--accent-line);
+  color: var(--accent-strong);
+}
+
+.brief-chip {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  display: inline-flex;
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+
+.brief-chip.is-complete {
+  border-color: var(--accent-line);
+  color: var(--accent-strong);
+}
+
+.brief-chip.is-empty {
+  color: var(--faint);
+}
+
+.card-status-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.card-status-line .exact-status {
+  margin-top: 0;
+}
+
+.brief-assets {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.brief-asset {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 9px;
+}
+
+.brief-asset strong {
+  font-size: 11px;
+}
+
+.brief-asset small {
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.brief-asset em {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brief-asset.is-received {
+  border-color: var(--accent-line);
+}
+
+.brief-asset.is-received small {
+  color: var(--accent-strong);
+}
+
+.brief-asset.is-missing {
+  background: var(--surface-sunken);
+}
+
+.brief-updated {
+  color: var(--faint);
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  margin: 12px 0 0;
+}
+
+.brief-form {
+  display: grid;
+  gap: 11px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.brief-form label,
+.brief-dimensions-label {
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 650;
+  gap: 5px;
+}
+
+.brief-form input,
+.brief-form select,
+.brief-form textarea {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  min-height: 36px;
+  outline: none;
+  padding: 7px 9px;
+  transition:
+          border-color 180ms ease,
+          box-shadow 180ms ease;
+  width: 100%;
+}
+
+.brief-form input:focus,
+.brief-form select:focus,
+.brief-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.brief-form textarea {
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.brief-form .wide-field {
+  grid-column: 1 / -1;
+}
+
+.brief-dimensions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.brief-dimensions > div {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.brief-assets-editor {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  padding: 12px;
+}
+
+.brief-assets-editor legend {
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 6px;
+  text-transform: uppercase;
+}
+
+.brief-assets-editor > div {
+  align-items: center;
+  display: grid;
+  gap: 7px;
+  grid-template-columns: 74px 108px minmax(0, 1fr);
+}
+
+.brief-assets-editor > div > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.brief-actions {
+  display: flex;
+  gap: 8px;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.brief-actions button {
+  min-height: 36px;
+  padding: 0 14px;
+}
+
 .related-list {
   display: grid;
   gap: 7px;
@@ -2873,6 +3098,19 @@ html[data-theme="dark"] textarea {
 
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .brief-form,
+  .brief-assets {
+    grid-template-columns: 1fr;
+  }
+
+  .brief-assets-editor > div {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brief-assets-editor > div > input {
+    grid-column: 1 / -1;
   }
 
   .toast {

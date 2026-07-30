@@ -702,6 +702,25 @@ button {
   border-radius: 2px;
 }
 
+.brief-chip,
+.brief-progress,
+.brief-asset,
+.brief-assets-editor,
+.brief-form input,
+.brief-form select,
+.brief-form textarea {
+  border-radius: 2px;
+}
+
+.brief-asset.is-received {
+  border-left: 3px solid var(--accent);
+}
+
+.brief-assets-editor legend {
+  font-family: "Geist Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
 /* Chat */
 
 .chat-view {

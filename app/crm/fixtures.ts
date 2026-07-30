@@ -21,10 +21,39 @@ export const DEMO_USER_IDS = {
   sofia: "user-sofia",
   nikolai: "user-nikolai",
   timur: "user-timur",
+  maria: "user-maria",
 } as const;
 
 const DEMO_CREATED_AT = "2026-06-01T08:00:00.000Z";
 const DEMO_UPDATED_AT = "2026-07-23T08:00:00.000Z";
+
+/**
+ * Данные команды зафиксированы на конец июля 2026 года, а рабочий стол
+ * менеджера показывает списки на сегодня. Поэтому записи Марии строятся
+ * относительно текущей даты — иначе все пять списков были бы пустыми.
+ */
+const offsetDate = (days: number, hour = 9, minute = 0) => {
+  const now = new Date();
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + days,
+    hour,
+    minute,
+  );
+};
+
+const offsetIso = (days: number, hour = 9, minute = 0) =>
+  offsetDate(days, hour, minute).toISOString();
+
+const offsetDay = (days: number) => {
+  const date = offsetDate(days);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+};
 
 export const demoTeams: Team[] = [
   {
@@ -70,6 +99,18 @@ export const demoUsers: User[] = [
     initials: "ТА",
     isActive: true,
     createdAt: DEMO_CREATED_AT,
+    updatedAt: DEMO_UPDATED_AT,
+  },
+  {
+    id: DEMO_USER_IDS.maria,
+    teamId: DEMO_TEAM_ID,
+    fullName: "Мария Кольцова",
+    email: "maria@gofra.demo",
+    role: "employee",
+    jobTitle: "Менеджер по продажам",
+    initials: "МК",
+    isActive: true,
+    createdAt: "2026-07-06T08:00:00.000Z",
     updatedAt: DEMO_UPDATED_AT,
   },
 ];
@@ -190,6 +231,100 @@ const clientsFromStatuses: Client[] = CLIENT_STATUSES.map((status, index) => {
   };
 });
 
+const MARIA_NAME = "Мария Кольцова";
+
+/**
+ * Портфель Марии собран так, чтобы её рабочий стол показал все пять списков:
+ * просроченное действие, задачу на сегодня, сделку без следующего шага,
+ * молчание после КП и приближающийся повторный заказ.
+ */
+const mariaClients: Client[] = [
+  {
+    id: "КЛ-1061",
+    companyName: "Ижевский комбинат",
+    inn: "1831045720",
+    region: "Удмуртская Республика",
+    city: "Ижевск",
+    industry: "Пищевая промышленность",
+    produces: "Полуфабрикаты глубокой заморозки",
+    mayPurchase: "Гофроящики с печатью",
+    potential: "B",
+    status: "Переговоры",
+    source: "Выставка",
+    ownerId: DEMO_USER_IDS.maria,
+    managerName: MARIA_NAME,
+    createdAt: offsetIso(-38),
+    updatedAt: offsetIso(-6, 14),
+    lastContactAt: offsetIso(-6, 14),
+    nextAction: "Позвонить по итогам тестового образца",
+    nextActionAt: offsetIso(-2, 11),
+    comment: "Ждут подтверждение по срокам печати.",
+  },
+  {
+    id: "КЛ-1062",
+    companyName: "Сибирская пекарня",
+    inn: "5405317889",
+    region: "Новосибирская область",
+    city: "Новосибирск",
+    industry: "Кондитерка",
+    produces: "Хлеб и кондитерские изделия",
+    mayPurchase: "Лотки и транспортная упаковка",
+    potential: "A",
+    status: "Активный клиент",
+    source: "Рекомендация",
+    ownerId: DEMO_USER_IDS.maria,
+    managerName: MARIA_NAME,
+    createdAt: offsetIso(-52),
+    updatedAt: offsetIso(-3, 10),
+    lastContactAt: offsetIso(-3, 10),
+    nextAction: "Согласовать объём на август",
+    nextActionAt: offsetIso(0, 11),
+    comment: "Просят зафиксировать цену до конца квартала.",
+  },
+  {
+    id: "КЛ-1063",
+    companyName: "Дальний порт",
+    inn: "2540198443",
+    region: "Приморский край",
+    city: "Владивосток",
+    industry: "Логистика",
+    produces: "Комплектация и перегрузка партий",
+    mayPurchase: "Транспортная упаковка",
+    potential: "A",
+    status: "Активный клиент",
+    source: "Сайт компании",
+    ownerId: DEMO_USER_IDS.maria,
+    managerName: MARIA_NAME,
+    createdAt: offsetIso(-96),
+    updatedAt: offsetIso(-44, 12),
+    lastContactAt: offsetIso(-44, 12),
+    nextAction: "",
+    nextActionAt: null,
+    comment: "Закупает партиями примерно раз в полтора месяца.",
+  },
+  {
+    id: "КЛ-1064",
+    companyName: "Невская кофейня",
+    inn: "7813554021",
+    region: "Санкт-Петербург",
+    city: "Санкт-Петербург",
+    industry: "Напитки",
+    produces: "Обжарка и фасовка кофе",
+    mayPurchase: "Упаковка с печатью",
+    potential: "B",
+    status: "КП отправлено",
+    source: "2ГИС",
+    ownerId: DEMO_USER_IDS.maria,
+    managerName: MARIA_NAME,
+    createdAt: offsetIso(-29),
+    updatedAt: offsetIso(-7, 15),
+    lastContactAt: offsetIso(-8, 11),
+    nextAction: "",
+    nextActionAt: null,
+    comment: "После отправки КП ответа пока нет.",
+  },
+];
+
 export const demoClients: Client[] = [
   {
     ...clientsFromStatuses[0],
@@ -200,6 +335,7 @@ export const demoClients: Client[] = [
     nextActionAt: "2026-07-23T11:00:00.000Z",
   },
   ...clientsFromStatuses,
+  ...mariaClients,
 ];
 
 export const demoContacts: Contact[] = demoClients
@@ -235,7 +371,7 @@ const dealProducts = [
   "Архивный короб",
 ] as const;
 
-export const demoDeals: Deal[] = DEAL_STATUSES.map((status, index) => {
+const dealsFromStatuses: Deal[] = DEAL_STATUSES.map((status, index) => {
   const ourPrice = 168000 + index * 21300;
   const purchasePrice = 114000 + index * 16700;
   const logistics = 12000 + (index % 4) * 3900;
@@ -278,7 +414,104 @@ export const demoDeals: Deal[] = DEAL_STATUSES.map((status, index) => {
   };
 });
 
-export const demoInteractions: Interaction[] = Array.from(
+const mariaDeals: Deal[] = [
+  {
+    id: "СД-0830",
+    clientId: "КЛ-1061",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-31),
+    updatedAt: offsetIso(-11, 16),
+    title: "Поставка · Гофроящик 400×300",
+    product: "Гофроящик 400×300",
+    volume: "24 тыс. шт.",
+    clientPrice: 412000,
+    ourPrice: 394000,
+    purchasePrice: 268000,
+    logistics: 21000,
+    margin: 105000,
+    marginPercent: 26.6,
+    status: "Согласование условий",
+    proposalDate: offsetDay(-19),
+    nextAction: "",
+    nextActionAt: null,
+    managerName: MARIA_NAME,
+    comment: "Обсуждение зависло на условиях отсрочки.",
+  },
+  {
+    id: "СД-0831",
+    clientId: "КЛ-1064",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-21),
+    updatedAt: offsetIso(-7, 15),
+    title: "Поставка · Упаковка с печатью",
+    product: "Упаковка с печатью",
+    volume: "12 тыс. шт.",
+    clientPrice: 268000,
+    ourPrice: 249000,
+    purchasePrice: 171000,
+    logistics: 14000,
+    margin: 64000,
+    marginPercent: 25.7,
+    status: "КП отправлено",
+    proposalDate: offsetDay(-7),
+    nextAction: "Напомнить о коммерческом предложении",
+    nextActionAt: offsetIso(2, 10),
+    managerName: MARIA_NAME,
+    comment: "КП ушло клиенту, ответа не было.",
+  },
+  {
+    id: "СД-0832",
+    clientId: "КЛ-1063",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-72),
+    updatedAt: offsetIso(-44, 12),
+    title: "Поставка · Транспортная упаковка",
+    product: "Транспортная упаковка",
+    volume: "30 тыс. шт.",
+    clientPrice: 522000,
+    ourPrice: 498000,
+    purchasePrice: 341000,
+    logistics: 26000,
+    margin: 131000,
+    marginPercent: 26.3,
+    status: "Закрыта успешно",
+    proposalDate: offsetDay(-58),
+    nextAction: "",
+    nextActionAt: null,
+    managerName: MARIA_NAME,
+    comment: "Регулярная отгрузка, цикл около полутора месяцев.",
+  },
+  {
+    id: "СД-0833",
+    clientId: "КЛ-1062",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-16),
+    updatedAt: offsetIso(-3, 10),
+    title: "Поставка · Лоток с печатью",
+    product: "Лоток с печатью",
+    volume: "18 тыс. шт.",
+    clientPrice: 331000,
+    ourPrice: 312000,
+    purchasePrice: 214000,
+    logistics: 17000,
+    margin: 81000,
+    marginPercent: 26,
+    status: "Переговоры",
+    proposalDate: offsetDay(-9),
+    nextAction: "Подтвердить график отгрузок на август",
+    nextActionAt: offsetIso(3, 12),
+    managerName: MARIA_NAME,
+    comment: "",
+  },
+];
+
+export const demoDeals: Deal[] = [...dealsFromStatuses, ...mariaDeals];
+
+const interactionsFromTemplate: Interaction[] = Array.from(
   { length: 14 },
   (_, index) => ({
     id: `ИВ-${String(3201 + index).padStart(4, "0")}`,
@@ -322,6 +555,62 @@ export const demoInteractions: Interaction[] = Array.from(
     comment: index % 2 === 0 ? "Контакт подтверждён." : "",
   }),
 );
+
+const mariaInteractions: Interaction[] = [
+  {
+    id: "ИВ-3301",
+    occurredAt: offsetIso(-8, 11),
+    clientId: "КЛ-1064",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-8, 11),
+    updatedAt: offsetIso(-8, 11),
+    kind: "Звонок",
+    subject: "Уточнение потребности",
+    result: "Собрали требования к печати и тиражу",
+    nextStep: "Подготовить и отправить КП",
+    nextStepAt: null,
+    managerName: MARIA_NAME,
+    comment: "КП отправлено следом.",
+  },
+  {
+    id: "ИВ-3302",
+    occurredAt: offsetIso(-7, 15),
+    clientId: "КЛ-1064",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-7, 15),
+    updatedAt: offsetIso(-7, 15),
+    kind: "Отправка КП",
+    subject: "Коммерческое предложение",
+    result: "КП отправлено на почту",
+    nextStep: "Уточнить решение по коммерческому предложению",
+    nextStepAt: offsetIso(-4, 10),
+    managerName: MARIA_NAME,
+    comment: "Ответа пока нет.",
+  },
+  {
+    id: "ИВ-3303",
+    occurredAt: offsetIso(-44, 12),
+    clientId: "КЛ-1063",
+    contactId: null,
+    ownerId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-44, 12),
+    updatedAt: offsetIso(-44, 12),
+    kind: "Встреча",
+    subject: "Согласование условий",
+    result: "Отгрузили партию, договорились о следующем цикле",
+    nextStep: "Вернуться к обсуждению перед новым заказом",
+    nextStepAt: offsetIso(1, 10),
+    managerName: MARIA_NAME,
+    comment: "",
+  },
+];
+
+export const demoInteractions: Interaction[] = [
+  ...interactionsFromTemplate,
+  ...mariaInteractions,
+];
 
 const clientTasks: Task[] = demoClients
   .filter((client) => client.nextAction)

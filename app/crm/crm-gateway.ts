@@ -128,6 +128,35 @@ const normalizeUser = (
   } as User;
 };
 
+const DEMO_USER_ID_LIST: readonly string[] = Object.values(DEMO_USER_IDS);
+
+/**
+ * Состав демо-команды пополняется между версиями прототипа, а сохранённый
+ * снимок остаётся прежним. Для снимков, всё ещё построенных на демо-данных,
+ * возвращаем недостающих сотрудников — иначе их кабинет просто не открыть.
+ */
+const findMissingDemoUsers = (users: readonly User[]): User[] => {
+  const builtOnDemoData = users.some((user) =>
+    DEMO_USER_ID_LIST.includes(user.id),
+  );
+  if (!builtOnDemoData) return [];
+
+  return demoUsers
+    .filter((demoUser) => !users.some((user) => user.id === demoUser.id))
+    .map(clone);
+};
+
+/** Добавляет записи, которых ещё нет в коллекции, не трогая существующие. */
+const appendMissingById = <T extends { id: string }>(
+  target: T[],
+  additions: readonly T[],
+): void => {
+  const known = new Set(target.map((item) => item.id));
+  for (const item of additions) {
+    if (!known.has(item.id)) target.push(clone(item));
+  }
+};
+
 const collectLegacyManagerNames = (source: JsonRecord): string[] =>
   unique(
     [
@@ -513,6 +542,8 @@ export const migrateCrmSnapshot = (
   }
 
   ensureRecordOwnersExist(source, users, migratedAt, fallbackTeamId);
+  const missingDemoUsers = findMissingDemoUsers(users);
+  users.push(...missingDemoUsers);
   if (!users.length) users.push(clone(demoUsers[0]));
 
   const userById = new Map(users.map((user) => [user.id, user]));
@@ -660,6 +691,48 @@ export const migrateCrmSnapshot = (
   const targets = targetSource.map((target, index) =>
     normalizeTarget(target, migratedAt, index, activeTeamId),
   );
+
+  if (missingDemoUsers.length) {
+    // Вместе с новым демо-сотрудником переносим только его записи: чужие
+    // удалённые данные восстанавливать нельзя.
+    const newOwnerIds = new Set(missingDemoUsers.map((user) => user.id));
+    appendMissingById(
+      clients,
+      demoSnapshot.clients.filter((client) => newOwnerIds.has(client.ownerId)),
+    );
+    appendMissingById(
+      contacts,
+      demoSnapshot.contacts.filter((contact) =>
+        newOwnerIds.has(contact.ownerId),
+      ),
+    );
+    appendMissingById(
+      deals,
+      demoSnapshot.deals.filter((deal) => newOwnerIds.has(deal.ownerId)),
+    );
+    appendMissingById(
+      interactions,
+      demoSnapshot.interactions.filter((interaction) =>
+        newOwnerIds.has(interaction.ownerId),
+      ),
+    );
+    appendMissingById(
+      tasks,
+      demoSnapshot.tasks.filter((task) => newOwnerIds.has(task.assigneeId)),
+    );
+    appendMissingById(
+      statusEvents,
+      demoSnapshot.statusEvents.filter((event) =>
+        newOwnerIds.has(event.changedById),
+      ),
+    );
+    appendMissingById(
+      targets,
+      demoSnapshot.targets.filter((target) =>
+        newOwnerIds.has(target.subjectId),
+      ),
+    );
+  }
 
   return {
     schemaVersion: CRM_SCHEMA_VERSION,

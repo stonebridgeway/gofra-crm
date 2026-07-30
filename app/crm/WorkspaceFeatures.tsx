@@ -11,6 +11,7 @@ import {
 } from "react";
 import {
   DEAL_PIPELINE,
+  type Client,
   type CrmSnapshot,
   type Deal,
   type Interaction,
@@ -102,6 +103,18 @@ const TASK_SOURCE_LABELS: Record<Task["source"], string> = {
   interaction: "После взаимодействия",
   imported: "Импортирована",
 };
+
+/** Сколько строк показываем в списке рабочего стола менеджера. */
+const FOCUS_LIST_LIMIT = 6;
+/** Через сколько дней молчания после КП клиента считаем «не ответил». */
+const PROPOSAL_SILENCE_DAYS = 3;
+/** Типичный цикл повторного заказа постоянного клиента. */
+const REORDER_CYCLE_DAYS = 45;
+/** За сколько дней до расчётной даты напоминаем о повторном заказе. */
+const REORDER_WINDOW_DAYS = 14;
+const PROPOSAL_SENT_STATUS = "КП отправлено";
+const WON_DEAL_STATUS = "Закрыта успешно";
+const REORDER_CLIENT_STATUSES = new Set(["Активный клиент", "Спящий клиент"]);
 
 const MONTH_FORMATTER = new Intl.DateTimeFormat("ru-RU", {
   month: "long",
@@ -302,6 +315,215 @@ function taskIsOverdue(task: Task, today = startOfDay(new Date())) {
 function taskIsToday(task: Task, today = startOfDay(new Date())) {
   const dueAt = safeDate(task.dueAt);
   return Boolean(dueAt && dateKey(dueAt) === dateKey(today));
+}
+
+function daysBetween(from: Date, to: Date) {
+  return Math.round(
+      (startOfDay(to).getTime() - startOfDay(from).getTime()) / DAY_MS,
+  );
+}
+
+function byDueDate(left: Task, right: Task) {
+  return (
+      (safeDate(left.dueAt)?.getTime() ?? Number.MAX_SAFE_INTEGER) -
+      (safeDate(right.dueAt)?.getTime() ?? Number.MAX_SAFE_INTEGER)
+  );
+}
+
+/** Строка списка на рабочем столе менеджера. */
+interface FocusRow {
+  id: string;
+  badge: string;
+  tone: "danger" | "warning" | "neutral";
+  title: string;
+  meta: string;
+  dateIso: string | null;
+  dateLabel: string;
+  entity: "client" | "deal";
+  entityId: string;
+}
+
+function clientNamesById(clients: readonly Client[]) {
+  return new Map(clients.map((client) => [client.id, client.companyName]));
+}
+
+/**
+ * Активные сделки, по которым не запланировано ни одной открытой задачи.
+ * Задачи из полей nextAction подтягивает getWorkspaceTasks, поэтому сюда
+ * попадают только сделки, действительно оставшиеся без следующего шага.
+ */
+function buildDealsWithoutNextStep(
+    deals: readonly Deal[],
+    tasks: readonly Task[],
+    clientNames: Map<string, string>,
+    today: Date,
+): FocusRow[] {
+  const plannedDealIds = new Set(
+      tasks
+          .filter(taskIsOpen)
+          .map((task) => task.dealId)
+          .filter((dealId): dealId is string => Boolean(dealId)),
+  );
+
+  return deals
+      .filter(
+          (deal) =>
+              !CLOSED_DEAL_STATUSES.has(deal.status) &&
+              !plannedDealIds.has(deal.id),
+      )
+      .map((deal) => {
+        const movedAt = safeDate(deal.updatedAt);
+        const idleDays = movedAt ? daysBetween(movedAt, today) : 0;
+
+        return {
+          id: deal.id,
+          badge: "СД",
+          tone: idleDays >= 7 ? "danger" : "warning",
+          title: clientNames.get(deal.clientId) ?? deal.title,
+          meta: deal.nextAction
+              ? `${deal.status} · срок не назначен`
+              : `${deal.status} · ${formatCompactMoney(deal.ourPrice)}`,
+          dateIso: deal.updatedAt,
+          dateLabel: idleDays > 0 ? `${idleDays} дн. без движения` : "Сегодня",
+          entity: "deal",
+          entityId: deal.id,
+        } satisfies FocusRow;
+      })
+      .sort((left, right) =>
+          (safeDate(left.dateIso)?.getTime() ?? 0) -
+          (safeDate(right.dateIso)?.getTime() ?? 0),
+      );
+}
+
+/**
+ * Отправленные КП, по которым клиент молчит дольше PROPOSAL_SILENCE_DAYS:
+ * после даты предложения нет ни одного взаимодействия с этим клиентом.
+ */
+function buildSilentProposals(
+    deals: readonly Deal[],
+    interactions: readonly Interaction[],
+    clientNames: Map<string, string>,
+    today: Date,
+): FocusRow[] {
+  return deals
+      .filter((deal) => deal.status === PROPOSAL_SENT_STATUS)
+      .map((deal) => {
+        const sentAt = safeDate(deal.proposalDate) ?? safeDate(deal.updatedAt);
+        return { deal, sentAt };
+      })
+      .filter(
+          (
+              entry,
+          ): entry is { deal: Deal; sentAt: Date } => entry.sentAt !== null,
+      )
+      .filter(({ deal, sentAt }) => {
+        if (daysBetween(sentAt, today) < PROPOSAL_SILENCE_DAYS) return false;
+
+        return !interactions.some((interaction) => {
+          // Отправка КП — наше действие, ответом клиента она не считается.
+          if (interaction.clientId !== deal.clientId) return false;
+          if (interaction.kind === "Отправка КП") return false;
+          const occurredAt = safeDate(interaction.occurredAt);
+          return Boolean(occurredAt && occurredAt.getTime() > sentAt.getTime());
+        });
+      })
+      .map(({ deal, sentAt }) => {
+        const silenceDays = daysBetween(sentAt, today);
+
+        return {
+          id: deal.id,
+          badge: "КП",
+          tone: silenceDays >= 7 ? "danger" : "warning",
+          title: clientNames.get(deal.clientId) ?? deal.title,
+          meta: `${formatCompactMoney(deal.ourPrice)} · ${deal.product}`,
+          dateIso: deal.proposalDate,
+          dateLabel: `Молчит ${silenceDays} ${plural(silenceDays, [
+            "день",
+            "дня",
+            "дней",
+          ])}`,
+          entity: "deal",
+          entityId: deal.id,
+        } satisfies FocusRow;
+      })
+      .sort((left, right) =>
+          (safeDate(left.dateIso)?.getTime() ?? 0) -
+          (safeDate(right.dateIso)?.getTime() ?? 0),
+      );
+}
+
+/**
+ * Постоянные клиенты, у которых с последней успешной сделки прошёл почти
+ * весь типичный цикл закупки. Если успешных сделок ещё не было, отсчитываем
+ * цикл от последнего контакта.
+ */
+function buildUpcomingReorders(
+    clients: readonly Client[],
+    deals: readonly Deal[],
+    today: Date,
+): FocusRow[] {
+  const lastWonByClient = new Map<string, Date>();
+  for (const deal of deals) {
+    if (deal.status !== WON_DEAL_STATUS) continue;
+    const closedAt = safeDate(deal.updatedAt);
+    if (!closedAt) continue;
+    const known = lastWonByClient.get(deal.clientId);
+    if (!known || closedAt.getTime() > known.getTime()) {
+      lastWonByClient.set(deal.clientId, closedAt);
+    }
+  }
+
+  return clients
+      .filter((client) => client.status && REORDER_CLIENT_STATUSES.has(client.status))
+      .map((client) => {
+        const wonAt = lastWonByClient.get(client.id);
+        const baseline = wonAt ?? safeDate(client.lastContactAt);
+        return { client, baseline, hasOrder: Boolean(wonAt) };
+      })
+      .filter(
+          (
+              entry,
+          ): entry is { client: Client; baseline: Date; hasOrder: boolean } =>
+              entry.baseline !== null,
+      )
+      .map(({ client, baseline, hasOrder }) => ({
+        client,
+        hasOrder,
+        expectedAt: addDays(baseline, REORDER_CYCLE_DAYS),
+      }))
+      .filter(({ expectedAt }) => {
+        const daysLeft = daysBetween(today, expectedAt);
+        return daysLeft <= REORDER_WINDOW_DAYS && daysLeft >= -REORDER_CYCLE_DAYS;
+      })
+      .sort(
+          (left, right) => left.expectedAt.getTime() - right.expectedAt.getTime(),
+      )
+      .map(({ client, hasOrder, expectedAt }) => {
+        const daysLeft = daysBetween(today, expectedAt);
+
+        return {
+          id: client.id,
+          badge: client.potential,
+          tone: daysLeft < 0 ? "danger" : daysLeft <= 3 ? "warning" : "neutral",
+          title: client.companyName,
+          meta: hasOrder
+              ? `Последний заказ · ${client.city}`
+              : `Заказов не было · ${client.city}`,
+          dateIso: expectedAt.toISOString(),
+          dateLabel:
+              daysLeft < 0
+                  ? `Пора · ${Math.abs(daysLeft)} дн. назад`
+                  : daysLeft === 0
+                      ? "Ожидаем сегодня"
+                      : `Через ${daysLeft} ${plural(daysLeft, [
+                        "день",
+                        "дня",
+                        "дней",
+                      ])}`,
+          entity: "client",
+          entityId: client.id,
+        } satisfies FocusRow;
+      });
 }
 
 function createId(prefix: string) {
@@ -1052,26 +1274,26 @@ export function DashboardView({
   if (!currentUser) return <MissingIdentity />;
 
   const isManager = currentUser.role === "manager";
-  const tasks = scopedTasks(
-      allTasks,
-      currentUser,
-      isManager ? "all" : currentUser.id,
-  );
-  const deals = scopedDeals(
-      snapshot,
-      currentUser,
-      isManager ? "all" : currentUser.id,
-  );
-  const clients = scopedClients(
-      snapshot,
-      currentUser,
-      isManager ? "all" : currentUser.id,
-  );
-  const interactions = scopedInteractions(
-      snapshot,
-      currentUser,
-      isManager ? "all" : currentUser.id,
-  );
+
+  // Менеджер начинает день не с аналитики, а с пяти рабочих списков.
+  if (!isManager) {
+    return (
+        <ManagerFocusBoard
+            allTasks={allTasks}
+            currentUser={currentUser}
+            onOpenClient={onOpenClient}
+            onOpenDeal={onOpenDeal}
+            onSnapshotChange={onSnapshotChange}
+            snapshot={snapshot}
+            today={today}
+        />
+    );
+  }
+
+  const tasks = scopedTasks(allTasks, currentUser, "all");
+  const deals = scopedDeals(snapshot, currentUser, "all");
+  const clients = scopedClients(snapshot, currentUser, "all");
+  const interactions = scopedInteractions(snapshot, currentUser, "all");
   const openTasks = tasks.filter(taskIsOpen);
   const overdueTasks = openTasks.filter((task) => taskIsOverdue(task, today));
   const todayTasks = openTasks.filter((task) => taskIsToday(task, today));
@@ -1101,26 +1323,12 @@ export function DashboardView({
   const weeklyInteractions = interactions.filter((interaction) =>
       withinRange(interaction.occurredAt, weekStart, addDays(today, 1)),
   );
-  const newClients = clients.filter((client) =>
-      withinRange(recordCreatedAt(client), weekStart, addDays(today, 1)),
-  );
   const attentionClients = clients
       .filter(
           (client) =>
               !ownerId(client) ||
               (client.nextActionAt &&
                   (safeDate(client.nextActionAt)?.getTime() ?? 0) < today.getTime()),
-      )
-      .slice(0, 5);
-  const upcomingTasks = openTasks
-      .filter((task) => {
-        const due = safeDate(task.dueAt);
-        return due && due.getTime() >= addDays(today, 1).getTime();
-      })
-      .sort(
-          (left, right) =>
-              (safeDate(left.dueAt)?.getTime() ?? 0) -
-              (safeDate(right.dueAt)?.getTime() ?? 0),
       )
       .slice(0, 5);
 
@@ -1161,11 +1369,7 @@ export function DashboardView({
   const maxStageValue = Math.max(...pipelineRows.map((row) => row.value), 1);
 
   return (
-      <section
-          className={`wf-view wf-dashboard ${
-              isManager ? "is-manager" : "is-employee"
-          }`}
-      >
+      <section className="wf-view wf-dashboard is-manager">
         <FeatureHeader
             actions={
               <div className="wf-current-date">
@@ -1176,12 +1380,8 @@ export function DashboardView({
             </span>
               </div>
             }
-            eyebrow={isManager ? "Кабинет руководителя" : "Личный кабинет"}
-            title={
-              isManager
-                  ? `Добрый день, ${currentUser.fullName.split(" ")[0]}`
-                  : `Фокус на сегодня, ${currentUser.fullName.split(" ")[0]}`
-            }
+            eyebrow="Кабинет руководителя"
+            title={`Добрый день, ${currentUser.fullName.split(" ")[0]}`}
         />
 
         {clients.length === 0 && deals.length === 0 && tasks.length === 0 ? (
@@ -1193,12 +1393,8 @@ export function DashboardView({
             <>
               <div className="wf-metric-grid">
                 <MetricCard
-                    caption={
-                      isManager
-                          ? `${wonDeals.length} успешных сделок`
-                          : "по завершённым сделкам"
-                    }
-                    label={isManager ? "Выручка команды" : "Моя выручка"}
+                    caption={`${wonDeals.length} успешных сделок`}
+                    label="Выручка команды"
                     tone="accent"
                     value={formatCompactMoney(revenue)}
                 />
@@ -1223,13 +1419,9 @@ export function DashboardView({
                 />
                 <MetricCard
                     caption={`${weeklyInteractions.length} контактов за 7 дней`}
-                    label={isManager ? "Плановая маржа" : "Активность"}
+                    label="Плановая маржа"
                     tone="good"
-                    value={
-                      isManager
-                          ? formatCompactMoney(margin)
-                          : NUMBER_FORMATTER.format(weeklyInteractions.length)
-                    }
+                    value={formatCompactMoney(margin)}
                 />
               </div>
 
@@ -1238,9 +1430,7 @@ export function DashboardView({
                   <header className="wf-panel-heading">
                     <div>
                       <span className="wf-eyebrow">Приоритеты</span>
-                      <h2>
-                        {isManager ? "Требует внимания" : "Сделать сегодня"}
-                      </h2>
+                      <h2>Требует внимания</h2>
                     </div>
                     <span className="wf-panel-count">
                   {focusTasks.length.toString().padStart(2, "0")}
@@ -1274,7 +1464,7 @@ export function DashboardView({
                   <header className="wf-panel-heading">
                     <div>
                       <span className="wf-eyebrow">Воронка</span>
-                      <h2>{isManager ? "Коммерческий поток" : "Мои сделки"}</h2>
+                      <h2>Коммерческий поток</h2>
                     </div>
                     <span className="wf-panel-count">
                   {activeDeals.length.toString().padStart(2, "0")}
@@ -1306,145 +1496,86 @@ export function DashboardView({
                   </div>
                 </section>
 
-                {isManager ? (
-                    <section className="wf-panel wf-team-panel">
-                      <header className="wf-panel-heading">
-                        <div>
-                          <span className="wf-eyebrow">Команда</span>
-                          <h2>Нагрузка сотрудников</h2>
-                        </div>
-                        <span className="wf-panel-count">
-                    {teamRows.length.toString().padStart(2, "0")}
-                  </span>
-                      </header>
-                      {teamRows.length ? (
-                          <div className="wf-team-list">
-                            {teamRows.map((row) => (
-                                <article key={row.user.id}>
+                <section className="wf-panel wf-team-panel">
+                  <header className="wf-panel-heading">
+                    <div>
+                      <span className="wf-eyebrow">Команда</span>
+                      <h2>Нагрузка сотрудников</h2>
+                    </div>
+                    <span className="wf-panel-count">
+                  {teamRows.length.toString().padStart(2, "0")}
+                </span>
+                  </header>
+                  {teamRows.length ? (
+                      <div className="wf-team-list">
+                        {teamRows.map((row) => (
+                            <article key={row.user.id}>
                         <span className="wf-avatar">
                           {row.user.initials || initials(row.user.fullName)}
                         </span>
-                                  <div>
-                                    <strong>{row.user.fullName}</strong>
-                                    <small>
-                                      {row.activeDeals} в работе ·{" "}
-                                      {formatCompactMoney(row.pipeline)}
-                                    </small>
-                                  </div>
-                                  <span
-                                      className={
-                                        row.overdue ? "wf-overdue-number" : "wf-zero-number"
-                                      }
-                                  >
+                              <div>
+                                <strong>{row.user.fullName}</strong>
+                                <small>
+                                  {row.activeDeals} в работе ·{" "}
+                                  {formatCompactMoney(row.pipeline)}
+                                </small>
+                              </div>
+                              <span
+                                  className={
+                                    row.overdue ? "wf-overdue-number" : "wf-zero-number"
+                                  }
+                              >
                           {row.overdue}
-                                    <small>проср.</small>
+                                <small>проср.</small>
                         </span>
-                                </article>
-                            ))}
-                          </div>
-                      ) : (
-                          <EmptyState
-                              title="Нет активных сотрудников"
-                              description="Добавьте сотрудников в команду, чтобы сравнивать нагрузку."
-                          />
-                      )}
-                    </section>
-                ) : (
-                    <section className="wf-panel wf-rhythm-panel">
-                      <header className="wf-panel-heading">
-                        <div>
-                          <span className="wf-eyebrow">Ритм недели</span>
-                          <h2>Личная динамика</h2>
-                        </div>
-                        <span className="wf-trend-chip">
-                    <Icon name="trend" />
-                    7 дней
-                  </span>
-                      </header>
-                      <dl className="wf-rhythm-stats">
-                        <div>
-                          <dt>Контакты</dt>
-                          <dd>{weeklyInteractions.length}</dd>
-                          <span>за неделю</span>
-                        </div>
-                        <div>
-                          <dt>Новые клиенты</dt>
-                          <dd>{newClients.length}</dd>
-                          <span>в работе</span>
-                        </div>
-                        <div>
-                          <dt>Маржа воронки</dt>
-                          <dd>{formatCompactMoney(margin)}</dd>
-                          <span>плановая</span>
-                        </div>
-                      </dl>
-                    </section>
-                )}
+                            </article>
+                        ))}
+                      </div>
+                  ) : (
+                      <EmptyState
+                          title="Нет активных сотрудников"
+                          description="Добавьте сотрудников в команду, чтобы сравнивать нагрузку."
+                      />
+                  )}
+                </section>
 
                 <section className="wf-panel wf-upcoming-panel">
                   <header className="wf-panel-heading">
                     <div>
-                  <span className="wf-eyebrow">
-                    {isManager ? "Риски" : "Дальше"}
-                  </span>
-                      <h2>
-                        {isManager ? "Клиенты без движения" : "Ближайшие задачи"}
-                      </h2>
+                      <span className="wf-eyebrow">Риски</span>
+                      <h2>Клиенты без движения</h2>
                     </div>
                   </header>
-                  {isManager ? (
-                      attentionClients.length ? (
-                          <div className="wf-attention-list">
-                            {attentionClients.map((client) => (
-                                <button
-                                    key={client.id}
-                                    onClick={() => onOpenClient(client.id)}
-                                    type="button"
-                                >
+                  {attentionClients.length ? (
+                      <div className="wf-attention-list">
+                        {attentionClients.map((client) => (
+                            <button
+                                key={client.id}
+                                onClick={() => onOpenClient(client.id)}
+                                type="button"
+                            >
                         <span
                             className={`wf-potential potential-${client.potential.toLocaleLowerCase()}`}
                         >
                           {client.potential}
                         </span>
-                                  <span>
+                              <span>
                           <strong>{client.companyName}</strong>
                           <small>
                             {client.nextAction || "Не назначено действие"}
                           </small>
                         </span>
-                                  <time dateTime={client.nextActionAt ?? undefined}>
-                                    {formatDate(client.nextActionAt)}
-                                  </time>
-                                  <Icon name="arrow" />
-                                </button>
-                            ))}
-                          </div>
-                      ) : (
-                          <EmptyState
-                              title="Рисков не найдено"
-                              description="Все клиенты распределены, ближайшие действия назначены."
-                          />
-                      )
-                  ) : upcomingTasks.length ? (
-                      <div className="wf-upcoming-list">
-                        {upcomingTasks.map((task) => (
-                            <TaskRow
-                                compact
-                                currentUser={currentUser}
-                                key={task.id}
-                                onNotice={showNotice}
-                                onOpenClient={onOpenClient}
-                                onOpenDeal={onOpenDeal}
-                                onSnapshotChange={onSnapshotChange}
-                                snapshot={snapshot}
-                                task={task}
-                            />
+                              <time dateTime={client.nextActionAt ?? undefined}>
+                                {formatDate(client.nextActionAt)}
+                              </time>
+                              <Icon name="arrow" />
+                            </button>
                         ))}
                       </div>
                   ) : (
                       <EmptyState
-                          title="Ближайших задач нет"
-                          description="Запланируйте следующий контакт в календаре."
+                          title="Рисков не найдено"
+                          description="Все клиенты распределены, ближайшие действия назначены."
                       />
                   )}
                 </section>
@@ -1453,6 +1584,249 @@ export function DashboardView({
         )}
         <Notice message={notice} />
       </section>
+  );
+}
+
+/**
+ * Рабочий стол менеджера: вместо сводной аналитики — пять списков,
+ * по которым видно, что нужно сделать прямо сейчас.
+ */
+function ManagerFocusBoard({
+                             snapshot,
+                             currentUser,
+                             allTasks,
+                             today,
+                             onSnapshotChange,
+                             onOpenClient,
+                             onOpenDeal,
+                           }: {
+  snapshot: CrmSnapshot;
+  currentUser: User;
+  allTasks: Task[];
+  today: Date;
+  onSnapshotChange: (snapshot: CrmSnapshot) => void;
+  onOpenClient: (clientId: string) => void;
+  onOpenDeal: (dealId: string) => void;
+}) {
+  const { notice, showNotice } = useNotice();
+
+  const tasks = scopedTasks(allTasks, currentUser);
+  const deals = scopedDeals(snapshot, currentUser);
+  const clients = scopedClients(snapshot, currentUser);
+  const interactions = scopedInteractions(snapshot, currentUser);
+  const clientNames = clientNamesById(snapshot.clients);
+
+  const openTasks = tasks.filter(taskIsOpen);
+  const overdueTasks = openTasks
+      .filter((task) => taskIsOverdue(task, today))
+      .sort(byDueDate);
+  const todayTasks = openTasks
+      .filter((task) => taskIsToday(task, today))
+      .sort(byDueDate);
+  const dealsWithoutNextStep = buildDealsWithoutNextStep(
+      deals,
+      tasks,
+      clientNames,
+      today,
+  );
+  const silentProposals = buildSilentProposals(
+      deals,
+      interactions,
+      clientNames,
+      today,
+  );
+  const upcomingReorders = buildUpcomingReorders(clients, deals, today);
+
+  const renderTasks = (rows: Task[]) =>
+      rows.slice(0, FOCUS_LIST_LIMIT).map((task) => (
+          <TaskRow
+              compact
+              currentUser={currentUser}
+              key={task.id}
+              onNotice={showNotice}
+              onOpenClient={onOpenClient}
+              onOpenDeal={onOpenDeal}
+              onSnapshotChange={onSnapshotChange}
+              snapshot={snapshot}
+              task={task}
+          />
+      ));
+
+  return (
+      <section className="wf-view wf-dashboard is-employee">
+        <FeatureHeader
+            actions={
+              <div className="wf-current-date">
+                <Icon name="calendar" />
+                <span>
+              <small>Сегодня</small>
+                  {DAY_FORMATTER.format(today)}
+            </span>
+              </div>
+            }
+            eyebrow="Кабинет менеджера"
+            title={`Фокус на сегодня, ${currentUser.fullName.split(" ")[0]}`}
+        />
+
+        <div className="wf-focus-grid">
+          <FocusPanel
+              count={overdueTasks.length}
+              eyebrow="Сроки"
+              title="Просроченные действия"
+              tone={overdueTasks.length ? "danger" : "neutral"}
+          >
+            {overdueTasks.length ? (
+                <div className="wf-task-list">{renderTasks(overdueTasks)}</div>
+            ) : (
+                <EmptyState
+                    title="Просрочек нет"
+                    description="Все запланированные действия выполнены в срок."
+                />
+            )}
+          </FocusPanel>
+
+          <FocusPanel
+              count={todayTasks.length}
+              eyebrow="План дня"
+              title="Задачи на сегодня"
+          >
+            {todayTasks.length ? (
+                <div className="wf-task-list">{renderTasks(todayTasks)}</div>
+            ) : (
+                <EmptyState
+                    title="На сегодня задач нет"
+                    description="Запланируйте контакт в календаре или возьмите задачу из списков ниже."
+                />
+            )}
+          </FocusPanel>
+
+          <FocusPanel
+              count={dealsWithoutNextStep.length}
+              eyebrow="Воронка"
+              title="Сделки без следующего шага"
+          >
+            {dealsWithoutNextStep.length ? (
+                <FocusList
+                    onOpenClient={onOpenClient}
+                    onOpenDeal={onOpenDeal}
+                    rows={dealsWithoutNextStep.slice(0, FOCUS_LIST_LIMIT)}
+                />
+            ) : (
+                <EmptyState
+                    title="По всем сделкам есть план"
+                    description="Каждая активная сделка ведёт к следующему действию."
+                />
+            )}
+          </FocusPanel>
+
+          <FocusPanel
+              count={silentProposals.length}
+              eyebrow="Предложения"
+              title="КП без ответа клиента"
+          >
+            {silentProposals.length ? (
+                <FocusList
+                    onOpenClient={onOpenClient}
+                    onOpenDeal={onOpenDeal}
+                    rows={silentProposals.slice(0, FOCUS_LIST_LIMIT)}
+                />
+            ) : (
+                <EmptyState
+                    title="Все КП в работе"
+                    description={`Клиенты отвечают быстрее чем за ${PROPOSAL_SILENCE_DAYS} дня.`}
+                />
+            )}
+          </FocusPanel>
+
+          <FocusPanel
+              count={upcomingReorders.length}
+              eyebrow="Повторные продажи"
+              title="Приближается повторный заказ"
+              wide
+          >
+            {upcomingReorders.length ? (
+                <FocusList
+                    onOpenClient={onOpenClient}
+                    onOpenDeal={onOpenDeal}
+                    rows={upcomingReorders.slice(0, FOCUS_LIST_LIMIT)}
+                />
+            ) : (
+                <EmptyState
+                    title="Повторных заказов пока не ждём"
+                    description={`Считаем цикл в ${REORDER_CYCLE_DAYS} дней от последней успешной сделки.`}
+                />
+            )}
+          </FocusPanel>
+        </div>
+        <Notice message={notice} />
+      </section>
+  );
+}
+
+function FocusPanel({
+                      eyebrow,
+                      title,
+                      count,
+                      tone = "neutral",
+                      wide = false,
+                      children,
+                    }: {
+  eyebrow: string;
+  title: string;
+  count: number;
+  tone?: "danger" | "neutral";
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  return (
+      <section
+          className={`wf-panel wf-focus-block ${wide ? "is-wide" : ""} tone-${tone}`}
+      >
+        <header className="wf-panel-heading">
+          <div>
+            <span className="wf-eyebrow">{eyebrow}</span>
+            <h2>{title}</h2>
+          </div>
+          <span className="wf-panel-count">
+          {count.toString().padStart(2, "0")}
+        </span>
+        </header>
+        {children}
+      </section>
+  );
+}
+
+function FocusList({
+                     rows,
+                     onOpenClient,
+                     onOpenDeal,
+                   }: {
+  rows: FocusRow[];
+  onOpenClient: (clientId: string) => void;
+  onOpenDeal: (dealId: string) => void;
+}) {
+  return (
+      <div className="wf-attention-list wf-focus-list">
+        {rows.map((row) => (
+            <button
+                key={row.id}
+                onClick={() =>
+                    row.entity === "deal"
+                        ? onOpenDeal(row.entityId)
+                        : onOpenClient(row.entityId)
+                }
+                type="button"
+            >
+          <span className={`wf-focus-badge tone-${row.tone}`}>{row.badge}</span>
+              <span>
+            <strong>{row.title}</strong>
+            <small>{row.meta}</small>
+          </span>
+              <time dateTime={row.dateIso ?? undefined}>{row.dateLabel}</time>
+              <Icon name="arrow" />
+            </button>
+        ))}
+      </div>
   );
 }
 

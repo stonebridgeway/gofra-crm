@@ -509,6 +509,19 @@ button {
   margin-left: -1px;
 }
 
+.wf-focus-grid {
+  gap: 1px;
+}
+
+.wf-focus-grid > .wf-panel {
+  clip-path: none;
+}
+
+.wf-focus-badge {
+  border-radius: 0;
+  letter-spacing: 0.04em;
+}
+
 .wf-stat-overview-grid,
 .wf-stat-visual-grid,
 .wf-activity-grid,
@@ -771,6 +784,7 @@ button {
 .view-toolbar,
 .module-view .kanban-board,
 .wf-dashboard-grid,
+.wf-focus-grid,
 .wf-stat-section,
 .chat-view {
   animation: gofra-system-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -782,6 +796,7 @@ button {
 }
 
 .wf-dashboard-grid,
+.wf-focus-grid,
 .wf-stat-section,
 .module-view .kanban-board,
 .chat-view {
@@ -795,6 +810,7 @@ button {
   .view-toolbar,
   .module-view .kanban-board,
   .wf-dashboard-grid,
+  .wf-focus-grid,
   .wf-stat-section,
   .chat-view {
     animation: none;
@@ -838,11 +854,13 @@ button {
 }
 
 @media (max-width: 980px) {
-  .wf-dashboard-grid {
+  .wf-dashboard-grid,
+  .wf-focus-grid {
     grid-template-columns: 1fr;
   }
 
   .wf-dashboard-grid,
+  .wf-focus-grid,
   .wf-stat-overview-grid,
   .wf-stat-visual-grid,
   .wf-activity-grid,

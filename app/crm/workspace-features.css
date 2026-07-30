@@ -402,6 +402,70 @@ button.wf-metric-card:hover > i {
   min-height: 382px;
 }
 
+/* Рабочий стол менеджера: пять списков вместо сводной аналитики */
+
+.wf-focus-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wf-focus-block {
+  display: flex;
+  flex-direction: column;
+  min-height: 268px;
+}
+
+.wf-focus-block.is-wide {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.wf-focus-block.tone-danger .wf-panel-heading h2 {
+  color: var(--wf-danger);
+}
+
+.wf-focus-block .wf-empty {
+  flex: 1;
+  min-height: 0;
+}
+
+.wf-focus-list {
+  border-top: 1px solid var(--wf-line);
+}
+
+.wf-focus-badge {
+  align-items: center;
+  background: var(--wf-surface-muted);
+  border: 1px solid var(--wf-line);
+  border-radius: 6px;
+  display: flex;
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  font-weight: 750;
+  height: 26px;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  width: 26px;
+}
+
+.wf-focus-badge.tone-danger {
+  background: var(--wf-danger-soft);
+  border-color: transparent;
+  color: var(--wf-danger);
+}
+
+.wf-focus-badge.tone-warning {
+  background: var(--wf-warning-soft);
+  border-color: transparent;
+  color: var(--wf-warning);
+}
+
+.wf-focus-list time {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .wf-empty {
   align-items: flex-start;
   display: flex;
@@ -2817,12 +2881,14 @@ button.wf-metric-card:hover > i {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .wf-dashboard-grid {
+  .wf-dashboard-grid,
+  .wf-focus-grid {
     grid-template-columns: 1fr;
   }
 
   .wf-focus-panel,
-  .wf-funnel-panel {
+  .wf-funnel-panel,
+  .wf-focus-block {
     min-height: 0;
   }
 

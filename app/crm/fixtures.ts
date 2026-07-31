@@ -3,12 +3,15 @@ import {
   CRM_SCHEMA_VERSION,
   DEAL_STATUSES,
   createEmptyDealBrief,
+  createEmptyDealProcess,
   type Client,
   type Contact,
   type CrmSnapshot,
   type Deal,
   type DealBrief,
+  type DealProcess,
   type Interaction,
+  type Quote,
   type Potential,
   type Session,
   type StatusEvent,
@@ -16,7 +19,7 @@ import {
   type Task,
   type Team,
   type User,
-} from "./domain";
+} from "./domain.ts";
 
 export const DEMO_TEAM_ID = "team-gofra";
 export const DEMO_USER_IDS = {
@@ -523,36 +526,91 @@ const buildDemoBrief = (index: number, updatedAt: string): DealBrief => {
   return brief;
 };
 
+/**
+ * Деньги демо-сделок из списка статусов. Живут отдельно от сделки, потому что
+ * источником правды стали версии КП: у первой сделки их нет вовсе — это ветка
+ * «КП ещё не рассчитано».
+ */
+const generatedDealMoney = (index: number) =>
+  index === 0
+    ? { revenue: 0, cost: 0, logistics: 0 }
+    : {
+        revenue: 168000 + index * 21300,
+        cost: 114000 + index * 16700,
+        logistics: 12000 + (index % 4) * 3900,
+      };
+
+const generatedDealId = (index: number) =>
+  `СД-${String(812 + index).padStart(4, "0")}`;
+
+/** Дата КП у сгенерированных сделок: первые три ещё не считались. */
+const generatedProposalDate = (index: number) =>
+  index < 3 ? null : `2026-07-${String(4 + index).padStart(2, "0")}`;
+
+const demoMilestone = (completedAt: string | null, ownerId: string) => ({
+  completedAt,
+  completedById: completedAt === null ? null : ownerId,
+  note: "",
+});
+
+const buildDemoProcess = (options: {
+  ownerId: string;
+  specReceivedAt: string | null;
+  calculationAt: string | null;
+  quoteSentAt: string | null;
+  replyExpectedAt?: string | null;
+  sampleSkipped?: boolean;
+}): DealProcess => {
+  const process = createEmptyDealProcess();
+  const { ownerId } = options;
+
+  process.steps.specReceived = demoMilestone(options.specReceivedAt, ownerId);
+  process.steps.calculationRequested = demoMilestone(
+    options.calculationAt,
+    ownerId,
+  );
+  process.steps.calculationReceived = demoMilestone(
+    options.calculationAt,
+    ownerId,
+  );
+  process.steps.quoteSent = demoMilestone(options.quoteSentAt, ownerId);
+  process.replyExpectedAt = options.replyExpectedAt ?? null;
+  process.sampleSkipped = options.sampleSkipped ?? false;
+  process.updatedAt = options.quoteSentAt ?? options.specReceivedAt;
+
+  return process;
+};
+
 const dealsFromStatuses: Deal[] = DEAL_STATUSES.map((status, index) => {
-  const ourPrice = 168000 + index * 21300;
-  const purchasePrice = 114000 + index * 16700;
-  const logistics = 12000 + (index % 4) * 3900;
-  const margin = ourPrice - purchasePrice - logistics;
+  const money = generatedDealMoney(index);
+  const dealId = generatedDealId(index);
+  const ownerId = managerIds[index % managerIds.length];
+  const createdAt = `2026-07-${String(1 + index).padStart(2, "0")}T08:30:00.000Z`;
+  const proposalDate = generatedProposalDate(index);
 
   return {
-    id: `СД-${String(812 + index).padStart(4, "0")}`,
+    id: dealId,
     clientId: demoClients[(index + 1) % demoClients.length].id,
-    ownerId: managerIds[index % managerIds.length],
-    createdAt: `2026-07-${String(1 + index).padStart(2, "0")}T08:30:00.000Z`,
+    ownerId,
+    createdAt,
     updatedAt: `2026-07-${String(8 + index).padStart(2, "0")}T12:00:00.000Z`,
     contactId:
       index < demoContacts.length ? demoContacts[index].id : null,
     title: `Поставка · ${dealProducts[index % dealProducts.length]}`,
     product: dealProducts[index % dealProducts.length],
     volume: `${18 + index * 3} тыс. шт.`,
-    clientPrice: ourPrice + 18000,
-    ourPrice,
-    purchasePrice,
-    logistics,
-    margin,
-    marginPercent: Math.round((margin / ourPrice) * 1000) / 10,
     status,
     brief: buildDemoBrief(
       index,
       `2026-07-${String(8 + index).padStart(2, "0")}T12:00:00.000Z`,
     ),
-    proposalDate:
-      index < 3 ? null : `2026-07-${String(4 + index).padStart(2, "0")}`,
+    process: buildDemoProcess({
+      ownerId,
+      specReceivedAt: createdAt,
+      calculationAt: proposalDate === null ? null : createdAt,
+      quoteSentAt: proposalDate,
+    }),
+    activeQuoteId: money.revenue === 0 ? null : `КП-${dealId}-1`,
     nextAction:
       index > 12
         ? "Зафиксировать причину закрытия"
@@ -590,12 +648,6 @@ const mariaDeals: Deal[] = [
     title: "Поставка · Гофроящик 400×300",
     product: "Гофроящик 400×300",
     volume: "24 тыс. шт.",
-    clientPrice: 412000,
-    ourPrice: 394000,
-    purchasePrice: 268000,
-    logistics: 21000,
-    margin: 105000,
-    marginPercent: 26.6,
     status: "Согласование условий",
     brief: briefFrom({
       packagingType: "Гофроящик",
@@ -625,7 +677,13 @@ const mariaDeals: Deal[] = [
       },
       updatedAt: offsetIso(-12, 11),
     }),
-    proposalDate: offsetDay(-19),
+    process: buildDemoProcess({
+      ownerId: DEMO_USER_IDS.maria,
+      specReceivedAt: offsetIso(-31),
+      calculationAt: offsetIso(-24),
+      quoteSentAt: offsetIso(-19),
+    }),
+    activeQuoteId: "КП-СД-0830-1",
     nextAction: "",
     nextActionAt: null,
     managerName: MARIA_NAME,
@@ -641,12 +699,6 @@ const mariaDeals: Deal[] = [
     title: "Поставка · Упаковка с печатью",
     product: "Упаковка с печатью",
     volume: "12 тыс. шт.",
-    clientPrice: 268000,
-    ourPrice: 249000,
-    purchasePrice: 171000,
-    logistics: 14000,
-    margin: 64000,
-    marginPercent: 25.7,
     status: "КП отправлено",
     brief: briefFrom({
       packagingType: "Лоток",
@@ -671,7 +723,16 @@ const mariaDeals: Deal[] = [
       },
       updatedAt: offsetIso(-8, 14),
     }),
-    proposalDate: offsetDay(-7),
+    process: buildDemoProcess({
+      ownerId: DEMO_USER_IDS.maria,
+      specReceivedAt: offsetIso(-21),
+      calculationAt: offsetIso(-12),
+      quoteSentAt: offsetIso(-7),
+      // Дата, которую назвал клиент, уже прошла — сделка попадает
+      // в рабочий список «КП без ответа».
+      replyExpectedAt: offsetIso(-4),
+    }),
+    activeQuoteId: "КП-СД-0831-1",
     nextAction: "Напомнить о коммерческом предложении",
     nextActionAt: offsetIso(2, 10),
     managerName: MARIA_NAME,
@@ -687,12 +748,6 @@ const mariaDeals: Deal[] = [
     title: "Поставка · Транспортная упаковка",
     product: "Транспортная упаковка",
     volume: "30 тыс. шт.",
-    clientPrice: 522000,
-    ourPrice: 498000,
-    purchasePrice: 341000,
-    logistics: 26000,
-    margin: 131000,
-    marginPercent: 26.3,
     status: "Закрыта успешно",
     brief: briefFrom({
       packagingType: "Гофроящик",
@@ -721,7 +776,14 @@ const mariaDeals: Deal[] = [
       },
       updatedAt: offsetIso(-52, 10),
     }),
-    proposalDate: offsetDay(-58),
+    process: buildDemoProcess({
+      ownerId: DEMO_USER_IDS.maria,
+      specReceivedAt: offsetIso(-72),
+      calculationAt: offsetIso(-64),
+      quoteSentAt: offsetIso(-58),
+    }),
+    // Три версии КП: цена поднималась дважды, обе причины в истории.
+    activeQuoteId: "КП-СД-0832-3",
     nextAction: "",
     nextActionAt: null,
     managerName: MARIA_NAME,
@@ -737,12 +799,6 @@ const mariaDeals: Deal[] = [
     title: "Поставка · Лоток с печатью",
     product: "Лоток с печатью",
     volume: "18 тыс. шт.",
-    clientPrice: 331000,
-    ourPrice: 312000,
-    purchasePrice: 214000,
-    logistics: 17000,
-    margin: 81000,
-    marginPercent: 26,
     status: "Переговоры",
     brief: briefFrom({
       packagingType: "Лоток",
@@ -757,7 +813,14 @@ const mariaDeals: Deal[] = [
       },
       updatedAt: offsetIso(-4, 9),
     }),
-    proposalDate: offsetDay(-9),
+    process: buildDemoProcess({
+      ownerId: DEMO_USER_IDS.maria,
+      specReceivedAt: offsetIso(-16),
+      calculationAt: offsetIso(-11),
+      quoteSentAt: offsetIso(-9),
+      replyExpectedAt: offsetIso(2),
+    }),
+    activeQuoteId: "КП-СД-0833-1",
     nextAction: "Подтвердить график отгрузок на август",
     nextActionAt: offsetIso(3, 12),
     managerName: MARIA_NAME,
@@ -766,6 +829,124 @@ const mariaDeals: Deal[] = [
 ];
 
 export const demoDeals: Deal[] = [...dealsFromStatuses, ...mariaDeals];
+
+const demoQuote = (
+  dealId: string,
+  version: number,
+  patch: Pick<Quote, "revenue" | "cost" | "logistics" | "volume"> &
+    Partial<Quote>,
+): Quote => ({
+  id: `КП-${dealId}-${version}`,
+  dealId,
+  version,
+  status: "Отправлено",
+  validUntil: null,
+  changeReason: "",
+  sentAt: null,
+  authorId: "",
+  comment: "",
+  createdAt: DEMO_CREATED_AT,
+  updatedAt: DEMO_UPDATED_AT,
+  ...patch,
+});
+
+const generatedQuotes: Quote[] = DEAL_STATUSES.flatMap((_, index) => {
+  const money = generatedDealMoney(index);
+  if (money.revenue === 0) return [];
+
+  const dealId = generatedDealId(index);
+  const proposalDate = generatedProposalDate(index);
+  const createdAt = `2026-07-${String(1 + index).padStart(2, "0")}T08:30:00.000Z`;
+
+  return [
+    demoQuote(dealId, 1, {
+      ...money,
+      volume: `${18 + index * 3} тыс. шт.`,
+      status: proposalDate === null ? "Черновик" : "Отправлено",
+      sentAt: proposalDate,
+      authorId: managerIds[index % managerIds.length],
+      createdAt,
+      updatedAt: createdAt,
+    }),
+  ];
+});
+
+/**
+ * История версий КП по сделке СД-0832: цена росла дважды, и каждая правка
+ * объяснена — ради этого история версий и заводилась.
+ */
+const mariaQuotes: Quote[] = [
+  demoQuote("СД-0830", 1, {
+    revenue: 394000,
+    cost: 268000,
+    logistics: 21000,
+    volume: "24 тыс. шт.",
+    sentAt: offsetIso(-19),
+    validUntil: offsetDay(11),
+    authorId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-20),
+    updatedAt: offsetIso(-19),
+  }),
+  demoQuote("СД-0831", 1, {
+    revenue: 249000,
+    cost: 171000,
+    logistics: 14000,
+    volume: "12 тыс. шт.",
+    sentAt: offsetIso(-7),
+    validUntil: offsetDay(7),
+    authorId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-8),
+    updatedAt: offsetIso(-7),
+  }),
+  demoQuote("СД-0832", 1, {
+    revenue: 452000,
+    cost: 318000,
+    logistics: 26000,
+    volume: "26 тыс. шт.",
+    status: "Заменено",
+    sentAt: offsetIso(-66),
+    authorId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-67),
+    updatedAt: offsetIso(-59),
+  }),
+  demoQuote("СД-0832", 2, {
+    revenue: 470000,
+    cost: 324000,
+    logistics: 33000,
+    volume: "28 тыс. шт.",
+    status: "Заменено",
+    changeReason: "Клиент увеличил тираж",
+    sentAt: offsetIso(-62),
+    authorId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-63),
+    updatedAt: offsetIso(-59),
+  }),
+  demoQuote("СД-0832", 3, {
+    revenue: 498000,
+    cost: 327000,
+    logistics: 40000,
+    volume: "30 тыс. шт.",
+    changeReason: "Скидка под объём",
+    sentAt: offsetIso(-58),
+    validUntil: offsetDay(14),
+    authorId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-59),
+    updatedAt: offsetIso(-58),
+  }),
+  demoQuote("СД-0833", 1, {
+    revenue: 312000,
+    cost: 214000,
+    logistics: 17000,
+    volume: "18 тыс. шт.",
+    sentAt: offsetIso(-9),
+    validUntil: offsetDay(5),
+    authorId: DEMO_USER_IDS.maria,
+    createdAt: offsetIso(-10),
+    updatedAt: offsetIso(-9),
+  }),
+];
+
+export const demoQuotes: Quote[] = [...generatedQuotes, ...mariaQuotes];
 
 const interactionsFromTemplate: Interaction[] = Array.from(
   { length: 14 },
@@ -1109,6 +1290,7 @@ export const demoSnapshot: CrmSnapshot = {
   clients: demoClients,
   contacts: demoContacts,
   deals: demoDeals,
+  quotes: demoQuotes,
   interactions: demoInteractions,
   tasks: demoTasks,
   statusEvents: demoStatusEvents,

@@ -41,7 +41,7 @@ export const DEAL_STATUSES = [
 export type DealStatus = (typeof DEAL_STATUSES)[number];
 export type Potential = "A" | "B" | "C" | "D";
 
-export const CRM_SCHEMA_VERSION = 2 as const;
+export const CRM_SCHEMA_VERSION = 3 as const;
 export type CrmSchemaVersion = typeof CRM_SCHEMA_VERSION;
 
 export interface TimestampedEntity {
@@ -159,6 +159,24 @@ export const DEAL_PIPELINE: readonly PipelineGroup[] = [
     closed: true,
   },
 ] as const;
+
+/**
+ * Статусы, из которых достоверно следует, что КП уже уходило клиенту.
+ * «Проиграна», «Отложена» и «Отменена» сюда не входят: сделка может
+ * закрыться на любой стадии, в том числе до расчёта.
+ */
+export const SENT_IMPLYING_STATUSES: readonly DealStatus[] = [
+  "КП отправлено",
+  "Переговоры",
+  "Согласование условий",
+  "Счет выставлен",
+  "Ожидаем оплату",
+  "Оплачено",
+  "В закупке / производстве",
+  "Готово к отгрузке",
+  "Отгружено",
+  "Закрыта успешно",
+];
 
 export interface Client extends OwnedEntity {
   id: string;
@@ -408,6 +426,217 @@ export const getDealBriefCompletion = (
   return { filled: text + checks, total: 23 };
 };
 
+/**
+ * Вехи процесса расчёта, образца и КП. Дорожка идёт параллельно статусу сделки:
+ * образец могут делать, пока считается цена, поэтому порядок не навязывается.
+ */
+export const DEAL_PROCESS_STEPS = [
+  "specReceived",
+  "calculationRequested",
+  "calculationReceived",
+  "sampleProduced",
+  "sampleSent",
+  "sampleApproved",
+  "quoteSent",
+] as const;
+
+export type DealProcessStep = (typeof DEAL_PROCESS_STEPS)[number];
+
+export const DEAL_PROCESS_STEP_LABELS: Record<DealProcessStep, string> = {
+  specReceived: "ТЗ получено",
+  calculationRequested: "Расчёт запрошен",
+  calculationReceived: "Расчёт получен",
+  sampleProduced: "Образец изготовлен",
+  sampleSent: "Образец отправлен",
+  sampleApproved: "Образец согласован",
+  quoteSent: "КП отправлено",
+};
+
+/** Вехи образца: исключаются целиком, если образец в сделке не нужен. */
+export const SAMPLE_STEPS: readonly DealProcessStep[] = [
+  "sampleProduced",
+  "sampleSent",
+  "sampleApproved",
+];
+
+export interface DealProcessMilestone {
+  /** ISO-дата факта. null — веха не пройдена. */
+  completedAt: string | null;
+  completedById: string | null;
+  note: string;
+}
+
+export interface DealProcess {
+  steps: Record<DealProcessStep, DealProcessMilestone>;
+  /** Ответ клиента ожидается до этой даты, ISO. Ставится вместе с отправкой КП. */
+  replyExpectedAt: string | null;
+  /** Образец не требуется: три вехи образца скрыты и не участвуют в счётчике. */
+  sampleSkipped: boolean;
+  updatedAt: string | null;
+}
+
+const createEmptyMilestone = (): DealProcessMilestone => ({
+  completedAt: null,
+  completedById: null,
+  note: "",
+});
+
+export const createEmptyDealProcess = (): DealProcess => ({
+  steps: {
+    specReceived: createEmptyMilestone(),
+    calculationRequested: createEmptyMilestone(),
+    calculationReceived: createEmptyMilestone(),
+    sampleProduced: createEmptyMilestone(),
+    sampleSent: createEmptyMilestone(),
+    sampleApproved: createEmptyMilestone(),
+    quoteSent: createEmptyMilestone(),
+  },
+  replyExpectedAt: null,
+  sampleSkipped: false,
+  updatedAt: null,
+});
+
+/** Вехи, которые реально учитываются: без образца их четыре, с образцом семь. */
+export const getActiveProcessSteps = (
+  process: DealProcess,
+): readonly DealProcessStep[] =>
+  process.sampleSkipped
+    ? DEAL_PROCESS_STEPS.filter((step) => !SAMPLE_STEPS.includes(step))
+    : DEAL_PROCESS_STEPS;
+
+/** Счётчик для индикатора в карточке, по образцу getDealBriefCompletion. */
+export const getDealProcessCompletion = (
+  process: DealProcess,
+): { filled: number; total: number } => {
+  const steps = getActiveProcessSteps(process);
+
+  return {
+    filled: steps.filter((step) => process.steps[step].completedAt !== null)
+      .length,
+    total: steps.length,
+  };
+};
+
+/** Какие вехи считаются пройденными, если сделка добралась до статуса. */
+export const getImpliedProcessSteps = (
+  status: DealStatus,
+): readonly DealProcessStep[] => {
+  if (SENT_IMPLYING_STATUSES.includes(status)) {
+    return [
+      "specReceived",
+      "calculationRequested",
+      "calculationReceived",
+      "quoteSent",
+    ];
+  }
+  if (status === "Считаем цену") {
+    return ["specReceived", "calculationRequested"];
+  }
+  if (status === "Уточняем ТЗ") {
+    return ["specReceived"];
+  }
+
+  return [];
+};
+
+export const QUOTE_STATUSES = [
+  "Черновик",
+  "Отправлено",
+  "Принято",
+  "Отклонено",
+  "Заменено",
+] as const;
+
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
+
+/**
+ * Версия коммерческого предложения. После отправки замораживается:
+ * изменение цены оформляется новой версией с обязательной причиной.
+ */
+export interface Quote extends TimestampedEntity {
+  id: string;
+  dealId: string;
+  version: number;
+  status: QuoteStatus;
+  /** Выручка, RUB — сумма, которую платит клиент. */
+  revenue: number;
+  /** Себестоимость, RUB — закупка у производителя. */
+  cost: number;
+  /** Логистика, RUB. */
+  logistics: number;
+  /** Объём партии, свободный текст: «24 тыс. шт.» — как в брифе. */
+  volume: string;
+  /** Срок действия КП, ISO-дата. */
+  validUntil: string | null;
+  /** Причина изменения. Обязательна начиная со второй версии. */
+  changeReason: string;
+  sentAt: string | null;
+  authorId: string;
+  comment: string;
+}
+
+export const getQuoteMargin = (
+  quote: Pick<Quote, "revenue" | "cost" | "logistics">,
+): number => quote.revenue - quote.cost - quote.logistics;
+
+/** Процент от выручки, один знак после запятой. При нулевой выручке — 0. */
+export const getQuoteMarginPercent = (
+  quote: Pick<Quote, "revenue" | "cost" | "logistics">,
+): number => {
+  if (quote.revenue === 0) return 0;
+
+  return Math.round((getQuoteMargin(quote) / quote.revenue) * 1000) / 10;
+};
+
+/**
+ * Однозначные термины вместо прежней «Нашей цены»: она не отличалась
+ * от «Цены клиенту» ничем понятным.
+ */
+export const ECONOMICS_LABELS = {
+  revenue: "Выручка",
+  cost: "Себестоимость",
+  logistics: "Логистика",
+  margin: "Маржа",
+} as const;
+
+export interface DealEconomics {
+  revenue: number;
+  cost: number;
+  logistics: number;
+  margin: number;
+  marginPercent: number;
+}
+
+export const EMPTY_DEAL_ECONOMICS: DealEconomics = {
+  revenue: 0,
+  cost: 0,
+  logistics: 0,
+  margin: 0,
+  marginPercent: 0,
+};
+
+/**
+ * Единственная точка чтения денег сделки: экраны не джойнят КП вручную.
+ * У сделки без активного КП возвращает нули — воронка продолжает считаться.
+ */
+export const getDealEconomics = (
+  deal: { activeQuoteId: string | null },
+  quotes: readonly Quote[],
+): DealEconomics => {
+  if (!deal.activeQuoteId) return EMPTY_DEAL_ECONOMICS;
+
+  const quote = quotes.find((candidate) => candidate.id === deal.activeQuoteId);
+  if (!quote) return EMPTY_DEAL_ECONOMICS;
+
+  return {
+    revenue: quote.revenue,
+    cost: quote.cost,
+    logistics: quote.logistics,
+    margin: getQuoteMargin(quote),
+    marginPercent: getQuoteMarginPercent(quote),
+  };
+};
+
 export interface Deal extends OwnedEntity {
   id: string;
   clientId: string;
@@ -415,15 +644,12 @@ export interface Deal extends OwnedEntity {
   title: string;
   product: string;
   volume: string;
-  clientPrice: number;
-  ourPrice: number;
-  purchasePrice: number;
-  logistics: number;
-  margin: number;
-  marginPercent: number;
   status: DealStatus;
   brief: DealBrief;
-  proposalDate: string | null;
+  /** Дорожка вех расчёта, образца и КП. */
+  process: DealProcess;
+  /** Активная версия КП — источник денег сделки. */
+  activeQuoteId: string | null;
   nextAction: string;
   nextActionAt: string | null;
   managerName: string;
@@ -554,6 +780,7 @@ export interface CrmSnapshot {
   clients: Client[];
   contacts: Contact[];
   deals: Deal[];
+  quotes: Quote[];
   interactions: Interaction[];
   tasks: Task[];
   statusEvents: StatusEvent[];

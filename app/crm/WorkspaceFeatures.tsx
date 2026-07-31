@@ -11,14 +11,16 @@ import {
 } from "react";
 import {
   DEAL_PIPELINE,
+  getDealEconomics,
   type Client,
   type CrmSnapshot,
   type Deal,
   type Interaction,
+  type Quote,
   type StatusEvent,
   type Task,
   type User,
-} from "./domain";
+} from "./domain.ts";
 import "./workspace-features.css";
 
 export interface WorkspaceFeatureProps {
@@ -112,7 +114,6 @@ const PROPOSAL_SILENCE_DAYS = 3;
 const REORDER_CYCLE_DAYS = 45;
 /** За сколько дней до расчётной даты напоминаем о повторном заказе. */
 const REORDER_WINDOW_DAYS = 14;
-const PROPOSAL_SENT_STATUS = "КП отправлено";
 const WON_DEAL_STATUS = "Закрыта успешно";
 const REORDER_CLIENT_STATUSES = new Set(["Активный клиент", "Спящий клиент"]);
 
@@ -234,11 +235,9 @@ function ownerId(record: object) {
 }
 
 function recordCreatedAt(record: object) {
-  return (
-      readString(record, "createdAt") ||
-      readString(record, "proposalDate") ||
-      readString(record, "occurredAt")
-  );
+  // Дата КП сюда больше не входит: она переехала в веху quoteSent, а у сделки
+  // createdAt заполнен всегда — миграция это гарантирует.
+  return readString(record, "createdAt") || readString(record, "occurredAt");
 }
 
 function belongsToUser(
@@ -357,6 +356,7 @@ function buildDealsWithoutNextStep(
     tasks: readonly Task[],
     clientNames: Map<string, string>,
     today: Date,
+    quotes: readonly Quote[],
 ): FocusRow[] {
   const plannedDealIds = new Set(
       tasks
@@ -382,7 +382,9 @@ function buildDealsWithoutNextStep(
           title: clientNames.get(deal.clientId) ?? deal.title,
           meta: deal.nextAction
               ? `${deal.status} · срок не назначен`
-              : `${deal.status} · ${formatCompactMoney(deal.ourPrice)}`,
+              : `${deal.status} · ${formatCompactMoney(
+                  getDealEconomics(deal, quotes).revenue,
+              )}`,
           dateIso: deal.updatedAt,
           dateLabel: idleDays > 0 ? `${idleDays} дн. без движения` : "Сегодня",
           entity: "deal",
@@ -396,52 +398,93 @@ function buildDealsWithoutNextStep(
 }
 
 /**
- * Отправленные КП, по которым клиент молчит дольше PROPOSAL_SILENCE_DAYS:
- * после даты предложения нет ни одного взаимодействия с этим клиентом.
+ * КП, по которым ждём ответа. Основное правило — дата, которую назвал клиент.
+ * Если её не проставили, работает прежняя эвристика молчания.
  */
 function buildSilentProposals(
     deals: readonly Deal[],
     interactions: readonly Interaction[],
     clientNames: Map<string, string>,
     today: Date,
+    quotes: readonly Quote[],
 ): FocusRow[] {
   return deals
-      .filter((deal) => deal.status === PROPOSAL_SENT_STATUS)
+      // Отбор по вехе, а не по статусу: сделка могла уйти в «Переговоры»,
+      // а ответа по КП всё ещё нет.
+      .filter((deal) => deal.process.steps.quoteSent.completedAt !== null)
       .map((deal) => {
-        const sentAt = safeDate(deal.proposalDate) ?? safeDate(deal.updatedAt);
-        return { deal, sentAt };
+        const sentAt = safeDate(deal.process.steps.quoteSent.completedAt);
+        const expectedAt = safeDate(deal.process.replyExpectedAt);
+        return { deal, sentAt, expectedAt };
       })
       .filter(
           (
               entry,
-          ): entry is { deal: Deal; sentAt: Date } => entry.sentAt !== null,
+          ): entry is { deal: Deal; sentAt: Date; expectedAt: Date | null } =>
+              entry.sentAt !== null,
       )
-      .filter(({ deal, sentAt }) => {
-        if (daysBetween(sentAt, today) < PROPOSAL_SILENCE_DAYS) return false;
-
-        return !interactions.some((interaction) => {
+      .filter(({ deal, sentAt, expectedAt }) => {
+        // Ответ клиента закрывает вопрос независимо от дат.
+        const answered = interactions.some((interaction) => {
           // Отправка КП — наше действие, ответом клиента она не считается.
           if (interaction.clientId !== deal.clientId) return false;
           if (interaction.kind === "Отправка КП") return false;
           const occurredAt = safeDate(interaction.occurredAt);
           return Boolean(occurredAt && occurredAt.getTime() > sentAt.getTime());
         });
+        if (answered) return false;
+
+        if (expectedAt) return true;
+        return daysBetween(sentAt, today) >= PROPOSAL_SILENCE_DAYS;
       })
-      .map(({ deal, sentAt }) => {
-        const silenceDays = daysBetween(sentAt, today);
+      .map(({ deal, sentAt, expectedAt }) => {
+        const economics = getDealEconomics(deal, quotes);
+
+        if (!expectedAt) {
+          const silenceDays = daysBetween(sentAt, today);
+
+          return {
+            id: deal.id,
+            badge: "КП",
+            tone: silenceDays >= 7 ? "danger" : "warning",
+            title: clientNames.get(deal.clientId) ?? deal.title,
+            meta: `${formatCompactMoney(economics.revenue)} · ${deal.product}`,
+            dateIso: deal.process.steps.quoteSent.completedAt,
+            dateLabel: `Молчит ${silenceDays} ${plural(silenceDays, [
+              "день",
+              "дня",
+              "дней",
+            ])}`,
+            entity: "deal",
+            entityId: deal.id,
+          } satisfies FocusRow;
+        }
+
+        const daysLeft = daysBetween(today, expectedAt);
+        const overdue = expectedAt.getTime() < today.getTime();
+        const overdueDays = daysBetween(expectedAt, today);
+        const dateLabel = overdue
+            ? `Просрочено ${overdueDays} ${plural(overdueDays, [
+              "день",
+              "дня",
+              "дней",
+            ])}`
+            : daysLeft === 0
+                ? "Сегодня"
+                : `Через ${daysLeft} ${plural(daysLeft, [
+                  "день",
+                  "дня",
+                  "дней",
+                ])}`;
 
         return {
           id: deal.id,
           badge: "КП",
-          tone: silenceDays >= 7 ? "danger" : "warning",
+          tone: overdue ? "danger" : "warning",
           title: clientNames.get(deal.clientId) ?? deal.title,
-          meta: `${formatCompactMoney(deal.ourPrice)} · ${deal.product}`,
-          dateIso: deal.proposalDate,
-          dateLabel: `Молчит ${silenceDays} ${plural(silenceDays, [
-            "день",
-            "дня",
-            "дней",
-          ])}`,
+          meta: `${formatCompactMoney(economics.revenue)} · ${deal.product}`,
+          dateIso: deal.process.replyExpectedAt,
+          dateLabel,
           entity: "deal",
           entityId: deal.id,
         } satisfies FocusRow;
@@ -787,7 +830,7 @@ function getDealDate(
   return (
       matching[0]?.changedAt ||
       readString(deal, "closedAt") ||
-      deal.proposalDate ||
+      deal.process.steps.quoteSent.completedAt ||
       recordCreatedAt(deal)
   );
 }
@@ -1316,9 +1359,19 @@ export function DashboardView({
       (deal) => !CLOSED_DEAL_STATUSES.has(deal.status),
   );
   const wonDeals = deals.filter((deal) => deal.status === "Закрыта успешно");
-  const revenue = wonDeals.reduce((sum, deal) => sum + deal.ourPrice, 0);
-  const pipeline = activeDeals.reduce((sum, deal) => sum + deal.ourPrice, 0);
-  const margin = activeDeals.reduce((sum, deal) => sum + deal.margin, 0);
+  const quotes = snapshot.quotes;
+  const revenue = wonDeals.reduce(
+      (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+      0,
+  );
+  const pipeline = activeDeals.reduce(
+      (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+      0,
+  );
+  const margin = activeDeals.reduce(
+      (sum, deal) => sum + getDealEconomics(deal, quotes).margin,
+      0,
+  );
   const weekStart = addDays(today, -6);
   const weeklyInteractions = interactions.filter((interaction) =>
       withinRange(interaction.occurredAt, weekStart, addDays(today, 1)),
@@ -1344,7 +1397,10 @@ export function DashboardView({
           ).length,
           pipeline: userDeals
               .filter((deal) => !CLOSED_DEAL_STATUSES.has(deal.status))
-              .reduce((sum, deal) => sum + deal.ourPrice, 0),
+              .reduce(
+                  (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+                  0,
+              ),
           overdue: userTasks.filter((task) => taskIsOverdue(task, today)).length,
         };
       })
@@ -1363,7 +1419,10 @@ export function DashboardView({
       id: stage.id,
       label: stage.label,
       count: stageDeals.length,
-      value: stageDeals.reduce((sum, deal) => sum + deal.ourPrice, 0),
+      value: stageDeals.reduce(
+          (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+          0,
+      ),
     };
   });
   const maxStageValue = Math.max(...pipelineRows.map((row) => row.value), 1);
@@ -1628,12 +1687,14 @@ function ManagerFocusBoard({
       tasks,
       clientNames,
       today,
+      snapshot.quotes,
   );
   const silentProposals = buildSilentProposals(
       deals,
       interactions,
       clientNames,
       today,
+      snapshot.quotes,
   );
   const upcomingReorders = buildUpcomingReorders(clients, deals, today);
 
@@ -1722,7 +1783,7 @@ function ManagerFocusBoard({
           <FocusPanel
               count={silentProposals.length}
               eyebrow="Предложения"
-              title="КП без ответа клиента"
+              title="КП без ответа"
           >
             {silentProposals.length ? (
                 <FocusList
@@ -1733,7 +1794,7 @@ function ManagerFocusBoard({
             ) : (
                 <EmptyState
                     title="Все КП в работе"
-                    description={`Клиенты отвечают быстрее чем за ${PROPOSAL_SILENCE_DAYS} дня.`}
+                    description="Ждём ответ к дате, которую назвал клиент."
                 />
             )}
           </FocusPanel>
@@ -3094,6 +3155,7 @@ function buildTimeBuckets(
     end: Date,
     deals: Deal[],
     events: StatusEvent[],
+    quotes: readonly Quote[],
 ) {
   const bucketCount = range === "7" ? 7 : range === "30" ? 6 : 6;
   const spanDays =
@@ -3121,8 +3183,14 @@ function buildTimeBuckets(
                   bucketStart,
               )
               : SHORT_DATE_FORMATTER.format(bucketStart),
-      value: bucketDeals.reduce((sum, deal) => sum + deal.ourPrice, 0),
-      secondary: bucketDeals.reduce((sum, deal) => sum + deal.margin, 0),
+      value: bucketDeals.reduce(
+          (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+          0,
+      ),
+      secondary: bucketDeals.reduce(
+          (sum, deal) => sum + getDealEconomics(deal, quotes).margin,
+          0,
+      ),
     };
   });
 }
@@ -3205,12 +3273,22 @@ export function StatisticsView({
               end,
           ),
   );
-  const revenue = wonDeals.reduce((sum, deal) => sum + deal.ourPrice, 0);
-  const wonMargin = wonDeals.reduce((sum, deal) => sum + deal.margin, 0);
+  const quotes = snapshot.quotes;
+  const revenue = wonDeals.reduce(
+      (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+      0,
+  );
+  const wonMargin = wonDeals.reduce(
+      (sum, deal) => sum + getDealEconomics(deal, quotes).margin,
+      0,
+  );
   const activeDeals = allScopedDeals.filter(
       (deal) => !CLOSED_DEAL_STATUSES.has(deal.status),
   );
-  const pipeline = activeDeals.reduce((sum, deal) => sum + deal.ourPrice, 0);
+  const pipeline = activeDeals.reduce(
+      (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+      0,
+  );
   const completedTasks = tasks.filter(taskIsCompleted);
   const overdueTasks = allScopedTasks.filter((task) => taskIsOverdue(task));
   const enteredDealIds = new Set(
@@ -3240,6 +3318,7 @@ export function StatisticsView({
       now,
       wonDeals,
       snapshot.statusEvents,
+      quotes,
   );
   const targets = snapshot.targets.filter((target) => {
     if (target.metric !== "revenue") return false;
@@ -3261,7 +3340,7 @@ export function StatisticsView({
         secondary:
             snapshot.clients.find((client) => client.id === deal.clientId)
                 ?.companyName ?? deal.status,
-        meta: formatMoney(deal.ourPrice),
+        meta: formatMoney(getDealEconomics(deal, quotes).revenue),
         entity: "deal",
         entityId: deal.id,
       }));
@@ -3294,8 +3373,14 @@ export function StatisticsView({
       ...stage,
       deals: stageDeals,
       count: stageDeals.length,
-      value: stageDeals.reduce((sum, deal) => sum + deal.ourPrice, 0),
-      margin: stageDeals.reduce((sum, deal) => sum + deal.margin, 0),
+      value: stageDeals.reduce(
+          (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+          0,
+      ),
+      margin: stageDeals.reduce(
+          (sum, deal) => sum + getDealEconomics(deal, quotes).margin,
+          0,
+      ),
     };
   });
   const funnelBase = Math.max(funnelRows[0]?.count ?? 0, 1);
@@ -3364,8 +3449,14 @@ export function StatisticsView({
           user,
           deals: userDeals,
           won: userWon.length,
-          revenue: userWon.reduce((sum, deal) => sum + deal.ourPrice, 0),
-          margin: userWon.reduce((sum, deal) => sum + deal.margin, 0),
+          revenue: userWon.reduce(
+              (sum, deal) => sum + getDealEconomics(deal, quotes).revenue,
+              0,
+          ),
+          margin: userWon.reduce(
+              (sum, deal) => sum + getDealEconomics(deal, quotes).margin,
+              0,
+          ),
           activities: userInteractions.length,
           overdue: userTasks.filter((task) => taskIsOverdue(task)).length,
         };
@@ -3721,8 +3812,12 @@ export function StatisticsView({
                       </small>
                     </span>
                             <span>
-                      <strong>{formatMoney(deal.ourPrice)}</strong>
-                      <small>{formatMoney(deal.margin)} маржи</small>
+                      <strong>
+                        {formatMoney(getDealEconomics(deal, quotes).revenue)}
+                      </strong>
+                      <small>
+                        {formatMoney(getDealEconomics(deal, quotes).margin)} маржи
+                      </small>
                     </span>
                             <Icon name="arrow" />
                           </button>

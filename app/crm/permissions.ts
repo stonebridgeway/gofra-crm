@@ -1,10 +1,12 @@
 import type {
   AppModule,
   CrmSnapshot,
+  Deal,
   OwnedEntity,
+  Quote,
   User,
   UserRole,
-} from "./domain";
+} from "./domain.ts";
 
 export type Permission =
   | "records:view-own"
@@ -143,4 +145,22 @@ export const filterAccessibleRecords = <
   users: readonly User[],
 ): T[] =>
   records.filter((record) => canViewRecord(actor, record, users));
+
+/**
+ * У версии КП нет своего владельца: доступ наследуется от родительской сделки.
+ * КП без сделки не показывается никому — это осиротевшая запись.
+ */
+export const filterAccessibleQuotes = (
+  actor: User,
+  quotes: readonly Quote[],
+  deals: readonly Deal[],
+  users: readonly User[],
+): Quote[] => {
+  const dealById = new Map(deals.map((deal) => [deal.id, deal]));
+
+  return quotes.filter((quote) => {
+    const deal = dealById.get(quote.dealId);
+    return Boolean(deal && canViewRecord(actor, deal, users));
+  });
+};
 

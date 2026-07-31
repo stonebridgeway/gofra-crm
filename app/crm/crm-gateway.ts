@@ -1,8 +1,13 @@
 import {
   BRIEF_ASSET_KINDS,
   CRM_SCHEMA_VERSION,
+  DEAL_PROCESS_STEPS,
   PACKING_METHODS,
+  QUOTE_STATUSES,
+  SENT_IMPLYING_STATUSES,
   createEmptyDealBrief,
+  createEmptyDealProcess,
+  getImpliedProcessSteps,
   type BriefAsset,
   type BriefAssetStatus,
   type BriefDimensions,
@@ -11,9 +16,14 @@ import {
   type CrmSnapshot,
   type Deal,
   type DealBrief,
+  type DealProcess,
+  type DealProcessMilestone,
+  type DealProcessStep,
+  type DealStatus,
   type Dictionaries,
   type PackingMethod,
   type Interaction,
+  type Quote,
   type Session,
   type StatusEvent,
   type Target,
@@ -21,7 +31,7 @@ import {
   type Team,
   type User,
   type UserRole,
-} from "./domain";
+} from "./domain.ts";
 import {
   DEMO_TEAM_ID,
   DEMO_USER_IDS,
@@ -30,9 +40,10 @@ import {
   demoTargets,
   demoTeams,
   demoUsers,
-} from "./fixtures";
+} from "./fixtures.ts";
 
-export const CRM_STORAGE_KEY = "gofra-crm-prototype:v2";
+export const CRM_STORAGE_KEY = "gofra-crm-prototype:v3";
+export const LEGACY_V2_CRM_STORAGE_KEY = "gofra-crm-prototype:v2";
 export const LEGACY_CRM_STORAGE_KEY = "gofra-crm-prototype:v1";
 
 type JsonRecord = Record<string, unknown>;
@@ -551,8 +562,137 @@ const normalizeDealBrief = (value: unknown): DealBrief => {
   };
 };
 
+const normalizeMilestone = (value: unknown): DealProcessMilestone => {
+  const record = asRecord(value);
+
+  return {
+    completedAt: asNullableString(record.completedAt),
+    completedById: asNullableString(record.completedById),
+    note: asString(record.note),
+  };
+};
+
+const normalizeDealProcess = (value: unknown): DealProcess => {
+  const record = asRecord(value);
+  const steps = asRecord(record.steps);
+  const base = createEmptyDealProcess();
+
+  for (const step of DEAL_PROCESS_STEPS) {
+    base.steps[step] = normalizeMilestone(steps[step]);
+  }
+
+  base.replyExpectedAt = asNullableString(record.replyExpectedAt);
+  base.sampleSkipped = asBoolean(record.sampleSkipped, false);
+  base.updatedAt = asNullableString(record.updatedAt);
+
+  return base;
+};
+
 /**
- * Upgrades an unversioned/v1 browser snapshot to schema v2.
+ * Дозаполнение вех по статусу: сделка на позднем этапе не должна выглядеть
+ * с пустой дорожкой. Даты берём из истории статусов, иначе из создания сделки.
+ */
+const backfillProcessFromStatus = (
+  process: DealProcess,
+  deal: { id: string; status: DealStatus; createdAt: string; ownerId: string },
+  statusEvents: readonly StatusEvent[],
+): DealProcess => {
+  const implied = getImpliedProcessSteps(deal.status);
+  if (!implied.length) return process;
+
+  const eventDate = (status: DealStatus): string | null =>
+    statusEvents.find(
+      (event) =>
+        event.entityType === "deal" &&
+        event.entityId === deal.id &&
+        event.toStatus === status,
+    )?.changedAt ?? null;
+
+  const fallbackByStep: Partial<Record<DealProcessStep, DealStatus>> = {
+    specReceived: "Уточняем ТЗ",
+    calculationRequested: "Считаем цену",
+    calculationReceived: "Считаем цену",
+    quoteSent: "КП отправлено",
+  };
+
+  for (const step of implied) {
+    if (process.steps[step].completedAt !== null) continue;
+
+    const fallbackStatus = fallbackByStep[step];
+    process.steps[step] = {
+      completedAt:
+        (fallbackStatus ? eventDate(fallbackStatus) : null) ?? deal.createdAt,
+      completedById: deal.ownerId,
+      note: "",
+    };
+  }
+
+  return process;
+};
+
+const normalizeQuote = (value: unknown, now: string, index: number): Quote => {
+  const record = asRecord(value);
+  const dealId = asString(record.dealId);
+  const version = Math.max(1, Math.trunc(asNumber(record.version, index + 1)));
+  const rawStatus = asString(record.status) as Quote["status"];
+  const createdAt = asString(record.createdAt, now);
+
+  return {
+    id: asString(record.id, `КП-${dealId}-${version}`),
+    dealId,
+    version,
+    status: QUOTE_STATUSES.includes(rawStatus) ? rawStatus : "Черновик",
+    revenue: asNumber(record.revenue),
+    cost: asNumber(record.cost),
+    logistics: asNumber(record.logistics),
+    volume: asString(record.volume),
+    validUntil: asNullableString(record.validUntil),
+    changeReason: asString(record.changeReason),
+    sentAt: asNullableString(record.sentAt),
+    authorId: asString(record.authorId),
+    comment: asString(record.comment),
+    createdAt,
+    updatedAt: asString(record.updatedAt, createdAt),
+  };
+};
+
+/** Старые плоские деньги сделки становятся КП версии 1. */
+const createQuoteFromLegacyDeal = (
+  record: JsonRecord,
+  deal: { id: string; status: DealStatus; ownerId: string; createdAt: string },
+  now: string,
+): Quote | null => {
+  const revenue = asNumber(record.ourPrice);
+  const cost = asNumber(record.purchasePrice);
+  const logistics = asNumber(record.logistics);
+  if (revenue === 0 && cost === 0 && logistics === 0) return null;
+
+  const proposalDate = asNullableString(record.proposalDate);
+  const sent =
+    proposalDate !== null || SENT_IMPLYING_STATUSES.includes(deal.status);
+
+  return {
+    id: `КП-${deal.id}-1`,
+    dealId: deal.id,
+    version: 1,
+    status: sent ? "Отправлено" : "Черновик",
+    revenue,
+    cost,
+    logistics,
+    volume: asString(record.volume),
+    validUntil: null,
+    // У первой версии причины изменения не существует.
+    changeReason: "",
+    sentAt: proposalDate,
+    authorId: deal.ownerId,
+    comment: "",
+    createdAt: asString(record.createdAt, now),
+    updatedAt: asString(record.updatedAt, now),
+  };
+};
+
+/**
+ * Upgrades an unversioned/v1/v2 browser snapshot to schema v3.
  * Existing record IDs and legacy display fields are kept verbatim.
  */
 export const migrateCrmSnapshot = (
@@ -574,10 +714,13 @@ export const migrateCrmSnapshot = (
     throw new TypeError("В снимке CRM отсутствуют обязательные коллекции.");
   }
 
-  const isV2 = source.schemaVersion === CRM_SCHEMA_VERSION;
+  // Команды и пользователи появились в схеме v2. Сравнивать с текущей версией
+  // нельзя: после подъёма схемы снимок v2 потерял бы свою команду.
+  const hasTeamModel =
+    typeof source.schemaVersion === "number" && source.schemaVersion >= 2;
 
   const teamsSource =
-    isV2 && Array.isArray(source.teams) ? source.teams : demoTeams;
+    hasTeamModel && Array.isArray(source.teams) ? source.teams : demoTeams;
   const teams = teamsSource.map((team, index) =>
     normalizeTeam(team, migratedAt, index),
   );
@@ -585,7 +728,7 @@ export const migrateCrmSnapshot = (
 
   const fallbackTeamId = teams[0]?.id ?? DEMO_TEAM_ID;
   const usersSource =
-    isV2 && Array.isArray(source.users) ? source.users : demoUsers;
+    hasTeamModel && Array.isArray(source.users) ? source.users : demoUsers;
   const users = usersSource.map((user, index) =>
     normalizeUser(user, migratedAt, index, fallbackTeamId),
   );
@@ -711,14 +854,29 @@ export const migrateCrmSnapshot = (
       proposalDate ? `${proposalDate}T08:00:00.000Z` : migratedAt,
     );
 
+    // Плоские деньги и дата КП переехали в версии КП и вехи. Спред сохранил бы
+    // их в хранилище навсегда — и они бы молча разошлись с активным КП.
+    const {
+      clientPrice: _clientPrice,
+      ourPrice: _ourPrice,
+      purchasePrice: _purchasePrice,
+      logistics: _logistics,
+      margin: _margin,
+      marginPercent: _marginPercent,
+      proposalDate: _proposalDate,
+      ...rest
+    } = record;
+
     return {
-      ...record,
+      ...rest,
       ownerId,
       managerName: asString(
         record.managerName,
         userById.get(ownerId)?.fullName ?? "",
       ),
       brief: normalizeDealBrief(record.brief),
+      process: normalizeDealProcess(record.process),
+      activeQuoteId: asNullableString(record.activeQuoteId),
       createdAt,
       updatedAt: asString(record.updatedAt, createdAt),
     } as unknown as Deal;
@@ -759,6 +917,71 @@ export const migrateCrmSnapshot = (
         normalizeStatusEvent(event, migratedAt, index, currentUserId),
       )
     : createInitialStatusEvents(clients, deals);
+
+  // Сырые записи сделок нужны второй раз: старые деньги лежат только в них.
+  const dealRecords = new Map(
+    asArray(source.deals).map((value) => {
+      const record = asRecord(value);
+      return [asString(record.id), record] as const;
+    }),
+  );
+  const dealById = new Map(deals.map((deal) => [deal.id, deal]));
+
+  const storedQuotes = asArray(source.quotes)
+    .map((value, index) => normalizeQuote(value, migratedAt, index))
+    // КП без своей сделки — мусор, восстанавливать нечего.
+    .filter((quote) => dealById.has(quote.dealId));
+
+  const quotes: Quote[] = [...storedQuotes];
+
+  for (const deal of deals) {
+    // Дозаполняем вехи по статусу — только там, где фактов не нашлось.
+    const record = dealRecords.get(deal.id) ?? {};
+    const proposalDate = asNullableString(record.proposalDate);
+    if (proposalDate && deal.process.steps.quoteSent.completedAt === null) {
+      deal.process.steps.quoteSent = {
+        completedAt: proposalDate,
+        completedById: deal.ownerId,
+        note: "",
+      };
+    }
+    if (
+      deal.brief.updatedAt &&
+      deal.process.steps.specReceived.completedAt === null
+    ) {
+      deal.process.steps.specReceived = {
+        completedAt: deal.brief.updatedAt,
+        completedById: deal.ownerId,
+        note: "",
+      };
+    }
+    deal.process = backfillProcessFromStatus(deal.process, deal, statusEvents);
+
+    const dealQuotes = quotes.filter((quote) => quote.dealId === deal.id);
+
+    if (!dealQuotes.length) {
+      const migrated = createQuoteFromLegacyDeal(record, deal, migratedAt);
+      if (migrated) {
+        quotes.push(migrated);
+        deal.activeQuoteId = migrated.id;
+        continue;
+      }
+      deal.activeQuoteId = null;
+      continue;
+    }
+
+    // Перенумерация лечит дубли версий внутри одной сделки.
+    dealQuotes
+      .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+      .forEach((quote, index) => {
+        quote.version = index + 1;
+      });
+
+    if (!dealQuotes.some((quote) => quote.id === deal.activeQuoteId)) {
+      const live = dealQuotes.filter((quote) => quote.status !== "Заменено");
+      deal.activeQuoteId = (live.at(-1) ?? dealQuotes.at(-1))?.id ?? null;
+    }
+  }
 
   const targetSource = Array.isArray(source.targets)
     ? source.targets
@@ -817,6 +1040,7 @@ export const migrateCrmSnapshot = (
     clients,
     contacts,
     deals,
+    quotes,
     interactions,
     tasks,
     statusEvents,
@@ -841,25 +1065,25 @@ class BrowserMockGateway implements CrmGateway {
       throw new DOMException("Aborted", "AbortError");
     }
 
-    const stored = window.localStorage.getItem(CRM_STORAGE_KEY);
-    if (stored) {
+    // По убыванию версии: снимок любой из них поднимается миграцией до текущей.
+    for (const key of [
+      CRM_STORAGE_KEY,
+      LEGACY_V2_CRM_STORAGE_KEY,
+      LEGACY_CRM_STORAGE_KEY,
+    ]) {
+      const stored = window.localStorage.getItem(key);
+      if (!stored) continue;
+
       try {
         const snapshot = migrateCrmSnapshot(JSON.parse(stored));
         window.localStorage.setItem(CRM_STORAGE_KEY, JSON.stringify(snapshot));
         return snapshot;
       } catch {
-        window.localStorage.removeItem(CRM_STORAGE_KEY);
-      }
-    }
-
-    const legacy = window.localStorage.getItem(LEGACY_CRM_STORAGE_KEY);
-    if (legacy) {
-      try {
-        const snapshot = migrateCrmSnapshot(JSON.parse(legacy));
-        window.localStorage.setItem(CRM_STORAGE_KEY, JSON.stringify(snapshot));
-        return snapshot;
-      } catch {
-        // Keep the v1 value as a recoverable backup and fall back to demo data.
+        // Битым признаём только текущий ключ; прежние версии остаются
+        // восстановимой резервной копией.
+        if (key === CRM_STORAGE_KEY) {
+          window.localStorage.removeItem(key);
+        }
       }
     }
 

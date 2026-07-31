@@ -11,7 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "test": "vite build && node --test tests/static-build.test.mjs"
+    "test": "vite build && node --test \"tests/**/*.test.*\""
   },
   "dependencies": {
     "react": "19.2.6",

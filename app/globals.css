@@ -2232,6 +2232,103 @@ html[data-theme="dark"] textarea {
   grid-column: 1 / -1;
 }
 
+.deal-process-track {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.deal-process-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+}
+
+.deal-process-step label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.deal-process-step.is-done strong {
+  opacity: 0.7;
+}
+
+.deal-process-date {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.deal-process-counter {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.deal-process-skip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.quote-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.quote-row {
+  display: grid;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+}
+
+.quote-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quote-editor {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.quote-editor label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.quote-editor-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.quote-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0;
+}
+
+.quote-margin.negative,
+.quote-row small.negative {
+  color: var(--danger);
+}
+
 .brief-dimensions {
   display: flex;
   flex-direction: column;
@@ -3127,4 +3224,16 @@ html[data-theme="dark"] textarea {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.deal-process-reply {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.quote-row-actions {
+  display: flex;
+  gap: 10px;
 }

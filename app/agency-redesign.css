@@ -947,6 +947,24 @@ button {
   border-left: 3px solid var(--accent);
 }
 
+.deal-process-step,
+.deal-process-date {
+  border-radius: 2px;
+}
+
+.deal-process-step.is-done {
+  border-left: 2px solid var(--accent);
+}
+
+.quote-row,
+.quote-editor input {
+  border-radius: 2px;
+}
+
+.quote-row.is-active {
+  border-left: 2px solid var(--accent);
+}
+
 .brief-assets-editor legend {
   font-family: "Geist Mono", monospace;
   letter-spacing: 0.08em;

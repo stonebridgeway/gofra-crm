@@ -18,11 +18,25 @@ test("builds a self-contained static GitHub Pages artifact", async () => {
 });
 
 test("keeps every CRM status in the frontend contract", async () => {
-  const [app, domain, gateway, packageJson, viteConfig, workflow] =
+  const [
+    app,
+    domain,
+    gateway,
+    dealProcessView,
+    styles,
+    packageJson,
+    viteConfig,
+    workflow,
+  ] =
     await Promise.all([
       readFile(new URL("../app/crm/CrmApp.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/domain.ts", import.meta.url), "utf8"),
       readFile(new URL("../app/crm/crm-gateway.ts", import.meta.url), "utf8"),
+      readFile(
+        new URL("../app/crm/DealProcessView.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
       readFile(new URL("../package.json", import.meta.url), "utf8"),
       readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
       readFile(
@@ -45,6 +59,29 @@ test("keeps every CRM status in the frontend contract", async () => {
   assert.match(domain, /"0201"/);
   assert.match(domain, /getDealBriefCompletion/);
   assert.match(gateway, /normalizeDealBrief/);
+
+  assert.match(domain, /interface DealProcess/);
+  assert.match(domain, /interface Quote/);
+  assert.match(domain, /DEAL_PROCESS_STEPS/);
+  assert.match(domain, /QUOTE_STATUSES/);
+  assert.match(domain, /getDealEconomics/);
+  assert.match(domain, /ECONOMICS_LABELS/);
+  assert.match(domain, /"ТЗ получено"/);
+  assert.match(domain, /"Расчёт запрошен"/);
+  assert.match(domain, /"Образец согласован"/);
+  assert.match(domain, /"Заменено"/);
+  assert.match(domain, /"Выручка"/);
+  assert.match(domain, /"Себестоимость"/);
+  assert.match(gateway, /normalizeDealProcess/);
+  assert.match(gateway, /normalizeQuote/);
+  assert.match(dealProcessView, /export function DealProcessSection/);
+  assert.match(dealProcessView, /export function QuoteHistorySection/);
+  assert.match(styles, /\.deal-process-track/);
+  assert.match(styles, /\.quote-list/);
+
+  // Двусмысленная терминология не должна вернуться.
+  assert.doesNotMatch(domain, /ourPrice|clientPrice/);
+
   assert.doesNotMatch(packageJson, /next|vinext|wrangler|drizzle|cloudflare/i);
   assert.match(packageJson, /"tailwindcss": "4\.3\.3"/);
   assert.match(packageJson, /"@tailwindcss\/vite": "4\.3\.3"/);
@@ -96,7 +133,7 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
       readFile(new URL("../app/agency-redesign.css", import.meta.url), "utf8"),
     ]);
 
-  assert.match(domain, /CRM_SCHEMA_VERSION = 2/);
+  assert.match(domain, /CRM_SCHEMA_VERSION = 3/);
   assert.match(domain, /UserRole = "manager" \| "employee"/);
   assert.match(domain, /interface Task/);
   assert.match(domain, /type TaskSource/);

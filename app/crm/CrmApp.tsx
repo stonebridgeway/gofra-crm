@@ -33,8 +33,11 @@ import {
   PACKAGING_TYPES,
   PACKING_METHODS,
   PRINT_METHODS,
+  ECONOMICS_LABELS,
   createEmptyDealBrief,
+  createEmptyDealProcess,
   getDealBriefCompletion,
+  getDealEconomics,
   hasDimensions,
   type AppModule,
   type BriefAssetStatus,
@@ -45,17 +48,25 @@ import {
   type CrmSnapshot,
   type Deal,
   type DealBrief,
+  type DealProcess,
   type DealStatus,
   type Interaction,
   type InteractionKind,
   type PipelineGroup,
   type Potential,
+  type Quote,
   type Task,
   type User,
-} from "./domain";
+} from "./domain.ts";
+import {
+  DealProcessSection,
+  QuoteHistorySection,
+  type QuoteDraft,
+} from "./DealProcessView.tsx";
 import {
   canAccessModule,
   canViewFinancials,
+  filterAccessibleQuotes,
   filterAccessibleRecords,
   isManager,
 } from "./permissions";
@@ -373,6 +384,12 @@ export function CrmApp() {
       ...snapshot,
       clients,
       deals,
+      quotes: filterAccessibleQuotes(
+        currentUser,
+        snapshot.quotes,
+        snapshot.deals,
+        snapshot.users,
+      ),
       contacts: filterAccessibleRecords(
         currentUser,
         snapshot.contacts,
@@ -579,6 +596,169 @@ export function CrmApp() {
     );
   };
 
+  const saveDealProcess = (dealId: string, process: DealProcess) => {
+    if (!snapshot) return;
+    const now = new Date().toISOString();
+    const deal = snapshot.deals.find((item) => item.id === dealId);
+    if (!deal) return;
+
+    // Стабильный id задачи по сделке позволяет двигать и снимать срок,
+    // не плодя дубли в календаре.
+    const taskId = `TASK-СД-${dealId}-reply`;
+    const others = snapshot.tasks.filter((task) => task.id !== taskId);
+    const replyTask: Task[] = process.replyExpectedAt
+      ? [
+          {
+            id: taskId,
+            title: `Дождаться ответа по КП: ${deal.title}`,
+            description: "Клиент обещал ответить к этой дате.",
+            kind: "follow_up",
+            status: "open",
+            priority: "normal",
+            dueAt: process.replyExpectedAt,
+            completedAt: null,
+            assigneeId: deal.ownerId,
+            createdById: snapshot.session.currentUserId,
+            source: "deal",
+            sourceId: dealId,
+            checklist: [],
+            clientId: deal.clientId,
+            dealId,
+            contactId: deal.contactId,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ]
+      : [];
+
+    commit(
+      {
+        ...snapshot,
+        deals: snapshot.deals.map((item) =>
+          item.id === dealId ? { ...item, process, updatedAt: now } : item,
+        ),
+        tasks: [...others, ...replyTask],
+      },
+      "Процесс сделки обновлён",
+    );
+  };
+
+  const resolveQuote = (
+    dealId: string,
+    quoteId: string,
+    outcome: "Принято" | "Отклонено",
+  ) => {
+    if (!snapshot) return;
+    const now = new Date().toISOString();
+    const taskId = `TASK-СД-${dealId}-reply`;
+
+    commit(
+      {
+        ...snapshot,
+        quotes: snapshot.quotes.map((quote) =>
+          quote.id === quoteId
+            ? { ...quote, status: outcome, updatedAt: now }
+            : quote,
+        ),
+        tasks: snapshot.tasks.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                status: "completed" as const,
+                completedAt: now,
+                updatedAt: now,
+              }
+            : task,
+        ),
+      },
+      `Ответ клиента записан: ${outcome.toLowerCase()}`,
+    );
+  };
+
+  const createQuoteVersion = (dealId: string, draft: QuoteDraft) => {
+    if (!snapshot) return;
+    const now = new Date().toISOString();
+    const dealQuotes = snapshot.quotes.filter((quote) => quote.dealId === dealId);
+    const version = dealQuotes.length + 1;
+    const quote: Quote = {
+      id: `КП-${dealId}-${version}`,
+      dealId,
+      version,
+      status: "Черновик",
+      revenue: draft.revenue,
+      cost: draft.cost,
+      logistics: draft.logistics,
+      volume: draft.volume,
+      validUntil: draft.validUntil,
+      changeReason: draft.changeReason.trim(),
+      sentAt: null,
+      authorId: snapshot.session.currentUserId,
+      comment: "",
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    commit(
+      {
+        ...snapshot,
+        quotes: [
+          // Предыдущие отправленные версии уступают место новой.
+          ...snapshot.quotes.map((item) =>
+            item.dealId === dealId && item.status === "Отправлено"
+              ? { ...item, status: "Заменено" as const, updatedAt: now }
+              : item,
+          ),
+          quote,
+        ],
+        deals: snapshot.deals.map((deal) =>
+          deal.id === dealId
+            ? { ...deal, activeQuoteId: quote.id, updatedAt: now }
+            : deal,
+        ),
+      },
+      `КП версии ${version} создано`,
+    );
+  };
+
+  const sendQuote = (dealId: string, quoteId: string) => {
+    if (!snapshot) return;
+    const now = new Date().toISOString();
+
+    commit(
+      {
+        ...snapshot,
+        quotes: snapshot.quotes.map((quote) =>
+          quote.id === quoteId
+            ? { ...quote, status: "Отправлено" as const, sentAt: now, updatedAt: now }
+            : quote,
+        ),
+        deals: snapshot.deals.map((deal) =>
+          deal.id === dealId
+            ? {
+                ...deal,
+                activeQuoteId: quoteId,
+                // Веха отправки — следствие действия, а не отдельная галочка.
+                process: {
+                  ...deal.process,
+                  steps: {
+                    ...deal.process.steps,
+                    quoteSent: {
+                      completedAt: now,
+                      completedById: snapshot.session.currentUserId,
+                      note: "",
+                    },
+                  },
+                  updatedAt: now,
+                },
+                updatedAt: now,
+              }
+            : deal,
+        ),
+      },
+      "КП отправлено клиенту",
+    );
+  };
+
   const moveClient = (id: string, status: ClientStatus) => {
     if (!snapshot) return;
     const previous = snapshot.clients.find((client) => client.id === id);
@@ -749,7 +929,6 @@ export function CrmApp() {
       const title = String(form.get("title") ?? "").trim();
       const clientId = String(form.get("clientId") ?? "");
       if (!title || !clientId) return;
-      const ourPrice = Number(form.get("ourPrice") ?? 0);
       const managerName = String(
         form.get("manager") ?? currentUser?.fullName ?? managers[0],
       );
@@ -769,19 +948,14 @@ export function CrmApp() {
         title,
         product: String(form.get("product") ?? ""),
         volume: String(form.get("volume") ?? ""),
-        clientPrice: ourPrice,
-        ourPrice,
-        purchasePrice: Math.round(ourPrice * 0.68),
-        logistics: Math.round(ourPrice * 0.08),
-        margin: Math.round(ourPrice * 0.24),
-        marginPercent: 24,
         status: String(form.get("status") ?? "Новая заявка") as DealStatus,
         brief: {
           ...createEmptyDealBrief(),
           packagingType: String(form.get("packagingType") ?? ""),
           batchVolume: String(form.get("volume") ?? ""),
         },
-        proposalDate: null,
+        process: createEmptyDealProcess(),
+        activeQuoteId: null,
         nextAction,
         nextActionAt,
         managerName,
@@ -1124,6 +1298,7 @@ export function CrmApp() {
               <DealsView
                 clients={viewSnapshot.clients}
                 deals={viewSnapshot.deals}
+                quotes={viewSnapshot.quotes}
                 globalSearch={globalSearch}
                 showFinancials={canViewFinancials(currentUser)}
                 onAdvance={(deal) => {
@@ -1370,6 +1545,10 @@ export function CrmApp() {
           onMoveClient={requestClientMove}
           onMoveDeal={requestDealMove}
           onSaveBrief={saveDealBrief}
+          onSaveProcess={saveDealProcess}
+          onCreateQuote={createQuoteVersion}
+          onSendQuote={sendQuote}
+          onResolveQuote={resolveQuote}
           showFinancials={
             currentUser ? canViewFinancials(currentUser) : false
           }
@@ -1859,6 +2038,7 @@ function ClientTable({
 function DealsView({
   clients,
   deals,
+  quotes,
   globalSearch,
   showFinancials,
   onAdvance,
@@ -1868,6 +2048,7 @@ function DealsView({
 }: {
   clients: Client[];
   deals: Deal[];
+  quotes: Quote[];
   globalSearch: string;
   showFinancials: boolean;
   onAdvance: (deal: Deal) => void;
@@ -1902,8 +2083,11 @@ function DealsView({
 
   const pipeline = deals
     .filter((deal) => !["Проиграна", "Отложена", "Отменена"].includes(deal.status))
-    .reduce((sum, deal) => sum + deal.ourPrice, 0);
-  const margin = deals.reduce((sum, deal) => sum + deal.margin, 0);
+    .reduce((sum, deal) => sum + getDealEconomics(deal, quotes).revenue, 0);
+  const margin = deals.reduce(
+    (sum, deal) => sum + getDealEconomics(deal, quotes).margin,
+    0,
+  );
 
   return (
     <section className="module-view">
@@ -1966,6 +2150,7 @@ function DealsView({
                 clientMap.get(deal.clientId)?.companyName ?? "Клиент не найден"
               }
               deal={deal}
+              quotes={quotes}
               showFinancials={showFinancials}
               onAdvance={() => onAdvance(deal)}
               onOpen={() => onOpen(deal)}
@@ -1978,6 +2163,7 @@ function DealsView({
         <DealTable
           clientMap={clientMap}
           deals={filtered}
+          quotes={quotes}
           showFinancials={showFinancials}
           onOpen={onOpen}
           onStatus={onRequestMove}
@@ -1990,6 +2176,7 @@ function DealsView({
 function DealCard({
   deal,
   clientName,
+  quotes,
   showFinancials,
   onAdvance,
   onOpen,
@@ -1997,12 +2184,14 @@ function DealCard({
 }: {
   deal: Deal;
   clientName: string;
+  quotes: Quote[];
   showFinancials: boolean;
   onAdvance: () => void;
   onOpen: () => void;
   onStatus: () => void;
 }) {
   const due = getDueState(deal.nextActionAt);
+  const economics = getDealEconomics(deal, quotes);
   return (
     <article className="record-card deal-card">
       <button className="card-open" onClick={onOpen} type="button">
@@ -2015,14 +2204,14 @@ function DealCard({
         </span>
         <dl className={`deal-numbers ${showFinancials ? "" : "is-single"}`}>
           <div>
-            <dt>Сумма</dt>
-            <dd>{formatMoney(deal.ourPrice)}</dd>
+            <dt>{ECONOMICS_LABELS.revenue}</dt>
+            <dd>{formatMoney(economics.revenue)}</dd>
           </div>
           {showFinancials && (
             <div>
-              <dt>Маржа</dt>
-              <dd className="positive">
-                {formatMoney(deal.margin)} · {deal.marginPercent}%
+              <dt>{ECONOMICS_LABELS.margin}</dt>
+              <dd className={economics.margin < 0 ? "negative" : "positive"}>
+                {formatMoney(economics.margin)} · {economics.marginPercent}%
               </dd>
             </div>
           )}
@@ -2070,12 +2259,14 @@ function BriefChip({ brief }: { brief: DealBrief }) {
 function DealTable({
   deals,
   clientMap,
+  quotes,
   showFinancials,
   onOpen,
   onStatus,
 }: {
   deals: Deal[];
   clientMap: Map<string, Client>;
+  quotes: Quote[];
   showFinancials: boolean;
   onOpen: (deal: Deal) => void;
   onStatus: (deal: Deal) => void;
@@ -2089,15 +2280,18 @@ function DealTable({
             <th>Клиент</th>
             <th>Товар / объём</th>
             <th>Бриф</th>
-            <th>Сумма</th>
-            {showFinancials && <th>Маржа</th>}
+            <th>{ECONOMICS_LABELS.revenue}</th>
+            {showFinancials && <th>{ECONOMICS_LABELS.margin}</th>}
             <th>Точный статус</th>
             <th>Следующий шаг</th>
             <th aria-label="Действия" />
           </tr>
         </thead>
         <tbody>
-          {deals.map((deal) => (
+          {deals.map((deal) => {
+            const economics = getDealEconomics(deal, quotes);
+
+            return (
             <tr key={deal.id}>
               <td>
                 <button
@@ -2117,10 +2311,10 @@ function DealTable({
               <td>
                 <BriefChip brief={deal.brief} />
               </td>
-              <td className="mono">{formatMoney(deal.ourPrice)}</td>
+              <td className="mono">{formatMoney(economics.revenue)}</td>
               {showFinancials && (
-                <td className="positive">
-                  {formatMoney(deal.margin)} · {deal.marginPercent}%
+                <td className={economics.margin < 0 ? "negative" : "positive"}>
+                  {formatMoney(economics.margin)} · {economics.marginPercent}%
                 </td>
               )}
               <td>
@@ -2140,7 +2334,8 @@ function DealTable({
                 </button>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
       {!deals.length && <TableEmpty />}
@@ -2774,6 +2969,10 @@ function RecordDrawer({
   onMoveClient,
   onMoveDeal,
   onSaveBrief,
+  onSaveProcess,
+  onCreateQuote,
+  onSendQuote,
+  onResolveQuote,
   onAddContact,
   onAddInteraction,
   showFinancials,
@@ -2784,6 +2983,14 @@ function RecordDrawer({
   onMoveClient: (client: Client) => void;
   onMoveDeal: (deal: Deal) => void;
   onSaveBrief: (dealId: string, brief: DealBrief) => void;
+  onSaveProcess: (dealId: string, process: DealProcess) => void;
+  onCreateQuote: (dealId: string, draft: QuoteDraft) => void;
+  onSendQuote: (dealId: string, quoteId: string) => void;
+  onResolveQuote: (
+    dealId: string,
+    quoteId: string,
+    outcome: "Принято" | "Отклонено",
+  ) => void;
   onAddContact: (clientId: string) => void;
   onAddInteraction: (clientId: string) => void;
   showFinancials: boolean;
@@ -2811,6 +3018,13 @@ function RecordDrawer({
   const relatedInteractions = snapshot.interactions
     .filter((item) => item.clientId === relatedClient?.id)
     .slice(0, 4);
+  const dealQuotes = snapshot.quotes.filter(
+    (quote) => quote.dealId === deal?.id,
+  );
+  const dealEconomics = getDealEconomics(
+    deal ?? { activeQuoteId: null },
+    snapshot.quotes,
+  );
 
   return (
     <div className="dialog-backdrop" role="presentation">
@@ -2909,7 +3123,11 @@ function RecordDrawer({
                     <article key={item.id}>
                       <strong>{item.title}</strong>
                       <span>{item.status}</span>
-                      <small>{formatMoney(item.ourPrice)}</small>
+                      <small>
+                        {formatMoney(
+                          getDealEconomics(item, snapshot.quotes).revenue,
+                        )}
+                      </small>
                     </article>
                   ))}
                 </div>
@@ -2926,41 +3144,55 @@ function RecordDrawer({
                   <Detail label="Товар" value={deal.product} />
                   <Detail label="Объём" value={deal.volume} />
                   <Detail
-                    label="Цена клиенту"
-                    value={formatMoney(deal.clientPrice)}
-                    mono
-                  />
-                  <Detail
-                    label="Наша цена"
-                    value={formatMoney(deal.ourPrice)}
+                    label={ECONOMICS_LABELS.revenue}
+                    value={formatMoney(dealEconomics.revenue)}
                     mono
                   />
                   {showFinancials && (
                     <>
                       <Detail
-                        label="Закупка"
-                        value={formatMoney(deal.purchasePrice)}
+                        label={ECONOMICS_LABELS.cost}
+                        value={formatMoney(dealEconomics.cost)}
                         mono
                       />
                       <Detail
-                        label="Логистика"
-                        value={formatMoney(deal.logistics)}
+                        label={ECONOMICS_LABELS.logistics}
+                        value={formatMoney(dealEconomics.logistics)}
                         mono
                       />
                       <Detail
-                        label="Маржа"
-                        value={`${formatMoney(deal.margin)} · ${deal.marginPercent}%`}
+                        label={ECONOMICS_LABELS.margin}
+                        value={`${formatMoney(dealEconomics.margin)} · ${dealEconomics.marginPercent}%`}
                         mono
                       />
                     </>
                   )}
-                  <Detail label="Дата КП" value={formatDate(deal.proposalDate)} />
+                  <Detail
+                    label="Дата КП"
+                    value={formatDate(deal.process.steps.quoteSent.completedAt)}
+                  />
                 </dl>
               </DrawerSection>
               <DealBriefSection
                 key={deal.id}
                 brief={deal.brief}
                 onSave={(brief) => onSaveBrief(deal.id, brief)}
+              />
+              <DealProcessSection
+                key={`${deal.id}-process`}
+                currentUserId={snapshot.session.currentUserId}
+                onSave={(process) => onSaveProcess(deal.id, process)}
+                process={deal.process}
+              />
+              <QuoteHistorySection
+                activeQuoteId={deal.activeQuoteId}
+                onCreateVersion={(draft) => onCreateQuote(deal.id, draft)}
+                onResolveQuote={(quoteId, outcome) =>
+                  onResolveQuote(deal.id, quoteId, outcome)
+                }
+                onSendQuote={(quoteId) => onSendQuote(deal.id, quoteId)}
+                quotes={dealQuotes}
+                showFinancials={showFinancials}
               />
               <DrawerSection title="Следующий шаг">
                 <div className="next-action drawer-next">
@@ -3596,7 +3828,6 @@ function CreateDialog({
                 ]}
               />
               <Field label="Объём" name="volume" />
-              <Field label="Наша цена" name="ourPrice" type="number" />
               <SelectField
                 label="Менеджер"
                 name="manager"

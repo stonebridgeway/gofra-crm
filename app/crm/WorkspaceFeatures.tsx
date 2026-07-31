@@ -772,6 +772,72 @@ function Notice({ message }: { message: string }) {
   );
 }
 
+function TaskCompleteDialog({
+                              task,
+                              dueText,
+                              onCancel,
+                              onConfirm,
+                            }: {
+  task: Task;
+  dueText: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const titleId = useId();
+
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onCancel]);
+
+  return (
+      <div
+          className="dialog-backdrop centered"
+          onClick={onCancel}
+          role="presentation"
+      >
+        <section
+            aria-labelledby={titleId}
+            aria-modal="true"
+            className="status-dialog confirm-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+        >
+          <header>
+            <div>
+              <span className="section-kicker">Подтверждение</span>
+              <h2 id={titleId}>Выполнить задачу?</h2>
+              <p>
+                «{task.title}» — {TASK_KIND_LABELS[task.kind]}, {dueText}.
+                Задача будет отмечена как выполненная.
+              </p>
+            </div>
+          </header>
+          <footer className="confirm-actions">
+            <button
+                autoFocus
+                className="ghost-button"
+                onClick={onCancel}
+                type="button"
+            >
+              Отмена
+            </button>
+            <button
+                className="primary-button"
+                onClick={onConfirm}
+                type="button"
+            >
+              Выполнить
+            </button>
+          </footer>
+        </section>
+      </div>
+  );
+}
+
 function TaskRow({
                    snapshot,
                    task,
@@ -803,6 +869,7 @@ function TaskRow({
       (item) => item.completed,
   ).length;
   const canManage = currentUser.role === "manager";
+  const [confirmingComplete, setConfirmingComplete] = useState(false);
 
   const updateStatus = () => {
     if (!canManage) return;
@@ -819,6 +886,20 @@ function TaskRow({
         onSnapshotChange,
     );
     onNotice(completed ? "Задача возвращена в работу" : "Задача выполнена");
+  };
+
+  const requestStatusChange = () => {
+    if (!canManage) return;
+    if (taskIsCompleted(task)) {
+      updateStatus();
+      return;
+    }
+    setConfirmingComplete(true);
+  };
+
+  const confirmComplete = () => {
+    setConfirmingComplete(false);
+    updateStatus();
   };
 
   const snooze = (amount: number) => {
@@ -870,7 +951,7 @@ function TaskRow({
                       : `Выполнить задачу «${task.title}»`
                 }
                 className="wf-task-check"
-                onClick={updateStatus}
+                onClick={requestStatusChange}
                 type="button"
             >
               {taskIsCompleted(task) ? <Icon name="check" /> : null}
@@ -997,6 +1078,14 @@ function TaskRow({
               ) : null}
             </div>
         ) : null}
+        {confirmingComplete ? (
+            <TaskCompleteDialog
+                dueText={due.text}
+                onCancel={() => setConfirmingComplete(false)}
+                onConfirm={confirmComplete}
+                task={task}
+            />
+        ) : null}
       </article>
   );
 }
@@ -1110,7 +1199,7 @@ function ManagerFocusDashboard({
   );
   const renderTasks = (tasks: Task[]) => (
     <div className="wf-task-list">
-      {tasks.slice(0, 8).map((task) => (
+      {tasks.map((task) => (
         <TaskRow
           compact
           currentUser={currentUser}
@@ -1911,7 +2000,6 @@ function LeaderControlSection({
               <span className="wf-eyebrow">Контроль условий</span>
               <h3>Согласования</h3>
             </div>
-            <b>{control.pendingApprovals.length}</b>
           </header>
           {control.pendingApprovals.length ? (
             <div className="wf-approval-list">
@@ -1948,7 +2036,6 @@ function LeaderControlSection({
               <span className="wf-eyebrow">Риски воронки</span>
               <h3>Без движения</h3>
             </div>
-            <b>{control.stagnantDeals.length}</b>
           </header>
           <div className="wf-control-row-list">
             {control.stagnantDeals.slice(0, 6).map((row) => (
@@ -1967,7 +2054,6 @@ function LeaderControlSection({
               <span className="wf-eyebrow">Клиентская база</span>
               <h3>Давно не обработаны</h3>
             </div>
-            <b>{control.staleClients.length}</b>
           </header>
           <div className="wf-control-row-list">
             {control.staleClients.slice(0, 6).map((row) => (
@@ -2096,8 +2182,7 @@ function LegacyDashboardView({
             (safeDate(left.dueAt)?.getTime() ?? Number.MAX_SAFE_INTEGER) -
             (safeDate(right.dueAt)?.getTime() ?? Number.MAX_SAFE_INTEGER)
         );
-      })
-      .slice(0, 6);
+      });
   const activeDeals = deals.filter(isOpenDeal);
   const wonDeals = deals.filter((deal) => deal.status === "Закрыта успешно");
   const revenue = wonDeals.reduce((sum, deal) => sum + deal.ourPrice, 0);
@@ -2280,9 +2365,6 @@ function LegacyDashboardView({
                         {isManager ? "Требует внимания" : "Сделать сегодня"}
                       </h2>
                     </div>
-                    <span className="wf-panel-count">
-                  {focusTasks.length.toString().padStart(2, "0")}
-                </span>
                   </header>
                   {focusTasks.length ? (
                       <div className="wf-task-list">
@@ -2318,9 +2400,6 @@ function LegacyDashboardView({
                       <span className="wf-eyebrow">Воронка</span>
                       <h2>{isManager ? "Коммерческий поток" : "Мои сделки"}</h2>
                     </div>
-                    <span className="wf-panel-count">
-                  {activeDeals.length.toString().padStart(2, "0")}
-                </span>
                   </header>
                   <div className="wf-mini-funnel">
                     {pipelineRows.map((row, index) => (
@@ -2355,9 +2434,6 @@ function LegacyDashboardView({
                           <span className="wf-eyebrow">Команда</span>
                           <h2>Нагрузка сотрудников</h2>
                         </div>
-                        <span className="wf-panel-count">
-                    {teamRows.length.toString().padStart(2, "0")}
-                  </span>
                       </header>
                       {teamRows.length ? (
                           <div className="wf-team-list">
@@ -4202,9 +4278,6 @@ export function StatisticsView({
                       <span className="wf-eyebrow">Срез воронки</span>
                       <h2>Сделки по этапам</h2>
                     </div>
-                    <span className="wf-panel-count">
-                  {activeDeals.length.toString().padStart(2, "0")}
-                </span>
                   </header>
                   <DonutChart
                       centerLabel="сделок в работе"
@@ -4218,9 +4291,6 @@ export function StatisticsView({
                       <span className="wf-eyebrow">Каналы</span>
                       <h2>Структура коммуникаций</h2>
                     </div>
-                    <span className="wf-panel-count">
-                  {interactions.length.toString().padStart(2, "0")}
-                </span>
                   </header>
                   <DistributionChart data={activityDistributionData} />
                 </section>
@@ -4368,9 +4438,6 @@ export function StatisticsView({
                     <span className="wf-eyebrow">Закрыто успешно</span>
                     <h2>Последние продажи</h2>
                   </div>
-                  <span className="wf-panel-count">
-                {wonDeals.length.toString().padStart(2, "0")}
-              </span>
                 </header>
                 {wonDeals.length ? (
                     <div>
@@ -4416,9 +4483,6 @@ export function StatisticsView({
                     <span className="wf-eyebrow">Каналы</span>
                     <h2>Структура активности</h2>
                   </div>
-                  <span className="wf-panel-count">
-                {interactions.length.toString().padStart(2, "0")}
-              </span>
                 </header>
                 {activityKinds.length ? (
                     <div>

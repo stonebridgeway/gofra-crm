@@ -971,6 +971,14 @@ button {
   clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
 }
 
+.activity-summary {
+  padding: 18px;
+}
+
+.activity-summary > .section-kicker {
+  display: block;
+}
+
 .wf-sales-hero {
   --wf-hero-accent: var(--accent);
   --wf-hero-ink: var(--ink);
@@ -997,11 +1005,6 @@ button {
 .wf-panel-heading h2 {
   font-size: 16px;
   letter-spacing: -0.045em;
-}
-
-.wf-panel-count {
-  font-family: "Geist Mono", monospace;
-  letter-spacing: 0.06em;
 }
 
 .wf-feature-header {
@@ -4101,4 +4104,18 @@ html[data-theme="light"] .module-nav button.is-active {
 
 .deal-card .deal-numbers dd {
   font-size: 13px;
+}
+
+/* Brand mark. It used to inherit --nav-active / --on-accent, which resolve to
+   a solid accent tile with a light glyph in the light theme but to a barely
+   visible translucent wash with a near-black glyph in the dark one. These
+   tokens are deliberately theme-independent so the logo reads identically. */
+:root {
+  --brand-mark-bg: #075fd8;
+  --brand-mark-ink: #f7fbfa;
+}
+
+.brand-mark {
+  background: var(--brand-mark-bg);
+  color: var(--brand-mark-ink);
 }

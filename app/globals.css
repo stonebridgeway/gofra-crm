@@ -2540,6 +2540,25 @@ html[data-theme="dark"] textarea {
     padding: 16px 14px 30px;
   }
 
+  .crm-app[data-module="chat"] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .crm-app[data-module="chat"] .workspace {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 14px;
+  }
+
+  .crm-app[data-module="chat"] .chat-view {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 300px;
+  }
+
   .workspace-header {
     align-items: stretch;
     gap: 14px;

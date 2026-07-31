@@ -383,14 +383,6 @@ button.wf-metric-card:hover > i {
   margin-bottom: 5px;
 }
 
-.wf-panel-count {
-  color: var(--wf-faint);
-  font-family: "Geist Mono", monospace;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  padding-top: 3px;
-}
-
 .wf-dashboard-grid {
   display: grid;
   gap: 14px;
@@ -497,8 +489,7 @@ button.wf-metric-card:hover > i {
   margin: 0;
 }
 
-.wf-control-panel > header > small,
-.wf-control-panel > header > b {
+.wf-control-panel > header > small {
   color: var(--wf-faint);
   font-family: "Geist Mono", monospace;
   font-size: 11px;
@@ -992,6 +983,12 @@ button.wf-metric-card:hover > i {
 .wf-task-list,
 .wf-upcoming-list {
   border-top: 1px solid var(--wf-line);
+}
+
+.wf-focus-panel .wf-task-list,
+.wf-focus-queue .wf-task-list {
+  max-height: 320px;
+  overflow-y: auto;
 }
 
 .wf-task-row {
@@ -3409,6 +3406,12 @@ button.wf-metric-card:hover > i {
 
   .wf-day-agenda {
     max-height: none;
+  }
+
+  .wf-focus-panel .wf-task-list,
+  .wf-focus-queue .wf-task-list {
+    max-height: none;
+    overflow-y: visible;
   }
 
   .wf-day-task-list {

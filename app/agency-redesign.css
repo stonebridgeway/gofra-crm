@@ -671,15 +671,18 @@ button {
 .side-nav {
   gap: 0;
   padding: 0;
+}
+
+.module-nav {
   scrollbar-color: var(--nav-line) transparent;
   scrollbar-width: thin;
 }
 
-.side-nav::-webkit-scrollbar {
+.module-nav::-webkit-scrollbar {
   width: 4px;
 }
 
-.side-nav::-webkit-scrollbar-thumb {
+.module-nav::-webkit-scrollbar-thumb {
   background: var(--nav-line);
 }
 
@@ -4015,4 +4018,87 @@ html[data-theme="light"] .module-nav button.is-active {
     min-width: 0;
     padding-inline: 5px;
   }
+}
+
+/* Statistics: same card system as the manager dashboard on the main page —
+   separate rounded panels instead of welded blocks with clipped corners. */
+.wf-statistics-view .wf-stat-overview-grid,
+.wf-statistics-view .wf-stat-visual-grid,
+.wf-statistics-view .wf-activity-grid,
+.wf-statistics-view .wf-sales-grid {
+  gap: 14px;
+}
+
+.wf-statistics-view .wf-stat-visual-grid {
+  margin-top: 14px;
+}
+
+.wf-statistics-view .wf-panel,
+.wf-statistics-view .wf-funnel-table,
+.wf-statistics-view .wf-team-stat-table {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  clip-path: none;
+  overflow: hidden;
+}
+
+.wf-statistics-view .wf-panel-heading {
+  min-height: 0;
+  padding: 15px 17px 13px;
+}
+
+.wf-statistics-view .wf-metric-grid > .wf-metric-card {
+  background: var(--surface-raised);
+  border-left: 0;
+  min-height: 0;
+  padding: 15px 16px 16px;
+}
+
+.wf-statistics-view .wf-metric-grid > .wf-metric-card > strong {
+  font-size: 23px;
+  letter-spacing: -0.045em;
+  margin: 9px 0 5px;
+}
+
+/* Clients page: statuses, region and industry were set in the smallest type
+   scale and were hard to scan — bump them up. */
+.clients-desktop-table .exact-status,
+.client-card .exact-status,
+.mobile-client-card .exact-status {
+  font-size: 14px;
+  padding: 5px 10px;
+}
+
+.client-card .card-facts dt {
+  font-size: 12px;
+}
+
+.client-card .card-facts dd {
+  font-size: 13px;
+}
+
+/* Statuses listed under the board column titles on the clients and deals
+   pages. */
+.crm-app[data-module="clients"] .substatus-list,
+.crm-app[data-module="deals"] .substatus-list {
+  font-size: 12px;
+}
+
+.crm-app[data-module="clients"] .substatus-list span,
+.crm-app[data-module="deals"] .substatus-list span {
+  font-size: inherit;
+}
+
+/* Deals board cards: status chip and the revenue / margin figures. */
+.deal-card .exact-status {
+  font-size: 14px;
+  padding: 5px 10px;
+}
+
+.deal-card .deal-numbers dt {
+  font-size: 12px;
+}
+
+.deal-card .deal-numbers dd {
+  font-size: 13px;
 }

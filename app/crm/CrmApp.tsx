@@ -348,6 +348,9 @@ export function CrmApp() {
   const [createKind, setCreateKind] = useState<CreateKind>(null);
   const [createClientId, setCreateClientId] = useState<string | null>(null);
   const [createDealId, setCreateDealId] = useState<string | null>(null);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [pendingClientDeletion, setPendingClientDeletion] =
+    useState<Client | null>(null);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<number | null>(null);
@@ -951,17 +954,12 @@ export function CrmApp() {
         snapshot.clients.find((client) => client.id === clientId)?.ownerId ??
         currentUser?.id ??
         snapshot.session.currentUserId;
-      const contact: Contact = {
-        id: `КТ-${Date.now().toString().slice(-4)}`,
-        ownerId,
-        createdAt: now,
-        updatedAt: now,
+      const values = {
         clientId,
         fullName,
         role: String(form.get("role") ?? ""),
         phone: String(form.get("phone") ?? ""),
         email: String(form.get("email") ?? ""),
-        comment: "",
         decisionRole: String(
           form.get("decisionRole") ?? "Закупщик",
         ) as Contact["decisionRole"],
@@ -973,10 +971,33 @@ export function CrmApp() {
         ) as Contact["preferredChannel"],
         introductionNeeded: String(form.get("introductionNeeded") ?? ""),
       };
-      commit(
-        { ...snapshot, contacts: [contact, ...snapshot.contacts] },
-        "Контакт добавлен",
-      );
+
+      if (editingContact) {
+        commit(
+          {
+            ...snapshot,
+            contacts: snapshot.contacts.map((item) =>
+              item.id === editingContact.id
+                ? { ...item, ...values, updatedAt: now }
+                : item,
+            ),
+          },
+          "Контакт обновлён",
+        );
+      } else {
+        const contact: Contact = {
+          id: `КТ-${Date.now().toString().slice(-4)}`,
+          ownerId,
+          createdAt: now,
+          updatedAt: now,
+          comment: "",
+          ...values,
+        };
+        commit(
+          { ...snapshot, contacts: [contact, ...snapshot.contacts] },
+          "Контакт добавлен",
+        );
+      }
     }
 
     if (createKind === "interaction") {
@@ -1132,6 +1153,7 @@ export function CrmApp() {
     setCreateKind(null);
     setCreateClientId(null);
     setCreateDealId(null);
+    setEditingContact(null);
   };
 
   const updateClientRepeatOrder = (
@@ -1205,9 +1227,58 @@ export function CrmApp() {
     clientId?: string,
     dealId?: string,
   ) => {
+    setEditingContact(null);
     setCreateKind(kind);
     setCreateClientId(clientId ?? null);
     setCreateDealId(dealId ?? null);
+  };
+
+  const openContactCard = (contact: Contact) => {
+    setEditingContact(contact);
+    setCreateKind("contact");
+    setCreateClientId(contact.clientId);
+    setCreateDealId(null);
+  };
+
+  const deleteClient = (clientId: string) => {
+    if (!snapshot) return;
+    const client = snapshot.clients.find((item) => item.id === clientId);
+    if (!client) return;
+    const dealIds = new Set(
+      snapshot.deals
+        .filter((deal) => deal.clientId === clientId)
+        .map((deal) => deal.id),
+    );
+    commit(
+      {
+        ...snapshot,
+        clients: snapshot.clients.filter((item) => item.id !== clientId),
+        contacts: snapshot.contacts.filter(
+          (item) => item.clientId !== clientId,
+        ),
+        deals: snapshot.deals.filter((item) => item.clientId !== clientId),
+        interactions: snapshot.interactions.filter(
+          (item) => item.clientId !== clientId,
+        ),
+        priceApprovals: snapshot.priceApprovals.filter(
+          (item) => item.clientId !== clientId && !dealIds.has(item.dealId),
+        ),
+        quotes: snapshot.quotes.filter((item) => !dealIds.has(item.dealId)),
+        tasks: snapshot.tasks.filter(
+          (item) =>
+            item.clientId !== clientId &&
+            !(item.dealId && dealIds.has(item.dealId)),
+        ),
+        statusEvents: snapshot.statusEvents.filter(
+          (item) =>
+            !(item.entityType === "client" && item.entityId === clientId) &&
+            !(item.entityType === "deal" && dealIds.has(item.entityId)),
+        ),
+      },
+      `Клиент удалён: ${client.companyName}`,
+    );
+    setPendingClientDeletion(null);
+    setDrawer(null);
   };
 
   const updateDealWorkflow = (updatedDeal: Deal, dealQuotes: Quote[]) => {
@@ -1468,6 +1539,7 @@ export function CrmApp() {
                 onOpenClient={(clientId) =>
                   setDrawer({ kind: "client", id: clientId })
                 }
+                onOpenContact={openContactCard}
               />
             )}
             {activeModule === "activity" && (
@@ -1689,6 +1761,7 @@ export function CrmApp() {
             openCreate("interaction", clientId, dealId)
           }
           onClose={() => setDrawer(null)}
+          onDeleteClient={setPendingClientDeletion}
           onMoveClient={requestClientMove}
           onMoveDeal={requestDealMove}
           onReviewApproval={reviewPriceApproval}
@@ -1697,6 +1770,15 @@ export function CrmApp() {
           showFinancials={
             currentUser ? canViewFinancials(currentUser) : false
           }
+        />
+      )}
+
+      {pendingClientDeletion && viewSnapshot && (
+        <DeleteClientDialog
+          client={pendingClientDeletion}
+          onClose={() => setPendingClientDeletion(null)}
+          onConfirm={() => deleteClient(pendingClientDeletion.id)}
+          snapshot={viewSnapshot}
         />
       )}
 
@@ -1734,6 +1816,7 @@ export function CrmApp() {
       {createKind && viewSnapshot && currentUser && (
         <CreateDialog
           clientId={createClientId}
+          contact={editingContact}
           currentUser={currentUser}
           dealId={createDealId}
           kind={createKind}
@@ -1741,6 +1824,7 @@ export function CrmApp() {
             setCreateKind(null);
             setCreateClientId(null);
             setCreateDealId(null);
+            setEditingContact(null);
           }}
           onSubmit={handleCreate}
           snapshot={viewSnapshot}
@@ -2039,7 +2123,7 @@ function ClientCard({
   const due = getDueState(client.nextActionAt);
   const canAdvance = Boolean(nextClientStatus(client.status));
   return (
-    <article className="record-card">
+    <article className="record-card client-card">
       <button className="card-open" onClick={onOpen} type="button">
         <div className="card-heading">
           <div>
@@ -2588,6 +2672,7 @@ function ContactsView({
   onCreate,
   onLog,
   onOpenClient,
+  onOpenContact,
 }: {
   clients: Client[];
   contacts: Contact[];
@@ -2595,6 +2680,7 @@ function ContactsView({
   onCreate: () => void;
   onLog: (contact: Contact) => void;
   onOpenClient: (id: string) => void;
+  onOpenContact: (contact: Contact) => void;
 }) {
   const clientMap = new Map(clients.map((client) => [client.id, client]));
   const filtered = contacts.filter((contact) =>
@@ -2637,7 +2723,13 @@ function ContactsView({
             {filtered.map((contact) => (
               <tr key={contact.id}>
                 <td>
-                  <strong>{contact.fullName}</strong>
+                  <button
+                    className="table-link"
+                    onClick={() => onOpenContact(contact)}
+                    type="button"
+                  >
+                    <strong>{contact.fullName}</strong>
+                  </button>
                   <small>{contact.id}</small>
                 </td>
                 <td>
@@ -3230,6 +3322,7 @@ function RecordDrawer({
   drawer,
   snapshot,
   onClose,
+  onDeleteClient,
   onMoveClient,
   onMoveDeal,
   onAddContact,
@@ -3243,6 +3336,7 @@ function RecordDrawer({
   drawer: Exclude<DrawerTarget, null>;
   snapshot: CrmSnapshot;
   onClose: () => void;
+  onDeleteClient: (client: Client) => void;
   onMoveClient: (client: Client) => void;
   onMoveDeal: (deal: Deal) => void;
   onAddContact: (clientId: string) => void;
@@ -3607,7 +3701,78 @@ function RecordDrawer({
             </div>
           </DrawerSection>
         </div>
+
+        {client && (
+          <footer className="drawer-footer">
+            <button
+              className="danger-button"
+              onClick={() => onDeleteClient(client)}
+              type="button"
+            >
+              Удалить клиента
+            </button>
+          </footer>
+        )}
       </aside>
+    </div>
+  );
+}
+
+function DeleteClientDialog({
+  client,
+  snapshot,
+  onClose,
+  onConfirm,
+}: {
+  client: Client;
+  snapshot: CrmSnapshot;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const relatedDeals = snapshot.deals.filter(
+    (deal) => deal.clientId === client.id,
+  );
+  const relatedContacts = snapshot.contacts.filter(
+    (contact) => contact.clientId === client.id,
+  );
+  const relatedInteractions = snapshot.interactions.filter(
+    (interaction) => interaction.clientId === client.id,
+  );
+
+  return (
+    <div className="dialog-backdrop centered" role="presentation">
+      <section
+        aria-label="Удаление клиента"
+        aria-modal="true"
+        className="status-dialog confirm-dialog"
+        role="dialog"
+      >
+        <header>
+          <div>
+            <span className="section-kicker">Подтверждение</span>
+            <h2>Удалить клиента «{client.companyName}»?</h2>
+            <p>
+              Действие нельзя отменить. Вместе с клиентом будут удалены сделки
+              ({relatedDeals.length}), контактные лица (
+              {relatedContacts.length}) и записанные взаимодействия (
+              {relatedInteractions.length}).
+            </p>
+          </div>
+        </header>
+        <footer className="confirm-actions">
+          <button
+            autoFocus
+            className="ghost-button"
+            onClick={onClose}
+            type="button"
+          >
+            Отмена
+          </button>
+          <button className="danger-button" onClick={onConfirm} type="button">
+            Удалить клиента
+          </button>
+        </footer>
+      </section>
     </div>
   );
 }
@@ -4256,6 +4421,7 @@ function LossReasonDialog({
 function CreateDialog({
   kind,
   clientId,
+  contact,
   dealId,
   currentUser,
   snapshot,
@@ -4264,6 +4430,7 @@ function CreateDialog({
 }: {
   kind: Exclude<CreateKind, null>;
   clientId: string | null;
+  contact?: Contact | null;
   dealId: string | null;
   currentUser: User;
   snapshot: CrmSnapshot;
@@ -4273,7 +4440,7 @@ function CreateDialog({
   const titles = {
     client: "Новый клиент",
     deal: "Новая сделка",
-    contact: "Новый контакт",
+    contact: contact ? "Карточка контакта" : "Новый контакт",
     interaction: "Результат контакта",
   };
   const managerOptions = (
@@ -4473,7 +4640,7 @@ function CreateDialog({
           {kind === "contact" && (
             <>
               <SelectField
-                defaultValue={clientId ?? undefined}
+                defaultValue={contact?.clientId ?? clientId ?? undefined}
                 label="Клиент"
                 name="clientId"
                 options={snapshot.clients.map((client) => ({
@@ -4481,26 +4648,50 @@ function CreateDialog({
                   value: client.id,
                 }))}
               />
-              <Field label="Имя и фамилия" name="fullName" required />
-              <Field label="Должность" name="role" />
-              <Field label="Телефон" name="phone" type="tel" />
-              <Field label="Email" name="email" type="email" wide />
+              <Field
+                defaultValue={contact?.fullName}
+                label="Имя и фамилия"
+                name="fullName"
+                required
+              />
+              <Field
+                defaultValue={contact?.role}
+                label="Должность"
+                name="role"
+              />
+              <Field
+                defaultValue={contact?.phone}
+                label="Телефон"
+                name="phone"
+                type="tel"
+              />
+              <Field
+                defaultValue={contact?.email}
+                label="Email"
+                name="email"
+                type="email"
+                wide
+              />
               <SelectField
+                defaultValue={contact?.decisionRole}
                 label="Роль в решении"
                 name="decisionRole"
                 options={DECISION_ROLES}
               />
               <SelectField
+                defaultValue={contact?.decisionInfluence}
                 label="Влияние"
                 name="decisionInfluence"
                 options={DECISION_INFLUENCES}
               />
               <SelectField
+                defaultValue={contact?.preferredChannel}
                 label="Предпочтительный канал"
                 name="preferredChannel"
                 options={PREFERRED_CHANNELS}
               />
               <Field
+                defaultValue={contact?.introductionNeeded}
                 label="С кем ещё необходимо познакомиться"
                 name="introductionNeeded"
                 wide

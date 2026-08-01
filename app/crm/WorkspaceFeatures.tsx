@@ -772,18 +772,116 @@ function Notice({ message }: { message: string }) {
   );
 }
 
+function useTaskSelection() {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  return {
+    // задачи, которые всё ещё есть в списке: закрытые отсюда просто выпадают
+    selectedIn: (tasks: Task[]) =>
+        tasks.filter((task) => selectedIds.includes(task.id)),
+    isSelected: (taskId: string) => selectedIds.includes(taskId),
+    toggle: (taskId: string) =>
+        setSelectedIds((previous) =>
+            previous.includes(taskId)
+                ? previous.filter((id) => id !== taskId)
+                : [...previous, taskId],
+        ),
+    clear: () => setSelectedIds([]),
+  };
+}
+
+function completeTasks(
+    snapshot: CrmSnapshot,
+    tasks: Task[],
+    onSnapshotChange: (next: CrmSnapshot) => void,
+) {
+  const now = new Date().toISOString();
+  const completed = new Map(
+      tasks.map((task) => [
+        task.id,
+        { ...task, status: "completed" as const, completedAt: now, updatedAt: now },
+      ]),
+  );
+  const stored = new Set(snapshot.tasks.map((task) => task.id));
+  onSnapshotChange({
+    ...snapshot,
+    tasks: [
+      ...snapshot.tasks.map((task) => completed.get(task.id) ?? task),
+      // производные задачи из getWorkspaceTasks ещё не лежат в снапшоте
+      ...[...completed.values()].filter((task) => !stored.has(task.id)),
+    ],
+  });
+}
+
+function useBulkComplete(
+    snapshot: CrmSnapshot | null,
+    onSnapshotChange: (next: CrmSnapshot) => void,
+    onNotice: (message: string) => void,
+) {
+  const [confirming, setConfirming] = useState<
+      { tasks: Task[]; clear: () => void } | null
+  >(null);
+
+  const confirm = () => {
+    if (!confirming || !snapshot) return;
+    completeTasks(snapshot, confirming.tasks, onSnapshotChange);
+    onNotice(
+        confirming.tasks.length === 1
+            ? "Задача выполнена"
+            : `Выполнено задач: ${confirming.tasks.length}`,
+    );
+    confirming.clear();
+    setConfirming(null);
+  };
+
+  return {
+    request: (tasks: Task[], clear: () => void) => {
+      if (tasks.length) setConfirming({ tasks, clear });
+    },
+    dialog: confirming ? (
+        <TaskCompleteDialog
+            dueText={
+              confirming.tasks.length === 1
+                  ? getDueLabel(confirming.tasks[0]).text
+                  : undefined
+            }
+            onCancel={() => setConfirming(null)}
+            onConfirm={confirm}
+            tasks={confirming.tasks}
+        />
+    ) : null,
+  };
+}
+
+function TaskBulkAction({
+                          count,
+                          onClick,
+                        }: {
+  count: number;
+  onClick: () => void;
+}) {
+  if (!count) return null;
+  return (
+      <button className="wf-task-bulk-action" onClick={onClick} type="button">
+        <Icon name="check" />
+        Выполнить ({count})
+      </button>
+  );
+}
+
 function TaskCompleteDialog({
-                              task,
+                              tasks,
                               dueText,
                               onCancel,
                               onConfirm,
                             }: {
-  task: Task;
-  dueText: string;
+  tasks: Task[];
+  dueText?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
   const titleId = useId();
+  const single = tasks.length === 1 ? tasks[0] : null;
 
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -809,11 +907,27 @@ function TaskCompleteDialog({
           <header>
             <div>
               <span className="section-kicker">Подтверждение</span>
-              <h2 id={titleId}>Выполнить задачу?</h2>
-              <p>
-                «{task.title}» — {TASK_KIND_LABELS[task.kind]}, {dueText}.
-                Задача будет отмечена как выполненная.
-              </p>
+              <h2 id={titleId}>
+                {single
+                    ? "Выполнить задачу?"
+                    : `Выполнить ${tasks.length} ${plural(tasks.length, [
+                      "задачу",
+                      "задачи",
+                      "задач",
+                    ])}?`}
+              </h2>
+              {single ? (
+                  <p>
+                    «{single.title}» — {TASK_KIND_LABELS[single.kind]}
+                    {dueText ? `, ${dueText}` : ""}. Задача будет отмечена как
+                    выполненная.
+                  </p>
+              ) : (
+                  <p>
+                    Будут отмечены как выполненные:{" "}
+                    {tasks.map((task) => `«${task.title}»`).join(", ")}.
+                  </p>
+              )}
             </div>
           </header>
           <footer className="confirm-actions">
@@ -847,6 +961,8 @@ function TaskRow({
                    onOpenDeal,
                    onEdit,
                    onNotice,
+                   onToggleSelect,
+                   selected = false,
                    compact = false,
                  }: {
   snapshot: CrmSnapshot;
@@ -857,6 +973,8 @@ function TaskRow({
   onOpenDeal: (dealId: string) => void;
   onEdit?: (task: Task) => void;
   onNotice: (message: string) => void;
+  onToggleSelect?: (taskId: string) => void;
+  selected?: boolean;
   compact?: boolean;
 }) {
   const due = getDueLabel(task);
@@ -869,37 +987,27 @@ function TaskRow({
       (item) => item.completed,
   ).length;
   const canManage = currentUser.role === "manager";
-  const [confirmingComplete, setConfirmingComplete] = useState(false);
+  const canCloseTask = canManage || task.assigneeId === currentUser.id;
+  const completed = taskIsCompleted(task);
 
-  const updateStatus = () => {
-    if (!canManage) return;
-    const completed = taskIsCompleted(task);
+  const reopenTask = () => {
     const now = new Date().toISOString();
     persistTask(
         snapshot,
-        {
-          ...task,
-          status: completed ? "open" : "completed",
-          completedAt: completed ? null : now,
-          updatedAt: now,
-        },
+        { ...task, status: "open", completedAt: null, updatedAt: now },
         onSnapshotChange,
     );
-    onNotice(completed ? "Задача возвращена в работу" : "Задача выполнена");
+    onNotice("Задача возвращена в работу");
   };
 
-  const requestStatusChange = () => {
-    if (!canManage) return;
-    if (taskIsCompleted(task)) {
-      updateStatus();
+  // открытую задачу чекбокс только выбирает, выполненную — сразу возвращает в работу
+  const handleCheckClick = () => {
+    if (!canCloseTask) return;
+    if (completed) {
+      reopenTask();
       return;
     }
-    setConfirmingComplete(true);
-  };
-
-  const confirmComplete = () => {
-    setConfirmingComplete(false);
-    updateStatus();
+    onToggleSelect?.(task.id);
   };
 
   const snooze = (amount: number) => {
@@ -921,7 +1029,7 @@ function TaskRow({
   };
 
   const toggleChecklistItem = (itemId: string) => {
-    if (!canManage) return;
+    if (!canCloseTask) return;
     const now = new Date().toISOString();
     const nextChecklist = checklist.map((item) =>
         item.id === itemId ? { ...item, completed: !item.completed } : item,
@@ -940,25 +1048,26 @@ function TaskRow({
   return (
       <article
           className={`wf-task-row priority-${task.priority} ${
-              taskIsCompleted(task) ? "is-completed" : ""
-          } ${compact ? "is-compact" : ""}`}
+              completed ? "is-completed" : ""
+          } ${selected ? "is-selected" : ""} ${compact ? "is-compact" : ""}`}
       >
-        {canManage ? (
+        {canCloseTask ? (
             <button
                 aria-label={
-                  taskIsCompleted(task)
+                  completed
                       ? `Вернуть задачу «${task.title}»`
-                      : `Выполнить задачу «${task.title}»`
+                      : `Выбрать задачу «${task.title}»`
                 }
-                className="wf-task-check"
-                onClick={requestStatusChange}
+                aria-pressed={completed ? undefined : selected}
+                className={`wf-task-check ${selected ? "is-selected" : ""}`}
+                onClick={handleCheckClick}
                 type="button"
             >
-              {taskIsCompleted(task) ? <Icon name="check" /> : null}
+              {completed || selected ? <Icon name="check" /> : null}
             </button>
         ) : (
             <span aria-hidden="true" className="wf-task-check is-readonly">
-              {taskIsCompleted(task) ? <Icon name="check" /> : null}
+              {completed ? <Icon name="check" /> : null}
             </span>
         )}
         <div className="wf-task-main">
@@ -1000,7 +1109,7 @@ function TaskRow({
                                       ? `Вернуть пункт «${item.title}»`
                                       : `Выполнить пункт «${item.title}»`
                                 }
-                                disabled={!canManage}
+                                disabled={!canCloseTask}
                                 onClick={() => toggleChecklistItem(item.id)}
                                 type="button"
                             >
@@ -1078,14 +1187,6 @@ function TaskRow({
               ) : null}
             </div>
         ) : null}
-        {confirmingComplete ? (
-            <TaskCompleteDialog
-                dueText={due.text}
-                onCancel={() => setConfirmingComplete(false)}
-                onConfirm={confirmComplete}
-                task={task}
-            />
-        ) : null}
       </article>
   );
 }
@@ -1152,6 +1253,7 @@ function FocusQueuePanel({
   tone = "default",
   emptyTitle,
   emptyDescription,
+  action,
   children,
 }: {
   title: string;
@@ -1160,6 +1262,7 @@ function FocusQueuePanel({
   tone?: "default" | "danger" | "warning";
   emptyTitle: string;
   emptyDescription: string;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -1169,7 +1272,7 @@ function FocusQueuePanel({
           <span className="wf-eyebrow">{eyebrow}</span>
           <h2>{title}</h2>
         </div>
-        <span className="wf-focus-count">{String(count).padStart(2, "0")}</span>
+        {action}
       </header>
       {count ? (
         children
@@ -1197,7 +1300,14 @@ function ManagerFocusDashboard({
     () => new Map(snapshot.clients.map((client) => [client.id, client])),
     [snapshot.clients],
   );
-  const renderTasks = (tasks: Task[]) => (
+  const bulk = useBulkComplete(snapshot, onSnapshotChange, showNotice);
+  const overdueSelection = useTaskSelection();
+  const todaySelection = useTaskSelection();
+
+  const renderTasks = (
+    tasks: Task[],
+    selection: ReturnType<typeof useTaskSelection>,
+  ) => (
     <div className="wf-task-list">
       {tasks.map((task) => (
         <TaskRow
@@ -1208,6 +1318,8 @@ function ManagerFocusDashboard({
           onOpenClient={onOpenClient}
           onOpenDeal={onOpenDeal}
           onSnapshotChange={onSnapshotChange}
+          onToggleSelect={selection.toggle}
+          selected={selection.isSelected(task.id)}
           snapshot={snapshot}
           task={task}
         />
@@ -1237,6 +1349,17 @@ function ManagerFocusDashboard({
 
       <div className="wf-manager-focus-grid">
         <FocusQueuePanel
+          action={
+            <TaskBulkAction
+              count={overdueSelection.selectedIn(focus.overdueTasks).length}
+              onClick={() =>
+                bulk.request(
+                  overdueSelection.selectedIn(focus.overdueTasks),
+                  overdueSelection.clear,
+                )
+              }
+            />
+          }
           count={focus.overdueTasks.length}
           emptyDescription="Все запланированные действия выполнены в срок."
           emptyTitle="Просрочек нет"
@@ -1244,17 +1367,28 @@ function ManagerFocusDashboard({
           title="Просроченные действия"
           tone="danger"
         >
-          {renderTasks(focus.overdueTasks)}
+          {renderTasks(focus.overdueTasks, overdueSelection)}
         </FocusQueuePanel>
 
         <FocusQueuePanel
+          action={
+            <TaskBulkAction
+              count={todaySelection.selectedIn(focus.todayTasks).length}
+              onClick={() =>
+                bulk.request(
+                  todaySelection.selectedIn(focus.todayTasks),
+                  todaySelection.clear,
+                )
+              }
+            />
+          }
           count={focus.todayTasks.length}
           emptyDescription="Возьмите задачу из очередей ниже или запланируйте контакт."
           emptyTitle="На сегодня задач нет"
           eyebrow="План дня"
           title="Задачи на сегодня"
         >
-          {renderTasks(focus.todayTasks)}
+          {renderTasks(focus.todayTasks, todaySelection)}
         </FocusQueuePanel>
 
         <FocusQueuePanel
@@ -1343,6 +1477,7 @@ function ManagerFocusDashboard({
           </div>
         </FocusQueuePanel>
       </div>
+      {bulk.dialog}
       <Notice message={notice} />
     </section>
   );
@@ -2139,6 +2274,8 @@ function LegacyDashboardView({
   const { notice, showNotice } = useNotice();
   const today = useMemo(() => startOfDay(new Date()), []);
   const allTasks = useMemo(() => getWorkspaceTasks(snapshot), [snapshot]);
+  const bulk = useBulkComplete(snapshot, onSnapshotChange, showNotice);
+  const focusSelection = useTaskSelection();
 
   if (loading || !snapshot) {
     return <FeatureSkeleton label="Загрузка рабочего кабинета" />;
@@ -2365,6 +2502,15 @@ function LegacyDashboardView({
                         {isManager ? "Требует внимания" : "Сделать сегодня"}
                       </h2>
                     </div>
+                    <TaskBulkAction
+                        count={focusSelection.selectedIn(focusTasks).length}
+                        onClick={() =>
+                            bulk.request(
+                                focusSelection.selectedIn(focusTasks),
+                                focusSelection.clear,
+                            )
+                        }
+                    />
                   </header>
                   {focusTasks.length ? (
                       <div className="wf-task-list">
@@ -2377,6 +2523,8 @@ function LegacyDashboardView({
                                 onOpenClient={onOpenClient}
                                 onOpenDeal={onOpenDeal}
                                 onSnapshotChange={onSnapshotChange}
+                                onToggleSelect={focusSelection.toggle}
+                                selected={focusSelection.isSelected(task.id)}
                                 snapshot={snapshot}
                                 task={task}
                             />
@@ -2573,6 +2721,7 @@ function LegacyDashboardView({
               </div>
             </>
         )}
+        {bulk.dialog}
         <Notice message={notice} />
       </section>
   );
@@ -3084,6 +3233,9 @@ export function CalendarView({
       undefined,
   );
   const { notice, showNotice } = useNotice();
+  const bulk = useBulkComplete(snapshot, onSnapshotChange, showNotice);
+  const daySelection = useTaskSelection();
+  const agendaSelection = useTaskSelection();
   const allTasks = useMemo(() => getWorkspaceTasks(snapshot), [snapshot]);
   const monthDays = useMemo(() => getMonthDays(cursor), [cursor]);
 
@@ -3305,6 +3457,15 @@ export function CalendarView({
                     <span className="wf-eyebrow">Выбранный день</span>
                     <h2>{DAY_FORMATTER.format(selectedDate)}</h2>
                   </div>
+                  <TaskBulkAction
+                      count={daySelection.selectedIn(selectedTasks).length}
+                      onClick={() =>
+                          bulk.request(
+                              daySelection.selectedIn(selectedTasks),
+                              daySelection.clear,
+                          )
+                      }
+                  />
                   {canAssignTasks ? (
                       <button
                           aria-label="Добавить задачу на выбранный день"
@@ -3327,6 +3488,8 @@ export function CalendarView({
                               onOpenClient={onOpenClient}
                               onOpenDeal={onOpenDeal}
                               onSnapshotChange={onSnapshotChange}
+                              onToggleSelect={daySelection.toggle}
+                              selected={daySelection.isSelected(task.id)}
                               snapshot={snapshot}
                               task={task}
                           />
@@ -3357,6 +3520,15 @@ export function CalendarView({
                   <span className="wf-eyebrow">Лента задач</span>
                   <h2>Повестка</h2>
                 </div>
+                <TaskBulkAction
+                    count={agendaSelection.selectedIn(filteredTasks).length}
+                    onClick={() =>
+                        bulk.request(
+                            agendaSelection.selectedIn(filteredTasks),
+                            agendaSelection.clear,
+                        )
+                    }
+                />
                 <span>
               {filteredTasks.length}{" "}
                   {plural(filteredTasks.length, ["задача", "задачи", "задач"])}
@@ -3387,6 +3559,8 @@ export function CalendarView({
                                       onOpenClient={onOpenClient}
                                       onOpenDeal={onOpenDeal}
                                       onSnapshotChange={onSnapshotChange}
+                                      onToggleSelect={agendaSelection.toggle}
+                                      selected={agendaSelection.isSelected(task.id)}
                                       snapshot={snapshot}
                                       task={task}
                                   />
@@ -3450,6 +3624,7 @@ export function CalendarView({
                 task={editorTask}
             />
         ) : null}
+        {bulk.dialog}
         <Notice message={notice} />
       </section>
   );

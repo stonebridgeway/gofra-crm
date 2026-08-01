@@ -848,15 +848,6 @@ button.wf-metric-card:hover > i {
   border-top: 3px solid var(--wf-warning);
 }
 
-.wf-focus-count {
-  color: var(--wf-muted);
-  font-family: "Geist Mono", monospace;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  padding-top: 2px;
-}
-
 .wf-focus-queue .wf-task-list {
   border-top: 0;
 }
@@ -1066,6 +1057,46 @@ button.wf-metric-card:hover > i {
 
 .wf-task-check.is-readonly {
   cursor: default;
+}
+
+/* выбранная задача: контур акцентом, в отличие от выполненной со сплошной заливкой */
+.wf-task-check.is-selected {
+  background: var(--wf-accent-soft);
+  border-color: var(--wf-accent);
+  color: var(--wf-accent);
+}
+
+.wf-task-row.is-selected {
+  background: var(--wf-accent-soft);
+}
+
+.wf-task-bulk-action {
+  align-items: center;
+  background: var(--wf-accent);
+  border: 1px solid var(--wf-accent);
+  border-radius: 8px;
+  color: var(--wf-on-accent);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 6px;
+  margin-left: auto;
+  min-height: 32px;
+  padding: 0 11px;
+  transition:
+          background 170ms ease,
+          border-color 170ms ease;
+}
+
+.wf-task-bulk-action:hover {
+  background: var(--wf-accent-strong);
+  border-color: var(--wf-accent-strong);
+}
+
+.wf-task-bulk-action svg {
+  height: 14px;
+  width: 14px;
 }
 
 .wf-task-row.is-completed .wf-task-main > header > strong,

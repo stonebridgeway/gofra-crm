@@ -462,11 +462,30 @@ html[data-theme="dark"] textarea {
 
 .account-switcher select {
   appearance: none;
+  background: #f7f8f6;
+  color: #151b1a;
+  color-scheme: light;
   cursor: pointer;
   inset: 0;
   opacity: 0;
   position: absolute;
   width: 100%;
+}
+
+.account-switcher select option {
+  background: #f7f8f6;
+  color: #151b1a;
+}
+
+html[data-theme="dark"] .account-switcher select {
+  background: #151b1a;
+  color: #f2f4f3;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .account-switcher select option {
+  background: #151b1a;
+  color: #f2f4f3;
 }
 
 .account-avatar {

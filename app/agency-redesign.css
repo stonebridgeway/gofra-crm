@@ -4932,6 +4932,7 @@ html[data-theme="light"] .module-nav button.is-active {
   gap: 3px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   padding: 14px 16px 12px;
+  position: relative;
 }
 
 .wf-leader-funnel-ribbon article {
@@ -4943,6 +4944,34 @@ html[data-theme="light"] .module-nav button.is-active {
   min-height: 104px;
   min-width: 0;
   padding: 13px 22px;
+  position: relative;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+.wf-leader-funnel-ribbon article.is-active {
+  filter: saturate(1.08) brightness(1.02);
+  transform: translateY(-2px);
+}
+
+.wf-leader-funnel-ribbon article.is-selected {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 60%, transparent);
+}
+
+.wf-leader-funnel-ribbon article > button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  inset: 0;
+  padding: 0;
+  position: absolute;
+  z-index: 2;
+}
+
+.wf-leader-funnel-ribbon article > button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: -5px;
 }
 
 .wf-leader-funnel-ribbon article:first-child {
@@ -5041,6 +5070,7 @@ html[data-theme="light"] .module-nav button.is-active {
 
 .wf-forecast-line-plot {
   height: 210px;
+  position: relative;
   width: 100%;
 }
 
@@ -5092,6 +5122,57 @@ html[data-theme="light"] .module-nav button.is-active {
   stroke: var(--accent);
 }
 
+.wf-forecast-hotspots {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+}
+
+.wf-forecast-point-hit {
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  height: 30px;
+  padding: 0;
+  pointer-events: auto;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 30px;
+}
+
+.wf-forecast-point-hit::before {
+  background: var(--surface-raised);
+  border: 2px solid color-mix(in srgb, var(--accent) 35%, var(--muted));
+  border-radius: 50%;
+  content: "";
+  height: 8px;
+  inset: 50% auto auto 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition:
+    background 140ms ease,
+    transform 140ms ease;
+  width: 8px;
+}
+
+.wf-forecast-point-hit.is-weighted::before {
+  border-color: var(--accent);
+}
+
+.wf-forecast-point-hit:hover::before,
+.wf-forecast-point-hit:focus-visible::before,
+.wf-forecast-point-hit.is-selected::before {
+  background: var(--accent);
+  transform: translate(-50%, -50%) scale(1.45);
+}
+
+.wf-forecast-point-hit:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
 .wf-forecast-axis {
   display: grid;
   gap: 8px;
@@ -5099,11 +5180,26 @@ html[data-theme="light"] .module-nav button.is-active {
   position: relative;
 }
 
-.wf-forecast-axis article {
+.wf-forecast-axis button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
   display: grid;
   gap: 3px;
   min-width: 0;
+  padding: 5px 3px;
   text-align: center;
+}
+
+.wf-forecast-axis button:hover,
+.wf-forecast-axis button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.wf-forecast-axis button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
 }
 
 .wf-forecast-axis strong {
@@ -5139,7 +5235,39 @@ html[data-theme="light"] .module-nav button.is-active {
   display: grid;
   padding: 15px;
   place-items: center;
+  position: relative;
   width: 136px;
+}
+
+.wf-repeat-ring > svg {
+  inset: 0;
+  overflow: visible;
+  position: absolute;
+  transform: rotate(-90deg);
+  width: 100%;
+  z-index: 2;
+}
+
+.wf-repeat-hit-segment {
+  cursor: pointer;
+  pointer-events: stroke;
+  stroke: rgba(0, 0, 0, 0.001);
+  stroke-width: 16;
+  transition:
+    stroke 140ms ease,
+    stroke-width 140ms ease;
+}
+
+.wf-repeat-hit-segment.is-active,
+.wf-repeat-hit-segment:focus-visible,
+.wf-repeat-hit-segment[aria-pressed="true"] {
+  stroke: color-mix(in srgb, var(--surface-raised) 32%, transparent);
+  stroke-width: 18;
+}
+
+.wf-repeat-hit-segment:focus-visible {
+  outline: none;
+  stroke: color-mix(in srgb, var(--focus-ring) 58%, transparent);
 }
 
 .wf-repeat-ring > span {
@@ -5149,7 +5277,29 @@ html[data-theme="light"] .module-nav button.is-active {
   display: grid;
   height: 100%;
   justify-items: center;
+  pointer-events: none;
+  position: relative;
   width: 100%;
+  z-index: 3;
+}
+
+.wf-repeat-tooltip {
+  align-content: center;
+  display: grid;
+  gap: 2px;
+  height: 100%;
+  justify-items: center;
+  padding: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+.wf-repeat-tooltip strong {
+  font-size: 22px;
+}
+
+.wf-repeat-tooltip small {
+  line-height: 1.15;
 }
 
 .wf-repeat-ring strong {
@@ -5170,11 +5320,27 @@ html[data-theme="light"] .module-nav button.is-active {
   gap: 10px;
 }
 
-.wf-repeat-legend > div {
+.wf-repeat-legend > button {
   align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
   display: grid;
   gap: 7px;
   grid-template-columns: 8px minmax(0, 1fr) auto;
+  padding: 4px 5px;
+  text-align: left;
+}
+
+.wf-repeat-legend > button:hover,
+.wf-repeat-legend > button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.wf-repeat-legend > button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
 }
 
 .wf-repeat-legend i {
@@ -5196,6 +5362,130 @@ html[data-theme="light"] .module-nav button.is-active {
   justify-content: space-between;
   margin-top: auto;
   padding: 13px 18px;
+}
+
+.wf-chart-tooltip {
+  background: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--surface-raised) 22%, transparent);
+  box-shadow: 0 12px 30px -18px color-mix(in srgb, #000 72%, transparent);
+  color: var(--surface-raised);
+  display: grid;
+  gap: 3px;
+  min-width: 158px;
+  padding: 9px 11px;
+  pointer-events: none;
+  position: absolute;
+  text-align: left;
+  transform: translateX(-50%);
+  z-index: 8;
+}
+
+.wf-chart-tooltip.is-start {
+  transform: translateX(-12%);
+}
+
+.wf-chart-tooltip.is-end {
+  transform: translateX(-88%);
+}
+
+.wf-chart-tooltip span,
+.wf-chart-tooltip small {
+  color: color-mix(in srgb, var(--surface-raised) 72%, transparent);
+  font-size: 9px;
+}
+
+.wf-chart-tooltip strong {
+  font-size: 11px;
+}
+
+.wf-chart-tooltip b {
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+}
+
+.wf-forecast-tooltip {
+  top: 8px !important;
+}
+
+.wf-funnel-tooltip {
+  top: 8px;
+}
+
+.wf-chart-selection {
+  align-items: start;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-muted));
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(130px, 0.4fr) minmax(0, 1fr);
+  margin-top: 10px;
+  padding: 11px 12px;
+}
+
+.wf-funnel-selection {
+  margin: 0 16px 12px;
+}
+
+.wf-repeat-selection {
+  margin: 0 18px 12px;
+}
+
+.wf-chart-selection-summary {
+  display: grid;
+  gap: 3px;
+}
+
+.wf-chart-selection-summary span,
+.wf-chart-selection-summary small,
+.wf-chart-related-list > small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.wf-chart-selection-summary strong {
+  font-size: 11px;
+}
+
+.wf-chart-related-list {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wf-chart-related-list button {
+  align-items: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.wf-chart-related-list button:hover {
+  border-color: var(--accent-line);
+}
+
+.wf-chart-related-list button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.wf-chart-related-list button span {
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-chart-related-list button strong {
+  flex: 0 0 auto;
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
 }
 
 .wf-leader-influence-panel {
@@ -5468,6 +5758,24 @@ html[data-theme="light"] .module-nav button.is-active {
     font-size: 9px;
   }
 
+  .wf-chart-tooltip {
+    min-width: 132px;
+    padding: 7px 9px;
+  }
+
+  .wf-chart-selection {
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wf-funnel-selection {
+    margin-inline: 8px;
+  }
+
+  .wf-repeat-selection {
+    margin-inline: 14px;
+  }
+
   .wf-leader-repeat-content {
     gap: 18px;
     grid-template-columns: 126px minmax(0, 1fr);
@@ -5513,6 +5821,14 @@ html[data-theme="light"] .module-nav button.is-active {
   .wf-repeat-ring {
     padding: 11px;
     width: 108px;
+  }
+
+  .wf-repeat-tooltip {
+    padding: 5px;
+  }
+
+  .wf-repeat-tooltip strong {
+    font-size: 18px;
   }
 
   .wf-repeat-ring strong {

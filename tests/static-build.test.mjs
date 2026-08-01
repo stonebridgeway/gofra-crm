@@ -130,6 +130,8 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(app, /data-module=\{activeModule\}/);
   assert.match(entry, /agency-redesign\.css/);
   assert.match(app, /function AccountSwitcher/);
+  assert.match(styles, /\.account-switcher select option/);
+  assert.match(styles, /html\[data-theme="dark"\] \.account-switcher select option/);
   assert.doesNotMatch(app, /short: "ГЛ"/u);
   assert.match(app, /switchDemoUser/);
   assert.match(app, /canViewFinancials/);
@@ -211,6 +213,11 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(agencyStyles, /\.deal-workspace-backdrop/);
   assert.match(features, /export function CalendarView/);
   assert.match(features, /export function StatisticsView/);
+  assert.match(features, /wf-forecast-point-hit/);
+  assert.match(features, /wf-chart-tooltip/);
+  assert.match(features, /aria-pressed=\{selectedStageId === stage\.id\}/);
+  assert.match(features, /role="button"[\s\S]*strokeDasharray/);
+  assert.match(agencyStyles, /\.wf-chart-selection/);
   assert.match(features, /TASK_SOURCE_LABELS/);
   assert.match(features, /Поставить задачу сотруднику/);
   assert.match(features, /canAssignTasks/);

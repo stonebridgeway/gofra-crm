@@ -7,11 +7,13 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type KeyboardEvent,
   type ReactNode,
 } from "react";
 import {
   DECISION_INFLUENCES,
   DEAL_PIPELINE,
+  type Client,
   type CrmSnapshot,
   type Deal,
   type Interaction,
@@ -2019,10 +2021,22 @@ const APPROVAL_TRIGGER_LABELS = {
 
 function LeaderForecastChart({
   months,
+  deals,
+  onOpenDeal,
 }: {
   months: ReturnType<typeof selectLeaderControl>["forecast"];
+  deals: Deal[];
+  onOpenDeal: (dealId: string) => void;
 }) {
   const captionId = useId();
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    monthKey: string;
+    series: "revenue" | "weighted";
+  } | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<{
+    monthKey: string;
+    series: "revenue" | "weighted";
+  } | null>(null);
   const maxRevenue = Math.max(...months.map((month) => month.revenue), 1);
   const totalRevenue = months.reduce((sum, month) => sum + month.revenue, 0);
   const totalWeighted = months.reduce(
@@ -2057,6 +2071,31 @@ function LeaderForecastChart({
         "Z",
       ].join(" ")
     : "";
+  const activePoint = hoveredPoint ?? selectedPoint;
+  const activeMonthIndex = activePoint
+    ? months.findIndex((month) => month.key === activePoint.monthKey)
+    : -1;
+  const activeMonth = activeMonthIndex >= 0 ? months[activeMonthIndex] : null;
+  const activeCoordinates =
+    activePoint && activeMonthIndex >= 0
+      ? (activePoint.series === "revenue" ? revenuePoints : weightedPoints)[activeMonthIndex]
+      : null;
+  const selectedMonth = selectedPoint
+    ? months.find((month) => month.key === selectedPoint.monthKey) ?? null
+    : null;
+  const selectedDeals = selectedMonth
+    ? deals.filter(
+        (deal) =>
+          isOpenDeal(deal) && deal.forecastCloseAt?.slice(0, 7) === selectedMonth.key,
+      )
+    : [];
+  const selectPoint = (monthKey: string, series: "revenue" | "weighted") => {
+    setSelectedPoint((current) =>
+      current?.monthKey === monthKey && current.series === series
+        ? null
+        : { monthKey, series },
+    );
+  };
 
   return (
     <figure aria-labelledby={captionId} className="wf-leader-forecast-chart">
@@ -2079,23 +2118,112 @@ function LeaderForecastChart({
             <circle className="wf-forecast-dot is-weighted" cx={x} cy={y} key={`weighted-${months[index].key}`} r="4" />
           ))}
         </svg>
+        <div className="wf-forecast-hotspots">
+          {(
+            [
+              ["revenue", revenuePoints],
+              ["weighted", weightedPoints],
+            ] as const
+          ).flatMap(([series, points]) =>
+            points.map(({ x, y }, index) => {
+              const month = months[index];
+              const value = series === "revenue" ? month.revenue : month.weightedRevenue;
+              const selected =
+                selectedPoint?.monthKey === month.key && selectedPoint.series === series;
+              return (
+                <button
+                  aria-label={`${month.label}, ${series === "revenue" ? "полный прогноз" : "взвешенный прогноз"}: ${formatMoney(value)}. ${month.deals} сделок. Нажмите, чтобы раскрыть сделки.`}
+                  aria-pressed={selected}
+                  className={`wf-forecast-point-hit is-${series}${selected ? " is-selected" : ""}`}
+                  key={`${series}-${month.key}`}
+                  onBlur={() => setHoveredPoint(null)}
+                  onClick={() => selectPoint(month.key, series)}
+                  onFocus={() => setHoveredPoint({ monthKey: month.key, series })}
+                  onMouseEnter={() => setHoveredPoint({ monthKey: month.key, series })}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                  style={{
+                    left: `${(x / chartWidth) * 100}%`,
+                    top: `${(y / 210) * 100}%`,
+                  }}
+                  type="button"
+                />
+              );
+            }),
+          )}
+        </div>
+        {activePoint && activeMonth && activeCoordinates ? (
+          <div
+            className={`wf-chart-tooltip wf-forecast-tooltip${activeMonthIndex === 0 ? " is-start" : activeMonthIndex === months.length - 1 ? " is-end" : ""}`}
+            role="tooltip"
+            style={{
+              left: `${(activeCoordinates.x / chartWidth) * 100}%`,
+              top: `${(activeCoordinates.y / 210) * 100}%`,
+            }}
+          >
+            <span>{activeMonth.label}</span>
+            <strong>
+              {activePoint.series === "revenue" ? "Полный прогноз" : "С учётом вероятности"}
+            </strong>
+            <b>
+              {formatMoney(
+                activePoint.series === "revenue"
+                  ? activeMonth.revenue
+                  : activeMonth.weightedRevenue,
+              )}
+            </b>
+            <small>{activeMonth.deals} сделок</small>
+          </div>
+        ) : null}
       </div>
       <div
         className="wf-forecast-axis"
-        role="list"
+        aria-label="Выбор месяца прогноза"
         style={{ gridTemplateColumns: `repeat(${months.length}, minmax(0, 1fr))` }}
       >
         {months.map((month) => (
-          <article
+          <button
             aria-label={`${month.label}: ${formatMoney(month.revenue)}, взвешенный прогноз ${formatMoney(month.weightedRevenue)}, ${month.deals} сделок`}
+            aria-pressed={selectedPoint?.monthKey === month.key}
             key={month.key}
-            role="listitem"
+            onBlur={() => setHoveredPoint(null)}
+            onClick={() => selectPoint(month.key, "weighted")}
+            onFocus={() => setHoveredPoint({ monthKey: month.key, series: "weighted" })}
+            onMouseEnter={() => setHoveredPoint({ monthKey: month.key, series: "weighted" })}
+            onMouseLeave={() => setHoveredPoint(null)}
+            type="button"
           >
             <strong>{month.label.replace(/\s+\d{4}.*$/u, "")}</strong>
             <small>{formatCompactMoney(month.weightedRevenue)}</small>
-          </article>
+          </button>
         ))}
       </div>
+      {selectedPoint && selectedMonth ? (
+        <div aria-live="polite" className="wf-chart-selection">
+          <div className="wf-chart-selection-summary">
+            <span>Выбранный месяц</span>
+            <strong>{selectedMonth.label}</strong>
+            <small>
+              {selectedPoint.series === "revenue" ? "Полный прогноз" : "Взвешенный прогноз"} · {formatMoney(
+                selectedPoint.series === "revenue"
+                  ? selectedMonth.revenue
+                  : selectedMonth.weightedRevenue,
+              )}
+            </small>
+          </div>
+          <div className="wf-chart-related-list">
+            {selectedDeals.length ? (
+              selectedDeals.slice(0, 4).map((deal) => (
+                <button key={deal.id} onClick={() => onOpenDeal(deal.id)} type="button">
+                  <span>{deal.title}</span>
+                  <strong>{formatCompactMoney(deal.ourPrice)}</strong>
+                </button>
+              ))
+            ) : (
+              <small>Связанных открытых сделок нет</small>
+            )}
+          </div>
+        </div>
+      ) : null}
       <footer>
         <div className="wf-forecast-legend">
           <span><i />Полный прогноз</span>
@@ -2110,7 +2238,15 @@ function LeaderForecastChart({
   );
 }
 
-function LeaderFunnelRibbon({ snapshot }: { snapshot: CrmSnapshot }) {
+function LeaderFunnelRibbon({
+  snapshot,
+  onOpenDeal,
+}: {
+  snapshot: CrmSnapshot;
+  onOpenDeal: (dealId: string) => void;
+}) {
+  const [hoveredStageId, setHoveredStageId] = useState<string | null>(null);
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const openDeals = snapshot.deals.filter(isOpenDeal);
   const stages = DEAL_PIPELINE.filter(
     (stage) => !stage.closed && !["won", "paused"].includes(stage.id),
@@ -2121,6 +2257,7 @@ function LeaderFunnelRibbon({ snapshot }: { snapshot: CrmSnapshot }) {
       label: stage.label,
       count: deals.length,
       value: deals.reduce((sum, deal) => sum + deal.ourPrice, 0),
+      deals,
     };
   });
   const total = stages.reduce((sum, stage) => sum + stage.value, 0);
@@ -2130,6 +2267,10 @@ function LeaderFunnelRibbon({ snapshot }: { snapshot: CrmSnapshot }) {
   const proposalConversion = incomingCount
     ? Math.round((proposalCount / incomingCount) * 100)
     : 0;
+  const activeStageId = hoveredStageId ?? selectedStageId;
+  const activeStageIndex = stages.findIndex((stage) => stage.id === activeStageId);
+  const activeStage = activeStageIndex >= 0 ? stages[activeStageIndex] : null;
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? null;
 
   return (
     <section className="wf-control-panel wf-leader-funnel-panel">
@@ -2140,16 +2281,64 @@ function LeaderFunnelRibbon({ snapshot }: { snapshot: CrmSnapshot }) {
         </div>
         <small>{formatCompactMoney(total)} в работе</small>
       </header>
-      <div aria-label="Этапы активной воронки продаж" className="wf-leader-funnel-ribbon" role="list">
+      <div aria-label="Этапы активной воронки продаж" className="wf-leader-funnel-ribbon">
         {stages.map((stage, index) => (
-          <article className={`tone-${index + 1}`} key={stage.id} role="listitem">
+          <article
+            className={`tone-${index + 1}${activeStageId === stage.id ? " is-active" : ""}${selectedStageId === stage.id ? " is-selected" : ""}`}
+            key={stage.id}
+          >
             <span>{String(index + 1).padStart(2, "0")}</span>
             <strong>{stage.label}</strong>
             <b>{stage.count}</b>
             <small>{formatCompactMoney(stage.value)}</small>
+            <button
+              aria-label={`${stage.label}: ${stage.count} сделок на ${formatMoney(stage.value)}. Нажмите, чтобы раскрыть сделки этапа.`}
+              aria-pressed={selectedStageId === stage.id}
+              onBlur={() => setHoveredStageId(null)}
+              onClick={() =>
+                setSelectedStageId((current) => (current === stage.id ? null : stage.id))
+              }
+              onFocus={() => setHoveredStageId(stage.id)}
+              onMouseEnter={() => setHoveredStageId(stage.id)}
+              onMouseLeave={() => setHoveredStageId(null)}
+              type="button"
+            />
           </article>
         ))}
+        {activeStage ? (
+          <div
+            className={`wf-chart-tooltip wf-funnel-tooltip${activeStageIndex === 0 ? " is-start" : activeStageIndex === stages.length - 1 ? " is-end" : ""}`}
+            role="tooltip"
+            style={{ left: `${((activeStageIndex + 0.5) / stages.length) * 100}%` }}
+          >
+            <span>{activeStage.label}</span>
+            <strong>{activeStage.count} сделок</strong>
+            <b>{formatMoney(activeStage.value)}</b>
+            <small>Нажмите для детализации</small>
+          </div>
+        ) : null}
       </div>
+      {selectedStage ? (
+        <div aria-live="polite" className="wf-chart-selection wf-funnel-selection">
+          <div className="wf-chart-selection-summary">
+            <span>Выбранный этап</span>
+            <strong>{selectedStage.label}</strong>
+            <small>{selectedStage.count} сделок · {formatMoney(selectedStage.value)}</small>
+          </div>
+          <div className="wf-chart-related-list">
+            {selectedStage.deals.length ? (
+              selectedStage.deals.slice(0, 5).map((deal) => (
+                <button key={deal.id} onClick={() => onOpenDeal(deal.id)} type="button">
+                  <span>{deal.title}</span>
+                  <strong>{formatCompactMoney(deal.ourPrice)}</strong>
+                </button>
+              ))
+            ) : (
+              <small>На этом этапе пока нет сделок</small>
+            )}
+          </div>
+        </div>
+      ) : null}
       <footer className="wf-leader-funnel-meta">
         <span><small>До предложения</small><strong>{formatPercent(proposalConversion)}</strong></span>
         <span><small>Активных сделок</small><strong>{openDeals.length}</strong></span>
@@ -2159,46 +2348,78 @@ function LeaderFunnelRibbon({ snapshot }: { snapshot: CrmSnapshot }) {
   );
 }
 
-function LeaderRepeatPanel({ snapshot }: { snapshot: CrmSnapshot }) {
+function LeaderRepeatPanel({
+  snapshot,
+  onOpenClient,
+}: {
+  snapshot: CrmSnapshot;
+  onOpenClient: (clientId: string) => void;
+}) {
+  const [hoveredBucketId, setHoveredBucketId] = useState<string | null>(null);
+  const [selectedBucketId, setSelectedBucketId] = useState<string | null>(null);
   const today = startOfDay(new Date());
   const repeatClients = snapshot.clients.filter((client) =>
     ["Активный клиент", "Спящий клиент"].includes(client.status ?? ""),
   );
-  const buckets = [
-    { id: "soon", label: "Заказ в 14 дней", count: 0, color: "#16a46f" },
-    { id: "later", label: "Запланировано", count: 0, color: "#0f6ee8" },
-    { id: "overdue", label: "Срок прошёл", count: 0, color: "#d88022" },
-    { id: "empty", label: "Нет даты", count: 0, color: "#d6dce5" },
+  const buckets: Array<{
+    id: string;
+    label: string;
+    clients: Client[];
+    color: string;
+  }> = [
+    { id: "soon", label: "Заказ в 14 дней", clients: [], color: "#16a46f" },
+    { id: "later", label: "Запланировано", clients: [], color: "#0f6ee8" },
+    { id: "overdue", label: "Срок прошёл", clients: [], color: "#d88022" },
+    { id: "empty", label: "Нет даты", clients: [], color: "#d6dce5" },
   ];
 
   for (const client of repeatClients) {
     const expectedAt = safeDate(client.expectedNextOrderAt);
     if (!expectedAt) {
-      buckets[3].count += 1;
+      buckets[3].clients.push(client);
       continue;
     }
     const daysUntil = Math.ceil((startOfDay(expectedAt).getTime() - today.getTime()) / DAY_MS);
-    if (daysUntil < 0) buckets[2].count += 1;
-    else if (daysUntil <= 14) buckets[0].count += 1;
-    else buckets[1].count += 1;
+    if (daysUntil < 0) buckets[2].clients.push(client);
+    else if (daysUntil <= 14) buckets[0].clients.push(client);
+    else buckets[1].clients.push(client);
   }
 
   const total = repeatClients.length;
-  const coverage = total ? Math.round(((total - buckets[3].count) / total) * 100) : 0;
+  const coverage = total
+    ? Math.round(((total - buckets[3].clients.length) / total) * 100)
+    : 0;
   let cursor = 0;
+  const segments = buckets.map((bucket) => {
+    const percent = total ? (bucket.clients.length / total) * 100 : 0;
+    const offset = cursor;
+    cursor += percent;
+    return { ...bucket, count: bucket.clients.length, percent, offset };
+  });
   const gradient = total
-    ? `conic-gradient(${buckets
-        .map((bucket) => {
-          const start = cursor;
-          cursor += (bucket.count / total) * 360;
-          return `${bucket.color} ${start}deg ${cursor}deg`;
-        })
+    ? `conic-gradient(${segments
+        .map((segment) =>
+          `${segment.color} ${segment.offset * 3.6}deg ${(segment.offset + segment.percent) * 3.6}deg`,
+        )
         .join(", ")})`
     : "conic-gradient(#d6dce5 0deg 360deg)";
   const monthlyVolume = repeatClients.reduce(
     (sum, client) => sum + client.averageMonthlyVolume,
     0,
   );
+  const activeBucketId = hoveredBucketId ?? selectedBucketId;
+  const activeBucket = segments.find((bucket) => bucket.id === activeBucketId) ?? null;
+  const selectedBucket = segments.find((bucket) => bucket.id === selectedBucketId) ?? null;
+  const selectBucket = (bucketId: string) =>
+    setSelectedBucketId((current) => (current === bucketId ? null : bucketId));
+  const handleBucketKeyDown = (
+    event: KeyboardEvent<SVGCircleElement>,
+    bucketId: string,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    selectBucket(bucketId);
+  };
 
   return (
     <section className="wf-control-panel wf-leader-repeat-panel">
@@ -2210,19 +2431,87 @@ function LeaderRepeatPanel({ snapshot }: { snapshot: CrmSnapshot }) {
         <small>{total} клиентов</small>
       </header>
       <div className="wf-leader-repeat-content">
-        <div aria-label={`${coverage}% клиентов имеют дату повторного заказа`} className="wf-repeat-ring" style={{ background: gradient }}>
-          <span><strong>{coverage}%</strong><small>с датой</small></span>
+        <div className="wf-repeat-ring" style={{ background: gradient }}>
+          <svg aria-label={`Повторные заказы: ${coverage}% клиентов имеют дату`} viewBox="0 0 100 100">
+            {segments
+              .filter((segment) => segment.count > 0)
+              .map((segment) => (
+                <circle
+                  aria-label={`${segment.label}: ${segment.count} клиентов, ${Math.round(segment.percent)}%`}
+                  aria-pressed={selectedBucketId === segment.id}
+                  className={`wf-repeat-hit-segment${activeBucketId === segment.id ? " is-active" : ""}`}
+                  cx="50"
+                  cy="50"
+                  fill="none"
+                  key={segment.id}
+                  onBlur={() => setHoveredBucketId(null)}
+                  onClick={() => selectBucket(segment.id)}
+                  onFocus={() => setHoveredBucketId(segment.id)}
+                  onKeyDown={(event) => handleBucketKeyDown(event, segment.id)}
+                  onMouseEnter={() => setHoveredBucketId(segment.id)}
+                  onMouseLeave={() => setHoveredBucketId(null)}
+                  pathLength="100"
+                  r="42"
+                  role="button"
+                  strokeDasharray={`${segment.percent} ${100 - segment.percent}`}
+                  strokeDashoffset={-segment.offset}
+                  tabIndex={0}
+                />
+              ))}
+          </svg>
+          <span>
+            {activeBucket ? (
+              <span className="wf-repeat-tooltip" role="tooltip">
+                <small>{activeBucket.label}</small>
+                <strong>{activeBucket.count}</strong>
+                <small>{Math.round(activeBucket.percent)}% клиентов</small>
+              </span>
+            ) : (
+              <><strong>{coverage}%</strong><small>с датой</small></>
+            )}
+          </span>
         </div>
         <div className="wf-repeat-legend">
-          {buckets.map((bucket) => (
-            <div key={bucket.id}>
+          {segments.map((bucket) => (
+            <button
+              aria-label={`${bucket.label}: ${bucket.count} клиентов. Нажмите, чтобы раскрыть клиентов.`}
+              aria-pressed={selectedBucketId === bucket.id}
+              key={bucket.id}
+              onBlur={() => setHoveredBucketId(null)}
+              onClick={() => selectBucket(bucket.id)}
+              onFocus={() => setHoveredBucketId(bucket.id)}
+              onMouseEnter={() => setHoveredBucketId(bucket.id)}
+              onMouseLeave={() => setHoveredBucketId(null)}
+              type="button"
+            >
               <i style={{ backgroundColor: bucket.color }} />
               <span>{bucket.label}</span>
               <strong>{bucket.count}</strong>
-            </div>
+            </button>
           ))}
         </div>
       </div>
+      {selectedBucket ? (
+        <div aria-live="polite" className="wf-chart-selection wf-repeat-selection">
+          <div className="wf-chart-selection-summary">
+            <span>Выбранный сегмент</span>
+            <strong>{selectedBucket.label}</strong>
+            <small>{selectedBucket.count} клиентов · {Math.round(selectedBucket.percent)}%</small>
+          </div>
+          <div className="wf-chart-related-list">
+            {selectedBucket.clients.length ? (
+              selectedBucket.clients.slice(0, 4).map((client) => (
+                <button key={client.id} onClick={() => onOpenClient(client.id)} type="button">
+                  <span>{client.companyName}</span>
+                  <strong>{formatDate(client.expectedNextOrderAt)}</strong>
+                </button>
+              ))
+            ) : (
+              <small>В этом сегменте клиентов нет</small>
+            )}
+          </div>
+        </div>
+      ) : null}
       <footer className="wf-repeat-volume">
         <span>Среднемесячный объём</span>
         <strong>{NUMBER_FORMATTER.format(monthlyVolume)} шт.</strong>
@@ -2404,7 +2693,7 @@ function LeaderControlSection({
       </div>
 
       <div className="wf-control-grid">
-        <LeaderFunnelRibbon snapshot={snapshot} />
+        <LeaderFunnelRibbon onOpenDeal={onOpenDeal} snapshot={snapshot} />
 
         <section className="wf-control-panel wf-control-forecast">
           <header>
@@ -2415,7 +2704,11 @@ function LeaderControlSection({
             <small>С учётом вероятности этапа</small>
           </header>
           {control.forecast.length ? (
-            <LeaderForecastChart months={control.forecast.slice(0, 6)} />
+            <LeaderForecastChart
+              deals={snapshot.deals}
+              months={control.forecast.slice(0, 6)}
+              onOpenDeal={onOpenDeal}
+            />
           ) : (
             <EmptyState
               title="Прогноз пока не заполнен"
@@ -2424,7 +2717,7 @@ function LeaderControlSection({
           )}
         </section>
 
-        <LeaderRepeatPanel snapshot={snapshot} />
+        <LeaderRepeatPanel onOpenClient={onOpenClient} snapshot={snapshot} />
 
         <LeaderInfluencePanel
           onOpenClient={onOpenClient}

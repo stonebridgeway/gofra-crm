@@ -252,40 +252,42 @@
     "direction": {
       "direction_id": "crm-focused-workflow",
       "approver": "Пользователь",
-      "evidence": "Пользователь ранее явно одобрил подготовленные focused-workflow экраны и теперь просит собрать функции в актуальном проекте. Desktop/mobile references повторно просмотрены: сохраняем navy/steel shell, task-first hierarchy и используем operational-clarity только как источник композиции пяти списков «Мой день».",
-      "approved_at": "2026-07-31T13:28:01.953Z"
+      "evidence": "Пользователь ранее утвердил crm-focused-workflow и в текущем сообщении отдельно потребовал сохранить весь новый функционал актуальной main. Все восемь direction/baseline PNG повторно просмотрены. Сохраняются c82afb0 workflows, navy/steel shell, task-first hierarchy and desktop/mobile composition; разрешены только исправления багов и типографическая полировка.",
+      "approved_at": "2026-08-01T08:48:27.675Z"
     },
     "design_system": {
       "approver": "Codex /root",
-      "evidence": "The user-approved crm-focused-workflow direction was re-established on clean current main. Design documents now explicitly cover role-aware My Day queues, progressive four-stage packaging brief, dated process milestones, normalized quote history, preserved current-main workflows, desktop/mobile behavior and WCAG 2.2 AA states.",
+      "evidence": "Design documents were restored from current c82afb0 main and reviewed against eight inspected references after rebuilding the approval chain at the current repository baseline. The user's preservation constraint is binding: retain all current workflows and data logic; enforce the documented Geist typography scale, 44px mobile targets, responsive table/drawer rules, readable interaction states, WCAG 2.2 AA, navy navigation and single blue accent.",
       "document_hashes": {
         "design_brief": "a4ef16b07314c122e1b8dd94118642bbaf37ed723eea0bba76d0be84a45e39cb",
-        "design_system": "199c65e558d5703451d69efe65924c54b25d5d07da7fca1b592d34b01d79d122",
-        "ui_inventory": "44113bd32f50a6ef7dc01f819483c3a3e38064e0c276a6f32964272fa035856f",
-        "visual_acceptance": "bf70cd1fe71ff5202fe27c371422544f0df1d81d8fbaf69bfb3c7fdb3cdda223"
+        "design_system": "9ddcf115e9f385643bbf8f65fd9669b76ec07c59799a8a60dde952fa17bf2ed0",
+        "ui_inventory": "203e02337c85c0781db13a6783677ef8ab0aa3871d5d5d0790cff6a63f1c37ae",
+        "visual_acceptance": "95063c95a4247cd426471b76e97bbb7704e83b9158f9a55a0dbf1947661bc9fd"
       },
       "baseline": {
         "kind": "git",
-        "project_root": "C:/Users/sacha/Desktop/Новая папка/gofra-crm-review",
+        "project_root": "C:/Users/sacha/OneDrive/Документы/Сайт Леха",
         "git": true,
-        "head": "7a51178be30842888300a7ef4795cd64b4cb40e7",
+        "head": "c82afb08ccb2ef5f850d491138836f42d1cddfe0",
         "branch": "main",
         "dirty": true,
         "dirty_files": [
+          ".ai-dev/frontend/anti-slop-policy.md",
           ".ai-dev/frontend/design-brief.md",
           ".ai-dev/frontend/design-system.md",
           ".ai-dev/frontend/product-quality.json",
+          ".ai-dev/frontend/references/README.md",
           ".ai-dev/frontend/ui-inventory.md",
           ".ai-dev/frontend/visual-acceptance.md"
         ],
-        "status_hash": "57a55a5e67ae2067e13fae5649f9a2de20f76acf77e568636dd3950af71ee381",
-        "fingerprint": "bba2370d828769689fe89730ec73f2503afcfcbdd96997779f7fa5be6cf90650",
-        "captured_at": "2026-07-31T13:28:40.359Z",
+        "status_hash": "fe2bb35dfb79d5272d6303ff2ace290d2a887c46835716fc6b91a9c2ffd0aaed",
+        "fingerprint": "818d33e53cfa8cb48609ef4e069211d372106bbf9383fdb94739fb816c039757",
+        "captured_at": "2026-08-01T08:48:34.977Z",
         "strength": "strong",
         "application_dirty_files": [],
         "application_dirty_hashes": {}
       },
-      "approved_at": "2026-07-31T13:28:40.359Z",
+      "approved_at": "2026-08-01T08:48:34.977Z",
       "approved_visual_baselines": [
         {
           "reference_id": "rf-20260730210111-6c3ba61966-crm-focused-workflow--clients--desktop--default",
@@ -324,7 +326,7 @@
   },
   "reference_factory": null,
   "latest_visual_run": {
-    "run_id": "visual-1785507637999-594ce354",
+    "run_id": "visual-1785578363942-bc608f69",
     "status": "passed",
     "technical_status": "passed",
     "strict": true,
@@ -350,61 +352,61 @@
           "route": "/#/clients",
           "viewport": "desktop",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__default.png"
-        },
-        {
-          "route": "/#/clients",
-          "viewport": "desktop",
-          "state": "empty",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__empty.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png"
         },
         {
           "route": "/#/clients",
           "viewport": "mobile",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__default.png"
-        },
-        {
-          "route": "/#/clients",
-          "viewport": "mobile",
-          "state": "empty",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__empty.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__default.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png"
+        },
+        {
+          "route": "/#/activity",
+          "viewport": "desktop",
+          "state": "empty",
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "validation",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__validation.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__success.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__default.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png"
+        },
+        {
+          "route": "/#/activity",
+          "viewport": "mobile",
+          "state": "empty",
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "validation",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__validation.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__success.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png"
         }
       ],
       "missing": [],
@@ -412,7 +414,7 @@
     },
     "artifacts": [
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png",
         "type": "screenshot",
         "route": "/#/clients",
         "viewport": "desktop",
@@ -426,21 +428,7 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__empty.png",
-        "type": "screenshot",
-        "route": "/#/clients",
-        "viewport": "desktop",
-        "state": "empty"
-      },
-      {
-        "path": ".ai-dev/frontend/references/approved/clients__desktop__empty.png",
-        "type": "baseline",
-        "route": "/#/clients",
-        "viewport": "desktop",
-        "state": "empty"
-      },
-      {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png",
         "type": "screenshot",
         "route": "/#/clients",
         "viewport": "mobile",
@@ -454,21 +442,7 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__empty.png",
-        "type": "screenshot",
-        "route": "/#/clients",
-        "viewport": "mobile",
-        "state": "empty"
-      },
-      {
-        "path": ".ai-dev/frontend/references/approved/clients__mobile__empty.png",
-        "type": "baseline",
-        "route": "/#/clients",
-        "viewport": "mobile",
-        "state": "empty"
-      },
-      {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -482,7 +456,21 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__validation.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png",
+        "type": "screenshot",
+        "route": "/#/activity",
+        "viewport": "desktop",
+        "state": "empty"
+      },
+      {
+        "path": ".ai-dev/frontend/references/approved/activity__desktop__empty.png",
+        "type": "baseline",
+        "route": "/#/activity",
+        "viewport": "desktop",
+        "state": "empty"
+      },
+      {
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -496,7 +484,7 @@
         "state": "validation"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -510,14 +498,14 @@
         "state": "success"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\visual-diffs\\activity__desktop__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__desktop__success.png",
         "type": "diff",
         "route": "/#/activity",
         "viewport": "desktop",
         "state": "success"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -531,7 +519,21 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__validation.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png",
+        "type": "screenshot",
+        "route": "/#/activity",
+        "viewport": "mobile",
+        "state": "empty"
+      },
+      {
+        "path": ".ai-dev/frontend/references/approved/activity__mobile__empty.png",
+        "type": "baseline",
+        "route": "/#/activity",
+        "viewport": "mobile",
+        "state": "empty"
+      },
+      {
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -545,7 +547,7 @@
         "state": "validation"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -559,40 +561,40 @@
         "state": "success"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\visual-diffs\\activity__mobile__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__mobile__success.png",
         "type": "diff",
         "route": "/#/activity",
         "viewport": "mobile",
         "state": "success"
       }
     ],
-    "report_file": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\frontend-qa-report.md",
-    "artifact_dir": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z",
-    "qa_started_at": "2026-07-31T14:20:22.063Z",
-    "qa_finished_at": "2026-07-31T14:20:37.956Z",
-    "recorded_at": "2026-07-31T14:20:38.000Z",
-    "reviewed_at": "2026-07-31T14:24:40.743Z",
-    "review_id": "visual-review-1785507880743-1a7efc7a"
+    "report_file": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\frontend-qa-report.md",
+    "artifact_dir": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z",
+    "qa_started_at": "2026-08-01T09:59:05.902Z",
+    "qa_finished_at": "2026-08-01T09:59:23.888Z",
+    "recorded_at": "2026-08-01T09:59:23.942Z",
+    "reviewed_at": "2026-08-01T10:03:12.939Z",
+    "review_id": "visual-review-1785578592939-3b578fad"
   },
   "visual_reviews": [
     {
-      "review_id": "visual-review-1785507880743-1a7efc7a",
-      "run_id": "visual-1785507637999-594ce354",
-      "reviewer": "Codex independent visual QA",
-      "reviewer_role": "independent frontend quality reviewer",
+      "review_id": "visual-review-1785578592939-3b578fad",
+      "run_id": "visual-1785578363942-bc608f69",
+      "reviewer": "Codex Visual QA Reviewer",
+      "reviewer_role": "Independent product design quality reviewer",
       "independent": true,
       "artifact_hashes_current": true,
       "artifacts": [
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png",
           "type": "screenshot",
           "route": "/#/clients",
           "viewport": "desktop",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__default.png",
-          "sha256": "11a99efd1f638dddadb51fa9020bf39d602904d0b3153a1b250e4cc7a86ef8de",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png",
+          "sha256": "6333f369dc908548ab2f9a8bfeabf79996992745580fe373902c8b9d61aced89",
           "inspection_method": "view_image",
-          "observations": "Desktop-список клиентов: ясная иерархия заголовка, KPI, сегментов повторных продаж, фильтров и таблицы; данные читаемы, основные действия заметны."
+          "observations": "Desktop client workspace is crisp and operational: KPI strip, repeat-order segments, filters and table hierarchy are readable; no clipping or horizontal overflow."
         },
         {
           "path": ".ai-dev/frontend/references/approved/clients__desktop__default.png",
@@ -600,43 +602,21 @@
           "route": "/#/clients",
           "viewport": "desktop",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\clients__desktop__default.png",
-          "sha256": "11a99efd1f638dddadb51fa9020bf39d602904d0b3153a1b250e4cc7a86ef8de",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\clients__desktop__default.png",
+          "sha256": "6333f369dc908548ab2f9a8bfeabf79996992745580fe373902c8b9d61aced89",
           "inspection_method": "view_image",
-          "observations": "Approved desktop baseline для клиентов визуально соответствует фактическому default-состоянию."
+          "observations": "Approved desktop client baseline matches the inspected implementation composition and full-page density."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__empty.png",
-          "type": "screenshot",
-          "route": "/#/clients",
-          "viewport": "desktop",
-          "state": "empty",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__desktop__empty.png",
-          "sha256": "f88689c27de209d478db6842cbe71ec401d1a9449fb283955218bdcacef14a7d",
-          "inspection_method": "view_image",
-          "observations": "Desktop empty-state: поиск показывает отсутствие совпадений, счётчик результата равен нулю, пустое состояние короткое и однозначное."
-        },
-        {
-          "path": ".ai-dev/frontend/references/approved/clients__desktop__empty.png",
-          "type": "baseline",
-          "route": "/#/clients",
-          "viewport": "desktop",
-          "state": "empty",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\clients__desktop__empty.png",
-          "sha256": "f88689c27de209d478db6842cbe71ec401d1a9449fb283955218bdcacef14a7d",
-          "inspection_method": "view_image",
-          "observations": "Approved desktop baseline для empty-состояния клиентов отражает поиск без результатов и нулевой список."
-        },
-        {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png",
           "type": "screenshot",
           "route": "/#/clients",
           "viewport": "mobile",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__default.png",
-          "sha256": "e964b8934691bd90080ecd383dc4f791494ee1b5b73f812e847a15b90017c64d",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png",
+          "sha256": "2a17d75d5fa84b55d819fe69c4a873e4d35459aa6744d239d6eb3bea486fc4c5",
           "inspection_method": "view_image",
-          "observations": "Mobile-список клиентов: KPI и сегменты корректно перестраиваются в две колонки, фильтры доступны, нижняя навигация не перекрывает контент."
+          "observations": "Mobile client workspace uses a clear single-column flow, 2×2 metrics, readable segment controls and persistent bottom navigation without overflow."
         },
         {
           "path": ".ai-dev/frontend/references/approved/clients__mobile__default.png",
@@ -644,43 +624,21 @@
           "route": "/#/clients",
           "viewport": "mobile",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\clients__mobile__default.png",
-          "sha256": "e964b8934691bd90080ecd383dc4f791494ee1b5b73f812e847a15b90017c64d",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\clients__mobile__default.png",
+          "sha256": "2a17d75d5fa84b55d819fe69c4a873e4d35459aa6744d239d6eb3bea486fc4c5",
           "inspection_method": "view_image",
-          "observations": "Approved mobile baseline для клиентов соответствует адаптивной компоновке фактического экрана."
+          "observations": "Approved mobile client baseline matches the inspected implementation and preserves the focused-workflow navigation language."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__empty.png",
-          "type": "screenshot",
-          "route": "/#/clients",
-          "viewport": "mobile",
-          "state": "empty",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\clients__mobile__empty.png",
-          "sha256": "11fb8c91469ae168f6f2d60d209c6b171d0764e6a0411558d0d4cff0edad5c14",
-          "inspection_method": "view_image",
-          "observations": "Mobile empty-state: поисковый запрос и сообщение об отсутствии совпадений видны без горизонтального переполнения; структура экрана сохраняется."
-        },
-        {
-          "path": ".ai-dev/frontend/references/approved/clients__mobile__empty.png",
-          "type": "baseline",
-          "route": "/#/clients",
-          "viewport": "mobile",
-          "state": "empty",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\clients__mobile__empty.png",
-          "sha256": "11fb8c91469ae168f6f2d60d209c6b171d0764e6a0411558d0d4cff0edad5c14",
-          "inspection_method": "view_image",
-          "observations": "Approved mobile baseline для empty-состояния соответствует фактическому поисковому состоянию."
-        },
-        {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__default.png",
-          "sha256": "7615ca679051bce08c3405fe6369e7504354a47e70ae9998e9cee5416cd12999",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png",
+          "sha256": "7fab23861c9779ea9819ebac004bbcbe58554a4b98806dba2b22c3f132dc0238",
           "inspection_method": "view_image",
-          "observations": "Desktop-история: таймлайн, следующий шаг, вложения и сводка ритма различимы; первичное действие находится в верхней панели."
+          "observations": "Desktop interaction history has a clear primary action, compact timeline rhythm and visible next-step context; long content remains scannable."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__default.png",
@@ -688,21 +646,43 @@
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\activity__desktop__default.png",
-          "sha256": "7615ca679051bce08c3405fe6369e7504354a47e70ae9998e9cee5416cd12999",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__default.png",
+          "sha256": "7fab23861c9779ea9819ebac004bbcbe58554a4b98806dba2b22c3f132dc0238",
           "inspection_method": "view_image",
-          "observations": "Approved desktop baseline истории совпадает с фактическим default-состоянием."
+          "observations": "Approved desktop activity baseline matches the final default state."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__validation.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png",
+          "type": "screenshot",
+          "route": "/#/activity",
+          "viewport": "desktop",
+          "state": "empty",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png",
+          "sha256": "5e92b47cb0b55d14a0e0446103cb010969f62d61009bebd316675a0cca76cc05",
+          "inspection_method": "view_image",
+          "observations": "Desktop empty state is concise and actionable, with a blue accent and reset-filter guidance rather than an oversized decorative panel."
+        },
+        {
+          "path": ".ai-dev/frontend/references/approved/activity__desktop__empty.png",
+          "type": "baseline",
+          "route": "/#/activity",
+          "viewport": "desktop",
+          "state": "empty",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__empty.png",
+          "sha256": "5e92b47cb0b55d14a0e0446103cb010969f62d61009bebd316675a0cca76cc05",
+          "inspection_method": "view_image",
+          "observations": "Approved desktop empty baseline matches the newly inspected compact empty-state treatment."
+        },
+        {
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "validation",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__validation.png",
-          "sha256": "e1043c93cdd6ef7c36c2d2310d1c4e035aa7c6a65ef41398290b45a21cb0ab24",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png",
+          "sha256": "a1854fcc6e3b6c3847423b65bc589933c6f0b5e97564e0ef8b468cab8a3db2b6",
           "inspection_method": "view_image",
-          "observations": "Desktop validation: обязательные поля подписаны, блок обязательного следующего шага выделен, сохранение недоступно до заполнения; фон модально затемнён."
+          "observations": "Desktop validation state clearly exposes client, deal, contact and required next-step fields; disabled submit is visually unambiguous."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__validation.png",
@@ -710,21 +690,21 @@
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "validation",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\activity__desktop__validation.png",
-          "sha256": "e1043c93cdd6ef7c36c2d2310d1c4e035aa7c6a65ef41398290b45a21cb0ab24",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__validation.png",
+          "sha256": "a1854fcc6e3b6c3847423b65bc589933c6f0b5e97564e0ef8b468cab8a3db2b6",
           "inspection_method": "view_image",
-          "observations": "Approved desktop validation baseline фиксирует обязательные поля и заблокированное сохранение."
+          "observations": "Approved desktop validation baseline matches the inspected full form state."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__desktop__success.png",
-          "sha256": "0dd94deeea411cfaf3ee9649ab1c4525a5663bdd55319820c75a17a46d88ff5c",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png",
+          "sha256": "749f0091145655bbdd10e7763d38c7af9ffcfe253cc50f0c8f5613c952a7d04e",
           "inspection_method": "view_image",
-          "observations": "Desktop success: новая активность первая в ленте, счётчик обновлён до 15, созданный следующий шаг виден, toast подтверждает сохранение и задачу."
+          "observations": "Desktop success state adds the new interaction at the top and shows confirmation toast while preserving timeline context."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__success.png",
@@ -732,32 +712,32 @@
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\activity__desktop__success.png",
-          "sha256": "4b230dc195762636d7537c87857396451ddfc226b8d2d34219907d9f3daa5653",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__success.png",
+          "sha256": "25cc7d200176cb03da26414c0283504a45837c928c7d115a61fd568728de6f0a",
           "inspection_method": "view_image",
-          "observations": "Approved desktop success baseline совпадает по структуре; допустимое динамическое отличие относится к минуте времени."
+          "observations": "Approved desktop success baseline matches the inspected final state."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\visual-diffs\\activity__desktop__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__desktop__success.png",
           "type": "diff",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\visual-diffs\\activity__desktop__success.png",
-          "sha256": "75b97815b158db18e5a749732c0639bcb080f2e5462a50087ca3bc53a84f6195",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__desktop__success.png",
+          "sha256": "95bdcc5d7fc1f9ba83c26da5874e5c366180b7fa5e68b8fad156dfb733feca6e",
           "inspection_method": "view_image",
-          "observations": "Diff почти пустой; единственная заметная область — динамическая минута во временной метке, без структурных или стилевых расхождений."
+          "observations": "Diff contains only a tiny timestamp-rendering pixel variation; no structural, typographic or layout regression."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__default.png",
-          "sha256": "e5f791f86d320ab5fa75f5ba11d6f63672ff2c68f3ec0c2a23bb22e6f1f0c859",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png",
+          "sha256": "ffaee9ead71a420e11c4cd86f29c0a9ed826aa77fb3e7d7cf098ff02480557c7",
           "inspection_method": "view_image",
-          "observations": "Mobile-история: одноколоночная лента, крупное действие и компактная навигация; карточки и даты читаемы, переполнения нет."
+          "observations": "Mobile activity default state has readable body text, strong action priority, compact controls and accessible bottom navigation."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__default.png",
@@ -765,21 +745,43 @@
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\activity__mobile__default.png",
-          "sha256": "3c6aa4990781f296f729f5e8c1677cee6705ddb0db5295cfc5c45ca10969a659",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__default.png",
+          "sha256": "ffaee9ead71a420e11c4cd86f29c0a9ed826aa77fb3e7d7cf098ff02480557c7",
           "inspection_method": "view_image",
-          "observations": "Approved mobile baseline истории совпадает с фактическим default-состоянием."
+          "observations": "Approved mobile activity baseline matches the final implementation."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__validation.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png",
+          "type": "screenshot",
+          "route": "/#/activity",
+          "viewport": "mobile",
+          "state": "empty",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png",
+          "sha256": "586851333adc81f31e549ecb91483c3ba6ef58ff02e6f10bfb86ab6ddbced7ed",
+          "inspection_method": "view_image",
+          "observations": "Mobile empty state remains visible in the first viewport and provides concise recovery guidance without blank-screen ambiguity."
+        },
+        {
+          "path": ".ai-dev/frontend/references/approved/activity__mobile__empty.png",
+          "type": "baseline",
+          "route": "/#/activity",
+          "viewport": "mobile",
+          "state": "empty",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__empty.png",
+          "sha256": "586851333adc81f31e549ecb91483c3ba6ef58ff02e6f10bfb86ab6ddbced7ed",
+          "inspection_method": "view_image",
+          "observations": "Approved mobile empty baseline matches the inspected implementation."
+        },
+        {
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "validation",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__validation.png",
-          "sha256": "7fbdce1945ad140eb52b2cf6045fb62e3ca4f5ee25a1481dfa8abe2c4ad54222",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png",
+          "sha256": "ddcd1e5b0fc6937d836dab8c7fa6c240a309531936cbfd70558b95c8339cfa34",
           "inspection_method": "view_image",
-          "observations": "Mobile validation: полноэкранная форма с последовательными полями и закреплённой нижней панелью; обязательный следующий шаг заметен."
+          "observations": "Mobile quick-contact validation is a focused full-screen form with legible labels, large controls, required-next-step emphasis and sticky disabled submit."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__validation.png",
@@ -787,21 +789,21 @@
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "validation",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\activity__mobile__validation.png",
-          "sha256": "7fbdce1945ad140eb52b2cf6045fb62e3ca4f5ee25a1481dfa8abe2c4ad54222",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__validation.png",
+          "sha256": "ddcd1e5b0fc6937d836dab8c7fa6c240a309531936cbfd70558b95c8339cfa34",
           "inspection_method": "view_image",
-          "observations": "Approved mobile validation baseline совпадает с фактической полноэкранной формой."
+          "observations": "Approved mobile validation baseline matches the final form layout."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\activity__mobile__success.png",
-          "sha256": "8061a5fd9a628cbad301aaf8161bfb0b7424c3c19b3ccfe8f6f33fdc4d370967",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png",
+          "sha256": "c4b054589fba6879076310a6c033d5d9947bd434d3d3839b90e2293676ec5612",
           "inspection_method": "view_image",
-          "observations": "Mobile success: созданная активность, следующий шаг и toast находятся в видимой области; интерфейс не скачет и не выходит за viewport."
+          "observations": "Mobile success state shows the saved interaction first, the mandatory next step and a readable confirmation toast above persistent navigation."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__success.png",
@@ -809,101 +811,106 @@
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\Desktop\\Новая папка\\gofra-crm-review\\.ai-dev\\frontend\\references\\approved\\activity__mobile__success.png",
-          "sha256": "1f3025a0afdd3b66e5a5cb135ed292bb93b480adc3649ff30753f65e3cdfdd04",
+          "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__success.png",
+          "sha256": "950e5a5ec266dde2f2a59ae4f0525af8086f682b70aab68aa00c7ae75c1b35b1",
           "inspection_method": "view_image",
-          "observations": "Approved mobile success baseline совпадает по структуре; динамическое отличие ограничено минутой времени."
+          "observations": "Approved mobile success baseline matches the inspected final state."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\visual-diffs\\activity__mobile__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__mobile__success.png",
           "type": "diff",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\gofra-crm\\2026-07-31T14-20-21-891Z\\visual-diffs\\activity__mobile__success.png",
-          "sha256": "9f75ee05e4b6c7daca1b5d0ed4bed80f72420aa948363caf799c686f28b7ada2",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__mobile__success.png",
+          "sha256": "2c74928b6e136fd9365b55b49e14b3bcd2a5c427b1a25245a692c77731c7dec8",
           "inspection_method": "view_image",
-          "observations": "Diff почти пустой; отличие локализовано в динамической минуте, остальные пиксели и компоновка стабильны."
+          "observations": "Diff is limited to a tiny timestamp pixel variation; composition and content are unchanged."
         }
       ],
       "scorecard": {
         "hierarchy": {
           "score": 5,
           "status": "pass",
-          "evidence": "Заголовки, KPI, рабочие очереди, формы и первичные действия формируют устойчивую иерархию на обеих ширинах.",
+          "evidence": "Page titles, KPI strips, primary actions, next-step panels and state feedback form a consistent priority ladder on desktop and mobile.",
           "findings": []
         },
         "composition": {
           "score": 5,
           "status": "pass",
-          "evidence": "Desktop использует рабочее пространство с сайдбаром, mobile — одноколоночную компоновку и нижнюю навигацию; пустые и модальные состояния собраны последовательно.",
+          "evidence": "Navy navigation, light work canvas, structured toolbars and content regions follow the approved focused-workflow composition.",
           "findings": []
         },
         "typography": {
-          "score": 4,
+          "score": 5,
           "status": "pass",
-          "evidence": "Типографика компактна для операционной CRM, но ключевые подписи, значения, даты и действия остаются различимыми на desktop и mobile.",
+          "evidence": "Unified token scale keeps body, support, labels, subtitles and page headings readable; mobile body text is 15px and support text is 13px.",
           "findings": []
         },
         "density": {
-          "score": 5,
+          "score": 4,
           "status": "pass",
-          "evidence": "Плотность соответствует экспертной CRM: таблицы и таймлайн насыщены данными, а мобильные экраны сохраняют достаточные отступы и группировку.",
-          "findings": []
+          "evidence": "Desktop tables and timelines preserve expert CRM density while tablet/mobile progressively collapse into cards and focused states.",
+          "findings": [
+            "Full-page desktop timelines remain intentionally long because all real records are preserved."
+          ]
         },
         "action_clarity": {
           "score": 5,
           "status": "pass",
-          "evidence": "Основные действия выделены синим, disabled-состояние сохранения очевидно, обязательный следующий шаг визуально акцентирован.",
+          "evidence": "Each active surface presents one dominant blue action; quick contact clearly blocks saving until required fields are complete.",
           "findings": []
         },
         "content_quality": {
           "score": 5,
           "status": "pass",
-          "evidence": "Интерфейс использует предметные русские подписи, реальные статусы, даты, следующие шаги, сегменты повторных продаж и подтверждающие сообщения.",
+          "evidence": "Labels and fixture data use packaging-sales language, explicit economics, repeat-order dates and canonical next steps.",
           "findings": []
         },
         "asset_authenticity": {
           "score": 5,
           "status": "pass",
-          "evidence": "В рабочий интерфейс не добавлены декоративные генеративные изображения; иконки и файлы используются только по функциональному назначению.",
+          "evidence": "Production UI uses existing CRM icons and real typed fixture data; no decorative generated imagery or fabricated metrics ship.",
           "findings": []
         },
         "mobile_ux": {
           "score": 5,
           "status": "pass",
-          "evidence": "Mobile-компоновка не имеет горизонтального переполнения, сохраняет доступ к основным действиям и использует закреплённые навигацию/футер формы.",
+          "evidence": "390×844 states use single-column forms, persistent bottom navigation, large controls, compact KPI grids and zero document overflow.",
           "findings": []
         },
         "state_coverage": {
           "score": 5,
           "status": "pass",
-          "evidence": "Проверены default, empty, validation и success для требуемых маршрутов на desktop и mobile; inspected 10 screenshots, 10 baselines и 2 diffs.",
+          "evidence": "Strict QA captured default, empty, validation and success on desktop and mobile; quick-contact submission and disabled validation were exercised.",
           "findings": []
         },
         "brand_coherence": {
           "score": 5,
           "status": "pass",
-          "evidence": "Тёмно-синий навигационный каркас, синий primary и светлая операционная поверхность последовательно применены во всех состояниях.",
+          "evidence": "The approved navy/steel shell, blue action accent, squared operational cards and restrained light surfaces persist across modules.",
           "findings": []
         }
       },
-      "reviewed_at": "2026-07-31T14:24:40.743Z"
+      "reviewed_at": "2026-08-01T10:03:12.939Z"
     }
   ],
-  "created_at": "2026-07-31T13:26:48.321Z",
-  "updated_at": "2026-07-31T14:24:40.744Z",
+  "created_at": "2026-08-01T08:48:06.486Z",
+  "updated_at": "2026-08-01T10:03:12.940Z",
   "preparation_baseline": {
     "kind": "git",
-    "project_root": "C:/Users/sacha/Desktop/Новая папка/gofra-crm-review",
+    "project_root": "C:/Users/sacha/OneDrive/Документы/Сайт Леха",
     "git": true,
-    "head": "7a51178be30842888300a7ef4795cd64b4cb40e7",
+    "head": "c82afb08ccb2ef5f850d491138836f42d1cddfe0",
     "branch": "main",
-    "dirty": false,
-    "dirty_files": [],
-    "status_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "fingerprint": "fe7b16134dbd1b0a9ff45cdd78ee03627a867812224836df0c6c179ed6b9439f",
-    "captured_at": "2026-07-31T13:26:48.321Z",
+    "dirty": true,
+    "dirty_files": [
+      ".ai-dev/frontend/design-brief.md",
+      ".ai-dev/frontend/product-quality.json"
+    ],
+    "status_hash": "19ebc305bcbf4a7bdc3bda5895bb5ff1acab58bb3c7ad2ddba1b3342cac41f28",
+    "fingerprint": "3f0424263a521b2f6a840bff58ccc05205ba338f6c554477e6cc4425e158d4ef",
+    "captured_at": "2026-08-01T08:48:06.486Z",
     "strength": "strong",
     "application_dirty_files": [],
     "application_dirty_hashes": {}

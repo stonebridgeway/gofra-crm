@@ -1247,6 +1247,7 @@ export function DashboardView(props: WorkspaceFeatureProps) {
 }
 
 function FocusQueuePanel({
+  id,
   title,
   eyebrow,
   count,
@@ -1256,6 +1257,7 @@ function FocusQueuePanel({
   action,
   children,
 }: {
+  id?: string;
   title: string;
   eyebrow: string;
   count: number;
@@ -1266,13 +1268,18 @@ function FocusQueuePanel({
   children: ReactNode;
 }) {
   return (
-    <section className={`wf-focus-queue tone-${tone}`}>
+    <section className={`wf-focus-queue tone-${tone}`} id={id}>
       <header>
         <div>
           <span className="wf-eyebrow">{eyebrow}</span>
           <h2>{title}</h2>
         </div>
-        {action}
+        <div className="wf-focus-queue-actions">
+          <span aria-label={`Записей: ${count}`} className="wf-focus-count">
+            {count}
+          </span>
+          {action}
+        </div>
       </header>
       {count ? (
         children
@@ -1347,8 +1354,30 @@ function ManagerFocusDashboard({
         статистики.
       </p>
 
+      <nav aria-label="Очереди на день" className="wf-focus-index">
+        {[
+          ["manager-overdue", "Просрочено", focus.overdueTasks.length, "danger"],
+          ["manager-today", "Сегодня", focus.todayTasks.length, "accent"],
+          ["manager-no-step", "Без шага", focus.dealsWithoutNextStep.length, "warning"],
+          ["manager-silent-quotes", "Без ответа", focus.silentQuotes.length, "violet"],
+          ["manager-reorders", "Повтор", focus.upcomingReorders.length, "success"],
+        ].map(([target, label, value, tone]) => (
+          <button
+            aria-label={`${label}: ${value}`}
+            className={`tone-${tone}`}
+            key={target}
+            onClick={() => document.getElementById(String(target))?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            type="button"
+          >
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+
       <div className="wf-manager-focus-grid">
         <FocusQueuePanel
+          id="manager-overdue"
           action={
             <TaskBulkAction
               count={overdueSelection.selectedIn(focus.overdueTasks).length}
@@ -1371,6 +1400,7 @@ function ManagerFocusDashboard({
         </FocusQueuePanel>
 
         <FocusQueuePanel
+          id="manager-today"
           action={
             <TaskBulkAction
               count={todaySelection.selectedIn(focus.todayTasks).length}
@@ -1392,6 +1422,7 @@ function ManagerFocusDashboard({
         </FocusQueuePanel>
 
         <FocusQueuePanel
+          id="manager-no-step"
           count={focus.dealsWithoutNextStep.length}
           emptyDescription="У каждой открытой сделки указан следующий шаг и дата."
           emptyTitle="Все сделки ведутся по плану"
@@ -1417,6 +1448,7 @@ function ManagerFocusDashboard({
         </FocusQueuePanel>
 
         <FocusQueuePanel
+          id="manager-silent-quotes"
           count={focus.silentQuotes.length}
           emptyDescription="Нет отправленных КП, по которым всё ещё ждём ответ."
           emptyTitle="Ожидающих ответа КП нет"
@@ -1448,6 +1480,7 @@ function ManagerFocusDashboard({
         </FocusQueuePanel>
 
         <FocusQueuePanel
+          id="manager-reorders"
           count={focus.upcomingReorders.length}
           emptyDescription="В ближайшее окно напоминаний повторных заказов нет."
           emptyTitle="Повторные заказы не приближаются"
@@ -1983,6 +2016,71 @@ const APPROVAL_TRIGGER_LABELS = {
   discount_and_margin: "Скидка и низкая маржа",
 } as const;
 
+function LeaderForecastChart({
+  months,
+}: {
+  months: ReturnType<typeof selectLeaderControl>["forecast"];
+}) {
+  const captionId = useId();
+  const maxRevenue = Math.max(...months.map((month) => month.revenue), 1);
+  const totalRevenue = months.reduce((sum, month) => sum + month.revenue, 0);
+  const totalWeighted = months.reduce(
+    (sum, month) => sum + month.weightedRevenue,
+    0,
+  );
+
+  return (
+    <figure aria-labelledby={captionId} className="wf-leader-forecast-chart">
+      <figcaption className="sr-only" id={captionId}>
+        Прогноз продаж по месяцам: полный и взвешенный объём из текущих сделок.
+      </figcaption>
+      <div aria-hidden="true" className="wf-forecast-grid-lines">
+        <i />
+        <i />
+        <i />
+      </div>
+      <div
+        className="wf-forecast-bars"
+        role="list"
+        style={{ gridTemplateColumns: `repeat(${months.length}, minmax(0, 1fr))` }}
+      >
+        {months.map((month) => (
+          <article
+            aria-label={`${month.label}: ${formatMoney(month.revenue)}, взвешенный прогноз ${formatMoney(month.weightedRevenue)}, ${month.deals} сделок`}
+            key={month.key}
+            role="listitem"
+          >
+            <div aria-hidden="true">
+              <i
+                style={{ height: `${Math.max(4, (month.revenue / maxRevenue) * 100)}%` }}
+              />
+              <b
+                style={{
+                  height: `${Math.max(4, (month.weightedRevenue / maxRevenue) * 100)}%`,
+                }}
+              />
+            </div>
+            <strong title={month.label}>
+              {month.label.replace(/\s+\d{4}.*$/u, "")}
+            </strong>
+            <small>{formatCompactMoney(month.weightedRevenue)}</small>
+          </article>
+        ))}
+      </div>
+      <footer>
+        <div className="wf-forecast-legend">
+          <span><i />Полный прогноз</span>
+          <span><i />С учётом вероятности</span>
+        </div>
+        <div className="wf-forecast-totals">
+          <span><small>Взвешенный</small><strong>{formatCompactMoney(totalWeighted)}</strong></span>
+          <span><small>Потенциал</small><strong>{formatCompactMoney(totalRevenue)}</strong></span>
+        </div>
+      </footer>
+    </figure>
+  );
+}
+
 function LeaderControlSection({
   snapshot,
   currentUser,
@@ -2006,10 +2104,6 @@ function LeaderControlSection({
   const weightedTotal = control.forecast.reduce(
     (sum, month) => sum + month.weightedRevenue,
     0,
-  );
-  const maxForecast = Math.max(
-    ...control.forecast.map((month) => month.revenue),
-    1,
   );
 
   const reviewApproval = (
@@ -2108,19 +2202,7 @@ function LeaderControlSection({
             <small>С учётом вероятности этапа</small>
           </header>
           {control.forecast.length ? (
-            <div className="wf-forecast-list">
-              {control.forecast.slice(0, 6).map((month) => (
-                <article key={month.key}>
-                  <strong>{month.label}</strong>
-                  <div className="wf-forecast-track" aria-hidden="true">
-                    <i style={{ transform: `scaleX(${month.revenue / maxForecast})` }} />
-                    <b style={{ transform: `scaleX(${month.weightedRevenue / maxForecast})` }} />
-                  </div>
-                  <span>{formatCompactMoney(month.weightedRevenue)}</span>
-                  <small>{month.deals} сделок · {formatCompactMoney(month.revenue)}</small>
-                </article>
-              ))}
-            </div>
+            <LeaderForecastChart months={control.forecast.slice(0, 6)} />
           ) : (
             <EmptyState
               title="Прогноз пока не заполнен"
@@ -2212,13 +2294,23 @@ function LeaderControlSection({
             <div>
               <h4>Менеджеры</h4>
               {control.managerConversion.slice(0, 5).map((row) => (
-                <div key={row.id}><span>{row.label}</span><strong>{formatPercent(row.conversionPercent)}</strong><small>{row.won}/{row.resolved}</small></div>
+                <div key={row.id}>
+                  <span>{row.label}</span>
+                  <i aria-hidden="true"><b style={{ transform: `scaleX(${row.conversionPercent / 100})` }} /></i>
+                  <strong>{formatPercent(row.conversionPercent)}</strong>
+                  <small>{row.won}/{row.resolved}</small>
+                </div>
               ))}
             </div>
             <div>
               <h4>Источники</h4>
               {control.sourceConversion.slice(0, 5).map((row) => (
-                <div key={row.id}><span>{row.label}</span><strong>{formatPercent(row.conversionPercent)}</strong><small>{row.won}/{row.resolved}</small></div>
+                <div key={row.id}>
+                  <span>{row.label}</span>
+                  <i aria-hidden="true"><b style={{ transform: `scaleX(${row.conversionPercent / 100})` }} /></i>
+                  <strong>{formatPercent(row.conversionPercent)}</strong>
+                  <small>{row.won}/{row.resolved}</small>
+                </div>
               ))}
             </div>
           </div>
@@ -3809,7 +3901,7 @@ function DonutChart({
             <strong className="font-mono text-[28px] font-semibold tracking-[-0.07em]">
               {total}
             </strong>
-            <span className="mt-1 max-w-[88px] text-[11px] leading-tight text-[var(--wf-muted)]">
+            <span className="mt-1 max-w-[88px] text-[12px] leading-tight text-[var(--wf-muted)]">
             {centerLabel}
           </span>
           </div>
@@ -3823,10 +3915,10 @@ function DonutChart({
                       style={{ background: chartSeriesColor(index) }}
                   />
                   <span className="min-w-0">
-                <strong className="block truncate text-[11px] font-semibold">
+                <strong className="block truncate text-[12px] font-semibold">
                   {item.label}
                 </strong>
-                <small className="mt-0.5 block truncate text-[11px] text-[var(--wf-faint)]">
+                <small className="mt-0.5 block truncate text-[12px] text-[var(--wf-faint)]">
                   {item.detail}
                 </small>
               </span>
@@ -3876,7 +3968,7 @@ function DistributionChart({ data }: { data: ChartDatum[] }) {
       <div className="grid gap-5 px-4 pb-5 pt-2">
         <div>
           <div className="mb-2 flex items-end justify-between gap-4">
-          <span className="text-[11px] text-[var(--wf-muted)]">
+          <span className="text-[12px] text-[var(--wf-muted)]">
             Всего взаимодействий
           </span>
             <strong className="font-mono text-[24px] font-semibold tracking-[-0.06em]">
@@ -3886,7 +3978,7 @@ function DistributionChart({ data }: { data: ChartDatum[] }) {
           <div
               aria-labelledby={titleId}
               className="flex h-4 w-full gap-[2px] overflow-hidden rounded-[5px] bg-[var(--wf-surface-strong)] p-[2px]"
-              role="img"
+              role="group"
           >
           <span className="sr-only" id={titleId}>
             Распределение взаимодействий по каналам
@@ -3918,10 +4010,10 @@ function DistributionChart({ data }: { data: ChartDatum[] }) {
                     className="size-2.5 rounded-[3px]"
                     style={{ background: chartSeriesColor(index) }}
                 />
-                <span className="truncate text-[11px] font-semibold">
+                <span className="truncate text-[12px] font-semibold">
               {item.label}
             </span>
-                <span className="font-mono text-[11px] text-[var(--wf-muted)]">
+                <span className="font-mono text-[12px] text-[var(--wf-muted)]">
               {formatPercent((item.value / total) * 100)}
             </span>
               </button>
@@ -4306,7 +4398,14 @@ export function StatisticsView({
   ];
 
   return (
-      <section className="wf-view wf-statistics-view">
+      <section
+          aria-describedby="statistics-data-source"
+          className="wf-view wf-statistics-view"
+          data-source="crm-snapshot"
+      >
+        <p className="sr-only" id="statistics-data-source">
+          Показатели рассчитаны из текущих сделок, задач и взаимодействий CRM.
+        </p>
         <div className="wf-stat-toolbar">
           <nav aria-label="Разделы статистики" className="wf-stat-tabs">
             {tabs.map((item) => (
@@ -4408,7 +4507,7 @@ export function StatisticsView({
                       <h2>Действия за период</h2>
                     </div>
                   </header>
-                  <dl>
+                  <div className="wf-score-grid" role="list">
                     <button
                         onClick={() =>
                             openDrill(
@@ -4417,11 +4516,12 @@ export function StatisticsView({
                                 interactionRows(interactions, snapshot),
                             )
                         }
+                        role="listitem"
                         type="button"
                     >
-                      <dt>Контакты</dt>
-                      <dd>{interactions.length}</dd>
-                      <span>звонки, письма и встречи</span>
+                      <span className="wf-score-label">Контакты</span>
+                      <strong className="wf-score-value">{interactions.length}</strong>
+                      <span className="wf-score-caption">звонки, письма и встречи</span>
                     </button>
                     <button
                         onClick={() =>
@@ -4431,18 +4531,19 @@ export function StatisticsView({
                                 taskRows(completedTasks),
                             )
                         }
+                        role="listitem"
                         type="button"
                     >
-                      <dt>Задачи</dt>
-                      <dd>{completedTasks.length}</dd>
-                      <span>завершено за период</span>
+                      <span className="wf-score-label">Задачи</span>
+                      <strong className="wf-score-value">{completedTasks.length}</strong>
+                      <span className="wf-score-caption">завершено за период</span>
                     </button>
-                    <div>
-                      <dt>Маржа</dt>
-                      <dd>{formatCompactMoney(wonMargin)}</dd>
-                      <span>по успешным сделкам</span>
+                    <div role="listitem">
+                      <span className="wf-score-label">Маржа</span>
+                      <strong className="wf-score-value">{formatCompactMoney(wonMargin)}</strong>
+                      <span className="wf-score-caption">по успешным сделкам</span>
                     </div>
-                  </dl>
+                  </div>
                 </section>
               </div>
 
@@ -4717,7 +4818,7 @@ export function StatisticsView({
                     />
                   </i>
                 </div>
-                <dl>
+                <div className="wf-discipline-breakdown" role="list">
                   <button
                       onClick={() =>
                           openDrill(
@@ -4726,10 +4827,11 @@ export function StatisticsView({
                               taskRows(completedTasks),
                           )
                       }
+                      role="listitem"
                       type="button"
                   >
-                    <dt>Выполнено</dt>
-                    <dd>{completedTasks.length}</dd>
+                    <span className="wf-discipline-label">Выполнено</span>
+                    <strong className="wf-discipline-value">{completedTasks.length}</strong>
                   </button>
                   <button
                       onClick={() =>
@@ -4739,14 +4841,15 @@ export function StatisticsView({
                               taskRows(overdueTasks),
                           )
                       }
+                      role="listitem"
                       type="button"
                   >
-                    <dt>Просрочено</dt>
-                    <dd className={overdueTasks.length ? "is-danger" : ""}>
+                    <span className="wf-discipline-label">Просрочено</span>
+                    <strong className={`wf-discipline-value ${overdueTasks.length ? "is-danger" : ""}`}>
                       {overdueTasks.length}
-                    </dd>
+                    </strong>
                   </button>
-                </dl>
+                </div>
               </section>
             </div>
         ) : null}

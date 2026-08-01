@@ -1358,9 +1358,14 @@ export function CrmApp() {
                 <span className="nav-group-label">{group.label}</span>
                 {groupModules.map((module) => (
                   <button
+                    aria-current={
+                      module.id === activeModule ? "page" : undefined
+                    }
+                    aria-label={module.label}
                     className={`${module.id === activeModule ? "is-active" : ""} group/nav`}
                     key={module.id}
                     onClick={() => navigateTo(module.id)}
+                    title={module.label}
                     type="button"
                   >
                     <span aria-hidden="true" className="nav-icon">
@@ -2722,7 +2727,7 @@ function ContactsView({
           <tbody>
             {filtered.map((contact) => (
               <tr key={contact.id}>
-                <td>
+                <td data-label="Контакт">
                   <button
                     className="table-link"
                     onClick={() => onOpenContact(contact)}
@@ -2732,7 +2737,7 @@ function ContactsView({
                   </button>
                   <small>{contact.id}</small>
                 </td>
-                <td>
+                <td data-label="Компания">
                   <button
                     className="table-link"
                     onClick={() => onOpenClient(contact.clientId)}
@@ -2741,20 +2746,24 @@ function ContactsView({
                     {clientMap.get(contact.clientId)?.companyName}
                   </button>
                 </td>
-                <td>{contact.role}</td>
-                <td>{contact.decisionRole}</td>
-                <td>
+                <td data-label="Должность">{contact.role}</td>
+                <td data-label="Роль в решении">{contact.decisionRole}</td>
+                <td data-label="Влияние">
                   <span
                     className={`influence influence-${contact.decisionInfluence === "Блокирует" ? "blocker" : contact.decisionInfluence === "Принимает решение" ? "decision" : "influencer"}`}
                   >
                     {contact.decisionInfluence}
                   </span>
                 </td>
-                <td>{contact.preferredChannel}</td>
-                <td>{contact.introductionNeeded || "Карта закрыта"}</td>
-                <td className="mono">{contact.phone}</td>
-                <td>{contact.email}</td>
-                <td>
+                <td data-label="Канал">{contact.preferredChannel}</td>
+                <td data-label="Познакомиться">
+                  {contact.introductionNeeded || "Карта закрыта"}
+                </td>
+                <td className="mono" data-label="Телефон">
+                  {contact.phone}
+                </td>
+                <td data-label="Email">{contact.email}</td>
+                <td data-label="Действия">
                   <button
                     className="text-button"
                     onClick={() => onLog(contact)}
@@ -2896,6 +2905,7 @@ function ActivityView({
                 </div>
               </article>
             ))}
+            {!filtered.length && <TableEmpty />}
           </div>
           <aside className="activity-summary">
             <span className="section-kicker">Контроль ритма</span>

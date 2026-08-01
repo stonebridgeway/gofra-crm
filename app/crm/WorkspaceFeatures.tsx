@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  DECISION_INFLUENCES,
   DEAL_PIPELINE,
   type CrmSnapshot,
   type Deal,
@@ -2028,19 +2029,59 @@ function LeaderForecastChart({
     (sum, month) => sum + month.weightedRevenue,
     0,
   );
+  const chartWidth = 720;
+  const chartTop = 18;
+  const chartBottom = 176;
+  const chartLeft = 24;
+  const chartRight = 696;
+  const chartHeight = chartBottom - chartTop;
+  const point = (value: number, index: number) => {
+    const x =
+      months.length === 1
+        ? chartWidth / 2
+        : chartLeft + ((chartRight - chartLeft) * index) / (months.length - 1);
+    const y = chartBottom - (value / maxRevenue) * chartHeight;
+    return { x, y };
+  };
+  const revenuePoints = months.map((month, index) => point(month.revenue, index));
+  const weightedPoints = months.map((month, index) =>
+    point(month.weightedRevenue, index),
+  );
+  const asPolyline = (points: Array<{ x: number; y: number }>) =>
+    points.map(({ x, y }) => `${x},${y}`).join(" ");
+  const areaPath = revenuePoints.length
+    ? [
+        `M ${revenuePoints[0].x} ${chartBottom}`,
+        ...revenuePoints.map(({ x, y }) => `L ${x} ${y}`),
+        `L ${revenuePoints[revenuePoints.length - 1].x} ${chartBottom}`,
+        "Z",
+      ].join(" ")
+    : "";
 
   return (
     <figure aria-labelledby={captionId} className="wf-leader-forecast-chart">
       <figcaption className="sr-only" id={captionId}>
         Прогноз продаж по месяцам: полный и взвешенный объём из текущих сделок.
       </figcaption>
-      <div aria-hidden="true" className="wf-forecast-grid-lines">
-        <i />
-        <i />
-        <i />
+      <div className="wf-forecast-line-plot">
+        <svg aria-hidden="true" preserveAspectRatio="none" viewBox={`0 0 ${chartWidth} 210`}>
+          {[0, 1, 2, 3].map((row) => {
+            const y = chartTop + (chartHeight * row) / 3;
+            return <line className="wf-forecast-grid-line" key={row} x1={chartLeft} x2={chartRight} y1={y} y2={y} />;
+          })}
+          <path className="wf-forecast-area" d={areaPath} />
+          <polyline className="wf-forecast-line is-full" points={asPolyline(revenuePoints)} />
+          <polyline className="wf-forecast-line is-weighted" points={asPolyline(weightedPoints)} />
+          {revenuePoints.map(({ x, y }, index) => (
+            <circle className="wf-forecast-dot is-full" cx={x} cy={y} key={`full-${months[index].key}`} r="4" />
+          ))}
+          {weightedPoints.map(({ x, y }, index) => (
+            <circle className="wf-forecast-dot is-weighted" cx={x} cy={y} key={`weighted-${months[index].key}`} r="4" />
+          ))}
+        </svg>
       </div>
       <div
-        className="wf-forecast-bars"
+        className="wf-forecast-axis"
         role="list"
         style={{ gridTemplateColumns: `repeat(${months.length}, minmax(0, 1fr))` }}
       >
@@ -2050,19 +2091,7 @@ function LeaderForecastChart({
             key={month.key}
             role="listitem"
           >
-            <div aria-hidden="true">
-              <i
-                style={{ height: `${Math.max(4, (month.revenue / maxRevenue) * 100)}%` }}
-              />
-              <b
-                style={{
-                  height: `${Math.max(4, (month.weightedRevenue / maxRevenue) * 100)}%`,
-                }}
-              />
-            </div>
-            <strong title={month.label}>
-              {month.label.replace(/\s+\d{4}.*$/u, "")}
-            </strong>
+            <strong>{month.label.replace(/\s+\d{4}.*$/u, "")}</strong>
             <small>{formatCompactMoney(month.weightedRevenue)}</small>
           </article>
         ))}
@@ -2078,6 +2107,187 @@ function LeaderForecastChart({
         </div>
       </footer>
     </figure>
+  );
+}
+
+function LeaderFunnelRibbon({ snapshot }: { snapshot: CrmSnapshot }) {
+  const openDeals = snapshot.deals.filter(isOpenDeal);
+  const stages = DEAL_PIPELINE.filter(
+    (stage) => !stage.closed && !["won", "paused"].includes(stage.id),
+  ).map((stage) => {
+    const deals = openDeals.filter((deal) => stage.statuses.includes(deal.status));
+    return {
+      id: stage.id,
+      label: stage.label,
+      count: deals.length,
+      value: deals.reduce((sum, deal) => sum + deal.ourPrice, 0),
+    };
+  });
+  const total = stages.reduce((sum, stage) => sum + stage.value, 0);
+  const proposalIndex = stages.findIndex((stage) => stage.id === "proposal");
+  const incomingCount = stages[0]?.count ?? 0;
+  const proposalCount = proposalIndex >= 0 ? stages[proposalIndex].count : 0;
+  const proposalConversion = incomingCount
+    ? Math.round((proposalCount / incomingCount) * 100)
+    : 0;
+
+  return (
+    <section className="wf-control-panel wf-leader-funnel-panel">
+      <header>
+        <div>
+          <span className="wf-eyebrow">Воронка продаж</span>
+          <h3>Путь выручки</h3>
+        </div>
+        <small>{formatCompactMoney(total)} в работе</small>
+      </header>
+      <div aria-label="Этапы активной воронки продаж" className="wf-leader-funnel-ribbon" role="list">
+        {stages.map((stage, index) => (
+          <article className={`tone-${index + 1}`} key={stage.id} role="listitem">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{stage.label}</strong>
+            <b>{stage.count}</b>
+            <small>{formatCompactMoney(stage.value)}</small>
+          </article>
+        ))}
+      </div>
+      <footer className="wf-leader-funnel-meta">
+        <span><small>До предложения</small><strong>{formatPercent(proposalConversion)}</strong></span>
+        <span><small>Активных сделок</small><strong>{openDeals.length}</strong></span>
+        <span><small>Средний чек</small><strong>{formatCompactMoney(openDeals.length ? total / openDeals.length : 0)}</strong></span>
+      </footer>
+    </section>
+  );
+}
+
+function LeaderRepeatPanel({ snapshot }: { snapshot: CrmSnapshot }) {
+  const today = startOfDay(new Date());
+  const repeatClients = snapshot.clients.filter((client) =>
+    ["Активный клиент", "Спящий клиент"].includes(client.status ?? ""),
+  );
+  const buckets = [
+    { id: "soon", label: "Заказ в 14 дней", count: 0, color: "#16a46f" },
+    { id: "later", label: "Запланировано", count: 0, color: "#0f6ee8" },
+    { id: "overdue", label: "Срок прошёл", count: 0, color: "#d88022" },
+    { id: "empty", label: "Нет даты", count: 0, color: "#d6dce5" },
+  ];
+
+  for (const client of repeatClients) {
+    const expectedAt = safeDate(client.expectedNextOrderAt);
+    if (!expectedAt) {
+      buckets[3].count += 1;
+      continue;
+    }
+    const daysUntil = Math.ceil((startOfDay(expectedAt).getTime() - today.getTime()) / DAY_MS);
+    if (daysUntil < 0) buckets[2].count += 1;
+    else if (daysUntil <= 14) buckets[0].count += 1;
+    else buckets[1].count += 1;
+  }
+
+  const total = repeatClients.length;
+  const coverage = total ? Math.round(((total - buckets[3].count) / total) * 100) : 0;
+  let cursor = 0;
+  const gradient = total
+    ? `conic-gradient(${buckets
+        .map((bucket) => {
+          const start = cursor;
+          cursor += (bucket.count / total) * 360;
+          return `${bucket.color} ${start}deg ${cursor}deg`;
+        })
+        .join(", ")})`
+    : "conic-gradient(#d6dce5 0deg 360deg)";
+  const monthlyVolume = repeatClients.reduce(
+    (sum, client) => sum + client.averageMonthlyVolume,
+    0,
+  );
+
+  return (
+    <section className="wf-control-panel wf-leader-repeat-panel">
+      <header>
+        <div>
+          <span className="wf-eyebrow">Повторные продажи</span>
+          <h3>Следующий заказ</h3>
+        </div>
+        <small>{total} клиентов</small>
+      </header>
+      <div className="wf-leader-repeat-content">
+        <div aria-label={`${coverage}% клиентов имеют дату повторного заказа`} className="wf-repeat-ring" style={{ background: gradient }}>
+          <span><strong>{coverage}%</strong><small>с датой</small></span>
+        </div>
+        <div className="wf-repeat-legend">
+          {buckets.map((bucket) => (
+            <div key={bucket.id}>
+              <i style={{ backgroundColor: bucket.color }} />
+              <span>{bucket.label}</span>
+              <strong>{bucket.count}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+      <footer className="wf-repeat-volume">
+        <span>Среднемесячный объём</span>
+        <strong>{NUMBER_FORMATTER.format(monthlyVolume)} шт.</strong>
+      </footer>
+    </section>
+  );
+}
+
+function LeaderInfluencePanel({
+  snapshot,
+  onOpenClient,
+}: {
+  snapshot: CrmSnapshot;
+  onOpenClient: (clientId: string) => void;
+}) {
+  const clientsById = new Map(snapshot.clients.map((client) => [client.id, client]));
+  const stats = DECISION_INFLUENCES.map((influence) => ({
+    influence,
+    count: snapshot.contacts.filter((contact) => contact.decisionInfluence === influence).length,
+  }));
+  const rankedContacts = [...snapshot.contacts]
+    .sort((left, right) => {
+      const rank = (value: (typeof DECISION_INFLUENCES)[number]) =>
+        value === "Блокирует" ? 0 : value === "Принимает решение" ? 1 : 2;
+      return rank(left.decisionInfluence) - rank(right.decisionInfluence);
+    })
+    .slice(0, 4);
+
+  return (
+    <section className="wf-control-panel wf-leader-influence-panel">
+      <header>
+        <div>
+          <span className="wf-eyebrow">Контур решения</span>
+          <h3>Карта влияния</h3>
+        </div>
+        <small>{snapshot.contacts.length} контактов</small>
+      </header>
+      <div className="wf-influence-stat-grid">
+        {stats.map((row) => (
+          <article className={row.influence === "Блокирует" ? "is-danger" : ""} key={row.influence}>
+            <span>{row.influence}</span>
+            <strong>{row.count}</strong>
+          </article>
+        ))}
+      </div>
+      {rankedContacts.length ? (
+        <div className="wf-influence-contact-list">
+          {rankedContacts.map((contact) => (
+            <button key={contact.id} onClick={() => onOpenClient(contact.clientId)} type="button">
+              <span className="wf-avatar">{initials(contact.fullName)}</span>
+              <span>
+                <strong>{contact.fullName}</strong>
+                <small>{clientsById.get(contact.clientId)?.companyName ?? contact.decisionRole}</small>
+              </span>
+              <em className={contact.decisionInfluence === "Блокирует" ? "is-danger" : ""}>
+                {contact.decisionInfluence}
+              </em>
+              <Icon name="arrow" />
+            </button>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="Карта влияния не заполнена" description="Добавьте роли ЛПР и влияние в карточках контактов." />
+      )}
+    </section>
   );
 }
 
@@ -2097,6 +2307,7 @@ function LeaderControlSection({
   onNotice: (message: string) => void;
 }) {
   const control = useMemo(() => selectLeaderControl(snapshot), [snapshot]);
+  const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
   const forecastTotal = control.forecast.reduce(
     (sum, month) => sum + month.revenue,
     0,
@@ -2193,6 +2404,8 @@ function LeaderControlSection({
       </div>
 
       <div className="wf-control-grid">
+        <LeaderFunnelRibbon snapshot={snapshot} />
+
         <section className="wf-control-panel wf-control-forecast">
           <header>
             <div>
@@ -2210,6 +2423,13 @@ function LeaderControlSection({
             />
           )}
         </section>
+
+        <LeaderRepeatPanel snapshot={snapshot} />
+
+        <LeaderInfluencePanel
+          onOpenClient={onOpenClient}
+          snapshot={snapshot}
+        />
 
         <section className="wf-control-panel wf-approval-panel">
           <header>
@@ -2247,6 +2467,8 @@ function LeaderControlSection({
           )}
         </section>
 
+        {showDetailedAnalytics ? (
+          <>
         <section className="wf-control-panel">
           <header>
             <div>
@@ -2350,7 +2572,21 @@ function LeaderControlSection({
           </div>
           <button className="wf-secondary-button" type="submit">Сохранить правила</button>
         </form>
+          </>
+        ) : null}
       </div>
+      <button
+        aria-expanded={showDetailedAnalytics}
+        className="wf-dashboard-disclosure"
+        onClick={() => setShowDetailedAnalytics((value) => !value)}
+        type="button"
+      >
+        <span>
+          <strong>{showDetailedAnalytics ? "Скрыть подробную аналитику" : "Подробная аналитика и настройки"}</strong>
+          <small>Сделки без движения, клиентская база, конверсия, причины проигрыша и пороги контроля</small>
+        </span>
+        <Icon name={showDetailedAnalytics ? "chevron-left" : "arrow"} />
+      </button>
     </section>
   );
 }
@@ -2368,6 +2604,7 @@ function LegacyDashboardView({
   const allTasks = useMemo(() => getWorkspaceTasks(snapshot), [snapshot]);
   const bulk = useBulkComplete(snapshot, onSnapshotChange, showNotice);
   const focusSelection = useTaskSelection();
+  const [showTeamDashboard, setShowTeamDashboard] = useState(false);
 
   if (loading || !snapshot) {
     return <FeatureSkeleton label="Загрузка рабочего кабинета" />;
@@ -2520,6 +2757,23 @@ function LegacyDashboardView({
                 />
               ) : null}
 
+              {isManager ? (
+                <button
+                  aria-expanded={showTeamDashboard}
+                  className="wf-dashboard-disclosure wf-team-dashboard-disclosure"
+                  onClick={() => setShowTeamDashboard((value) => !value)}
+                  type="button"
+                >
+                  <span>
+                    <strong>{showTeamDashboard ? "Скрыть командный дашборд" : "Открыть командный дашборд"}</strong>
+                    <small>Задачи команды, нагрузка сотрудников, коммерческий поток и клиенты без движения</small>
+                  </span>
+                  <Icon name={showTeamDashboard ? "chevron-left" : "arrow"} />
+                </button>
+              ) : null}
+
+              {!isManager || showTeamDashboard ? (
+                <>
               {isManager ? (
                 <div className="wf-dashboard-divider">
                   <span className="wf-eyebrow">Командный дашборд</span>
@@ -2811,6 +3065,8 @@ function LegacyDashboardView({
                   )}
                 </section>
               </div>
+                </>
+              ) : null}
             </>
         )}
         {bulk.dialog}

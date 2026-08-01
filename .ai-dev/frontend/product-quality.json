@@ -326,7 +326,7 @@
   },
   "reference_factory": null,
   "latest_visual_run": {
-    "run_id": "visual-1785578363942-bc608f69",
+    "run_id": "visual-1785582755294-41b2cf37",
     "status": "passed",
     "technical_status": "passed",
     "strict": true,
@@ -352,61 +352,61 @@
           "route": "/#/clients",
           "viewport": "desktop",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__desktop__default.png"
         },
         {
           "route": "/#/clients",
           "viewport": "mobile",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__mobile__default.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__default.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "empty",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__empty.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "validation",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__validation.png"
         },
         {
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__success.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "default",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__default.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "empty",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__empty.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "validation",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__validation.png"
         },
         {
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png"
+          "screenshot": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__success.png"
         }
       ],
       "missing": [],
@@ -414,7 +414,7 @@
     },
     "artifacts": [
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__desktop__default.png",
         "type": "screenshot",
         "route": "/#/clients",
         "viewport": "desktop",
@@ -428,7 +428,7 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__mobile__default.png",
         "type": "screenshot",
         "route": "/#/clients",
         "viewport": "mobile",
@@ -442,7 +442,7 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__default.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -456,7 +456,7 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__empty.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -470,7 +470,7 @@
         "state": "empty"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__validation.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -484,7 +484,7 @@
         "state": "validation"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__success.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "desktop",
@@ -498,14 +498,14 @@
         "state": "success"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__desktop__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\visual-diffs\\activity__desktop__success.png",
         "type": "diff",
         "route": "/#/activity",
         "viewport": "desktop",
         "state": "success"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__default.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -519,7 +519,7 @@
         "state": "default"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__empty.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -533,7 +533,7 @@
         "state": "empty"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__validation.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -547,7 +547,7 @@
         "state": "validation"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__success.png",
         "type": "screenshot",
         "route": "/#/activity",
         "viewport": "mobile",
@@ -561,40 +561,40 @@
         "state": "success"
       },
       {
-        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__mobile__success.png",
+        "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\visual-diffs\\activity__mobile__success.png",
         "type": "diff",
         "route": "/#/activity",
         "viewport": "mobile",
         "state": "success"
       }
     ],
-    "report_file": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\frontend-qa-report.md",
-    "artifact_dir": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z",
-    "qa_started_at": "2026-08-01T09:59:05.902Z",
-    "qa_finished_at": "2026-08-01T09:59:23.888Z",
-    "recorded_at": "2026-08-01T09:59:23.942Z",
-    "reviewed_at": "2026-08-01T10:03:12.939Z",
-    "review_id": "visual-review-1785578592939-3b578fad"
+    "report_file": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\frontend-qa-report.md",
+    "artifact_dir": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z",
+    "qa_started_at": "2026-08-01T11:12:19.958Z",
+    "qa_finished_at": "2026-08-01T11:12:35.239Z",
+    "recorded_at": "2026-08-01T11:12:35.294Z",
+    "reviewed_at": "2026-08-01T11:14:30.255Z",
+    "review_id": "visual-review-1785582870254-f36aff86"
   },
   "visual_reviews": [
     {
-      "review_id": "visual-review-1785578592939-3b578fad",
-      "run_id": "visual-1785578363942-bc608f69",
-      "reviewer": "Codex Visual QA Reviewer",
-      "reviewer_role": "Independent product design quality reviewer",
+      "review_id": "visual-review-1785582870254-f36aff86",
+      "run_id": "visual-1785582755294-41b2cf37",
+      "reviewer": "Frontend Quality Gate",
+      "reviewer_role": "independent visual quality reviewer",
       "independent": true,
       "artifact_hashes_current": true,
       "artifacts": [
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__desktop__default.png",
           "type": "screenshot",
           "route": "/#/clients",
           "viewport": "desktop",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__desktop__default.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__desktop__default.png",
           "sha256": "6333f369dc908548ab2f9a8bfeabf79996992745580fe373902c8b9d61aced89",
           "inspection_method": "view_image",
-          "observations": "Desktop client workspace is crisp and operational: KPI strip, repeat-order segments, filters and table hierarchy are readable; no clipping or horizontal overflow."
+          "observations": "Desktop clients view is crisp, aligned and readable; filters, KPI strip and table hierarchy remain intact with no clipping."
         },
         {
           "path": ".ai-dev/frontend/references/approved/clients__desktop__default.png",
@@ -605,18 +605,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\clients__desktop__default.png",
           "sha256": "6333f369dc908548ab2f9a8bfeabf79996992745580fe373902c8b9d61aced89",
           "inspection_method": "view_image",
-          "observations": "Approved desktop client baseline matches the inspected implementation composition and full-page density."
+          "observations": "Approved desktop clients baseline was inspected and matches the current screenshot exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__mobile__default.png",
           "type": "screenshot",
           "route": "/#/clients",
           "viewport": "mobile",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\clients__mobile__default.png",
-          "sha256": "2a17d75d5fa84b55d819fe69c4a873e4d35459aa6744d239d6eb3bea486fc4c5",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\clients__mobile__default.png",
+          "sha256": "743aac4da2e4161028f714b85c7e54f9c9eee0a1c69a24b60b5df2cfc1c66bd5",
           "inspection_method": "view_image",
-          "observations": "Mobile client workspace uses a clear single-column flow, 2×2 metrics, readable segment controls and persistent bottom navigation without overflow."
+          "observations": "Mobile clients view uses the intended stacked KPI/filter composition and fixed navigation without horizontal overflow."
         },
         {
           "path": ".ai-dev/frontend/references/approved/clients__mobile__default.png",
@@ -627,18 +627,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\clients__mobile__default.png",
           "sha256": "2a17d75d5fa84b55d819fe69c4a873e4d35459aa6744d239d6eb3bea486fc4c5",
           "inspection_method": "view_image",
-          "observations": "Approved mobile client baseline matches the inspected implementation and preserves the focused-workflow navigation language."
+          "observations": "Approved mobile clients baseline was inspected and matches the current screenshot exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__default.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__default.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__default.png",
           "sha256": "7fab23861c9779ea9819ebac004bbcbe58554a4b98806dba2b22c3f132dc0238",
           "inspection_method": "view_image",
-          "observations": "Desktop interaction history has a clear primary action, compact timeline rhythm and visible next-step context; long content remains scannable."
+          "observations": "Desktop activity feed keeps clear rhythm, compact event rows and prominent quick-contact action."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__default.png",
@@ -649,18 +649,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__default.png",
           "sha256": "7fab23861c9779ea9819ebac004bbcbe58554a4b98806dba2b22c3f132dc0238",
           "inspection_method": "view_image",
-          "observations": "Approved desktop activity baseline matches the final default state."
+          "observations": "Approved desktop activity default baseline was inspected and matches the current screenshot exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__empty.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "empty",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__empty.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__empty.png",
           "sha256": "5e92b47cb0b55d14a0e0446103cb010969f62d61009bebd316675a0cca76cc05",
           "inspection_method": "view_image",
-          "observations": "Desktop empty state is concise and actionable, with a blue accent and reset-filter guidance rather than an oversized decorative panel."
+          "observations": "Desktop empty state is explicit and restrained, with filters and rhythm summary still available."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__empty.png",
@@ -671,18 +671,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__empty.png",
           "sha256": "5e92b47cb0b55d14a0e0446103cb010969f62d61009bebd316675a0cca76cc05",
           "inspection_method": "view_image",
-          "observations": "Approved desktop empty baseline matches the newly inspected compact empty-state treatment."
+          "observations": "Approved desktop empty baseline was inspected and matches exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__validation.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "validation",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__validation.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__validation.png",
           "sha256": "a1854fcc6e3b6c3847423b65bc589933c6f0b5e97564e0ef8b468cab8a3db2b6",
           "inspection_method": "view_image",
-          "observations": "Desktop validation state clearly exposes client, deal, contact and required next-step fields; disabled submit is visually unambiguous."
+          "observations": "Desktop contact form presents required fields and mandatory next step clearly; disabled submit state is legible."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__validation.png",
@@ -693,18 +693,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__validation.png",
           "sha256": "a1854fcc6e3b6c3847423b65bc589933c6f0b5e97564e0ef8b468cab8a3db2b6",
           "inspection_method": "view_image",
-          "observations": "Approved desktop validation baseline matches the inspected full form state."
+          "observations": "Approved desktop validation baseline was inspected and matches exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__success.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__desktop__success.png",
-          "sha256": "749f0091145655bbdd10e7763d38c7af9ffcfe253cc50f0c8f5613c952a7d04e",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__desktop__success.png",
+          "sha256": "e86929a037f8f68932abeed30272e35664c9b17290dda070a31b812f8d81996a",
           "inspection_method": "view_image",
-          "observations": "Desktop success state adds the new interaction at the top and shows confirmation toast while preserving timeline context."
+          "observations": "Desktop success state adds the new contact at the top and confirms task creation with a visible toast."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__desktop__success.png",
@@ -715,29 +715,29 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__desktop__success.png",
           "sha256": "25cc7d200176cb03da26414c0283504a45837c928c7d115a61fd568728de6f0a",
           "inspection_method": "view_image",
-          "observations": "Approved desktop success baseline matches the inspected final state."
+          "observations": "Approved desktop success baseline was inspected; only expected timestamp and entered subject text differ within tolerance."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__desktop__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\visual-diffs\\activity__desktop__success.png",
           "type": "diff",
           "route": "/#/activity",
           "viewport": "desktop",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__desktop__success.png",
-          "sha256": "95bdcc5d7fc1f9ba83c26da5874e5c366180b7fa5e68b8fad156dfb733feca6e",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\visual-diffs\\activity__desktop__success.png",
+          "sha256": "8c23679a736c3c545bf2240bb41b6f21b3e9c746b99f36d563ded7f5b3016811",
           "inspection_method": "view_image",
-          "observations": "Diff contains only a tiny timestamp-rendering pixel variation; no structural, typographic or layout regression."
+          "observations": "Desktop success diff is localized to newly entered subject and timestamp; no layout or styling regression is visible."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__default.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "default",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__default.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__default.png",
           "sha256": "ffaee9ead71a420e11c4cd86f29c0a9ed826aa77fb3e7d7cf098ff02480557c7",
           "inspection_method": "view_image",
-          "observations": "Mobile activity default state has readable body text, strong action priority, compact controls and accessible bottom navigation."
+          "observations": "Mobile activity feed has readable controls, comfortable tap targets and a clear first event card above fixed navigation."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__default.png",
@@ -748,18 +748,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__default.png",
           "sha256": "ffaee9ead71a420e11c4cd86f29c0a9ed826aa77fb3e7d7cf098ff02480557c7",
           "inspection_method": "view_image",
-          "observations": "Approved mobile activity baseline matches the final implementation."
+          "observations": "Approved mobile activity default baseline was inspected and matches exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__empty.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "empty",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__empty.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__empty.png",
           "sha256": "586851333adc81f31e549ecb91483c3ba6ef58ff02e6f10bfb86ab6ddbced7ed",
           "inspection_method": "view_image",
-          "observations": "Mobile empty state remains visible in the first viewport and provides concise recovery guidance without blank-screen ambiguity."
+          "observations": "Mobile empty state remains compact, understandable and free of overflow."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__empty.png",
@@ -770,18 +770,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__empty.png",
           "sha256": "586851333adc81f31e549ecb91483c3ba6ef58ff02e6f10bfb86ab6ddbced7ed",
           "inspection_method": "view_image",
-          "observations": "Approved mobile empty baseline matches the inspected implementation."
+          "observations": "Approved mobile empty baseline was inspected and matches exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__validation.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "validation",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__validation.png",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__validation.png",
           "sha256": "ddcd1e5b0fc6937d836dab8c7fa6c240a309531936cbfd70558b95c8339cfa34",
           "inspection_method": "view_image",
-          "observations": "Mobile quick-contact validation is a focused full-screen form with legible labels, large controls, required-next-step emphasis and sticky disabled submit."
+          "observations": "Mobile validation form is a dedicated full-width flow with clear required fields and fixed actions."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__validation.png",
@@ -792,18 +792,18 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__validation.png",
           "sha256": "ddcd1e5b0fc6937d836dab8c7fa6c240a309531936cbfd70558b95c8339cfa34",
           "inspection_method": "view_image",
-          "observations": "Approved mobile validation baseline matches the final form layout."
+          "observations": "Approved mobile validation baseline was inspected and matches exactly."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__success.png",
           "type": "screenshot",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\activity__mobile__success.png",
-          "sha256": "c4b054589fba6879076310a6c033d5d9947bd434d3d3839b90e2293676ec5612",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\activity__mobile__success.png",
+          "sha256": "2561918f49d82792e3c680209701a6df61f1aaf308c49e3abc5d0f48b4f538f3",
           "inspection_method": "view_image",
-          "observations": "Mobile success state shows the saved interaction first, the mandatory next step and a readable confirmation toast above persistent navigation."
+          "observations": "Mobile success state preserves hierarchy and shows both the newly logged event and confirmation toast."
         },
         {
           "path": ".ai-dev/frontend/references/approved/activity__mobile__success.png",
@@ -814,89 +814,87 @@
           "absolute_path": "C:\\Users\\sacha\\OneDrive\\Документы\\Сайт Леха\\.ai-dev\\frontend\\references\\approved\\activity__mobile__success.png",
           "sha256": "950e5a5ec266dde2f2a59ae4f0525af8086f682b70aab68aa00c7ae75c1b35b1",
           "inspection_method": "view_image",
-          "observations": "Approved mobile success baseline matches the inspected final state."
+          "observations": "Approved mobile success baseline was inspected; expected entered content differences remain within tolerance."
         },
         {
-          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__mobile__success.png",
+          "path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\visual-diffs\\activity__mobile__success.png",
           "type": "diff",
           "route": "/#/activity",
           "viewport": "mobile",
           "state": "success",
-          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T09-59-05-713Z\\visual-diffs\\activity__mobile__success.png",
-          "sha256": "2c74928b6e136fd9365b55b49e14b3bcd2a5c427b1a25245a692c77731c7dec8",
+          "absolute_path": "C:\\Users\\sacha\\.codex\\artifacts\\frontend-qa\\crm\\2026-08-01T11-12-19-658Z\\visual-diffs\\activity__mobile__success.png",
+          "sha256": "4e00fc03cbbd36f00de9e40127c2adad0d8b4f80d86e72d0247cda2e281412f0",
           "inspection_method": "view_image",
-          "observations": "Diff is limited to a tiny timestamp pixel variation; composition and content are unchanged."
+          "observations": "Mobile success diff is confined to entered subject and time text; structure and spacing remain stable."
         }
       ],
       "scorecard": {
         "hierarchy": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Page titles, KPI strips, primary actions, next-step panels and state feedback form a consistent priority ladder on desktop and mobile.",
+          "score": 5,
+          "evidence": "Leader dashboard prioritizes greeting, four decision KPIs, funnel and forecast before secondary controls; activity and clients preserve established hierarchy.",
           "findings": []
         },
         "composition": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Navy navigation, light work canvas, structured toolbars and content regions follow the approved focused-workflow composition.",
+          "score": 5,
+          "evidence": "Dashboard uses a deliberate wide funnel, balanced forecast/ring pair and influence/approval pair, with secondary legacy panels collapsed.",
           "findings": []
         },
         "typography": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Unified token scale keeps body, support, labels, subtitles and page headings readable; mobile body text is 15px and support text is 13px.",
+          "score": 5,
+          "evidence": "Geist-based scale stays consistent across KPI values, section labels, tables, forms and mobile navigation with no oversized or microscopic outliers.",
           "findings": []
         },
         "density": {
-          "score": 4,
           "status": "pass",
-          "evidence": "Desktop tables and timelines preserve expert CRM density while tablet/mobile progressively collapse into cards and focused states.",
-          "findings": [
-            "Full-page desktop timelines remain intentionally long because all real records are preserved."
-          ]
+          "score": 5,
+          "evidence": "Primary leader view is compact and scannable; detailed analytics and old team dashboard remain available through progressive disclosure.",
+          "findings": []
         },
         "action_clarity": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Each active surface presents one dominant blue action; quick contact clearly blocks saving until required fields are complete.",
+          "score": 5,
+          "evidence": "Approval actions, quick-contact action, filter controls and disclosure rows are visually distinct and stateful.",
           "findings": []
         },
         "content_quality": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Labels and fixture data use packaging-sales language, explicit economics, repeat-order dates and canonical next steps.",
+          "score": 5,
+          "evidence": "Russian operational labels are concise; forecast, margin, funnel, repeat order and decision influence values explain their scope.",
           "findings": []
         },
         "asset_authenticity": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Production UI uses existing CRM icons and real typed fixture data; no decorative generated imagery or fabricated metrics ship.",
+          "score": 5,
+          "evidence": "Charts and KPIs are computed from the CRM snapshot and contacts/deals; the interface uses the existing icon language and no decorative stock assets.",
           "findings": []
         },
         "mobile_ux": {
-          "score": 5,
           "status": "pass",
-          "evidence": "390×844 states use single-column forms, persistent bottom navigation, large controls, compact KPI grids and zero document overflow.",
+          "score": 5,
+          "evidence": "390px QA shows no horizontal overflow, clear tap targets, fixed navigation, stacked forms and a focused first viewport.",
           "findings": []
         },
         "state_coverage": {
-          "score": 5,
           "status": "pass",
-          "evidence": "Strict QA captured default, empty, validation and success on desktop and mobile; quick-contact submission and disabled validation were exercised.",
+          "score": 5,
+          "evidence": "Strict desktop/mobile QA covers default, empty, validation and success; all states matched approved baselines and had zero console, network, overflow, axe or anti-slop findings.",
           "findings": []
         },
         "brand_coherence": {
-          "score": 5,
           "status": "pass",
-          "evidence": "The approved navy/steel shell, blue action accent, squared operational cards and restrained light surfaces persist across modules.",
+          "score": 5,
+          "evidence": "Navy shell, blue accent, square editorial cards and restrained semantic colors stay coherent across dashboard, clients and activity.",
           "findings": []
         }
       },
-      "reviewed_at": "2026-08-01T10:03:12.939Z"
+      "reviewed_at": "2026-08-01T11:14:30.255Z"
     }
   ],
   "created_at": "2026-08-01T08:48:06.486Z",
-  "updated_at": "2026-08-01T10:03:12.940Z",
+  "updated_at": "2026-08-01T11:14:30.255Z",
   "preparation_baseline": {
     "kind": "git",
     "project_root": "C:/Users/sacha/OneDrive/Документы/Сайт Леха",

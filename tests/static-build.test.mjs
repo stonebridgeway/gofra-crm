@@ -215,6 +215,11 @@ test("ships the role, theme, calendar, statistics and chat frontend modules", as
   assert.match(features, /export function StatisticsView/);
   assert.match(features, /wf-forecast-point-hit/);
   assert.match(features, /wf-chart-tooltip/);
+  assert.match(features, /DESKTOP_CHART_INTERACTIONS_QUERY = "\(min-width: 721px\)"/);
+  assert.match(features, /function useDesktopChartInteractions/);
+  assert.match(features, /chartInteractionsEnabled \? \(/);
+  assert.match(features, /className="wf-forecast-axis-label"/);
+  assert.match(features, /className="wf-repeat-legend-row"/);
   assert.match(features, /aria-pressed=\{selectedStageId === stage\.id\}/);
   assert.match(features, /role="button"[\s\S]*strokeDasharray/);
   assert.match(agencyStyles, /\.wf-chart-selection/);

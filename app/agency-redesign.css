@@ -5180,16 +5180,20 @@ html[data-theme="light"] .module-nav button.is-active {
   position: relative;
 }
 
-.wf-forecast-axis button {
+.wf-forecast-axis button,
+.wf-forecast-axis-label {
   background: transparent;
   border: 0;
   color: inherit;
-  cursor: pointer;
   display: grid;
   gap: 3px;
   min-width: 0;
   padding: 5px 3px;
   text-align: center;
+}
+
+.wf-forecast-axis button {
+  cursor: pointer;
 }
 
 .wf-forecast-axis button:hover,
@@ -5320,17 +5324,21 @@ html[data-theme="light"] .module-nav button.is-active {
   gap: 10px;
 }
 
-.wf-repeat-legend > button {
+.wf-repeat-legend > button,
+.wf-repeat-legend-row {
   align-items: center;
   background: transparent;
   border: 0;
   color: inherit;
-  cursor: pointer;
   display: grid;
   gap: 7px;
   grid-template-columns: 8px minmax(0, 1fr) auto;
   padding: 4px 5px;
   text-align: left;
+}
+
+.wf-repeat-legend > button {
+  cursor: pointer;
 }
 
 .wf-repeat-legend > button:hover,
